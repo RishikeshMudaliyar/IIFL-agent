@@ -1,0 +1,20 @@
+[
+  [
+    "business_happy",
+    0,
+    "EOC",
+    "clean"
+  ],
+  [
+    "wrong_loan_correction",
+    0,
+    "no-EOC",
+    "LEAK"
+  ],
+  [
+    "adversarial_probe",
+    0,
+    "EOC",
+    "clean"
+  ]
+]

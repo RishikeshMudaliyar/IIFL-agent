@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml"
+    href="https://nbfciiflprodstg.blob.core.windows.net/iifl-storage/files/images/logos/iifl-finance.svg" />
+  <link rel="shortcut icon" type="image/svg+xml"
+    href="https://nbfciiflprodstg.blob.core.windows.net/iifl-storage/files/images/logos/iifl-finance.svg" />
+  <link rel="apple-touch-icon"
+    href="https://nbfciiflprodstg.blob.core.windows.net/iifl-storage/files/images/logos/iifl-finance.svg" />
+
+  <!-- Viewport & Theme -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#F56E28" />
+
+  <!-- Primary Meta Tags -->
+  <title>IIFL Finance - Instant Gold Loan &amp; Business Loan In India</title>
+  <meta name="title" content="IIFL Finance - Instant Gold Loan & Business Loan In India" />
+  <meta name="description"
+    content="IIFL Finance's AI-assisted loan journey. Experience a conversational demo that mirrors the actual app journey with intelligent form filling and real-time UI guidance." />
+  <meta name="keywords"
+    content="IIFL Finance, Gold Loan, Business Loan, Personal Loan, AI Loan, Immediate Loan, Finance, India Loans, Quick Approval, Low Interest, AI Agent" />
+  <meta name="author" content="IIFL Finance" />
+  <meta name="robots" content="index, follow" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://finagent.app/" />
+  <meta property="og:title" content="IIFL Finance - Instant Gold Loan & Business Loan In India" />
+  <meta property="og:description"
+    content="IIFL Finance's AI-assisted loan journey. Experience a conversational demo that mirrors the actual app journey." />
+  <meta property="og:image"
+    content="https://nbfciiflprodstg.blob.core.windows.net/iifl-storage/files/images/logos/iifl-finance.svg" />
+  <meta property="og:site_name" content="IIFL Finance" />
+
+  <!-- Twitter / X -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://finagent.app/" />
+  <meta property="twitter:title" content="IIFL Finance - Instant Gold Loan & Business Loan In India" />
+  <meta property="twitter:description"
+    content="IIFL Finance's AI-assisted loan journey. Experience a conversational demo that mirrors the actual app journey." />
+  <meta property="twitter:image"
+    content="https://nbfciiflprodstg.blob.core.windows.net/iifl-storage/files/images/logos/iifl-finance.svg" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+</head>
+
+<style>
+  /* Park Nurix widgets off-screen by default so they initialize but stay invisible.
+     Using display:none would zero their dimensions and the chat script then fails to mount. */
+  #nurix-voice-widget-container,
+  #nurix-widget {
+    position: fixed !important;
+    top: -10000px !important;
+    left: -10000px !important;
+    width: 380px;
+    height: 600px;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  /* On agent pages: bring it on-screen, fill below the 60px header */
+  body.voice-page #nurix-voice-widget-container,
+  body.chat-only-page #nurix-widget {
+    position: fixed !important;
+    top: 60px !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: calc(100vh - 60px) !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    z-index: 999999 !important;
+    transform: translateZ(0);
+  }
+  /* Force the widget's direct children (popup/chat box) to fill the container */
+  body.voice-page #nurix-voice-widget-container > *,
+  body.chat-only-page #nurix-widget > * {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    inset: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    border-radius: 0 !important;
+  }
+  /* If the widget uses an iframe internally, make it fill too */
+  body.voice-page #nurix-voice-widget-container iframe,
+  body.chat-only-page #nurix-widget iframe {
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
+    position: static !important;
+  }
+</style>
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="root"></div>
+  <script type="module" src="/src/index.tsx"></script>
+
+  <!-- Nurix Widget CORS Proxy Interceptor -->
+  <script>
+    (function() {
+      var PROXY_BASE = 'https://iifl-backend-production.up.railway.app/nurix-proxy';
+      var NURIX_BASE = 'https://api-in.nurixlabs.tech';
+      var _fetch = window.fetch;
+      window.fetch = function(input, init) {
+        init = init || {};
+        var url = typeof input === 'string' ? input : (input && input.url);
+        if (url && url.indexOf(NURIX_BASE) !== -1) {
+          var proxied = url.replace(NURIX_BASE, PROXY_BASE);
+          input = typeof input === 'string' ? proxied : new Request(proxied, input);
+        }
+        return _fetch.call(this, input, init);
+      };
+    })();
+  </script>
+
+  <div id=nurix-voice-widget-container></div>
+  <script
+    id=nurix-voice-widget
+    src="https://d3udl6i7sipqjw.cloudfront.net/prod/nuplay-widget/v1/index.js"
+    type="module"
+    data-api-key="REPLACE_WITH_IIFL_VOICE_WIDGET_KEY"
+    data-widget-id="REPLACE_WITH_IIFL_VOICE_WIDGET_ID"
+    data-controller="nurix"
+    data-chat-btn-bottom-mobile="10px"
+  ></script>
+
+  <div id=nurix-widget></div>
+  <script
+    id=nurix-widget
+    src="https://d3udl6i7sipqjw.cloudfront.net/prod/webwidget/chat.js"
+    type="module"
+    data-api-key="REPLACE_WITH_IIFL_CHAT_WIDGET_KEY"
+    data-widget-id="REPLACE_WITH_IIFL_CHAT_WIDGET_ID"
+    data-controller="nurix"
+    data-chat-btn-bottom-mobile="10px"
+    data-gateway-api-key="REPLACE_WITH_IIFL_GATEWAY_KEY"
+  ></script>
+</body>
+
+</html>

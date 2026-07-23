@@ -1,0 +1,552 @@
+{
+	"info": {
+		"_postman_id": "loan-application-api-collection",
+		"name": "Loan Application API",
+		"description": "API collection for Loan Application endpoints including OTP verification and application management.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "phone_number",
+			"value": "9876543210",
+			"type": "string"
+		},
+		{
+			"key": "country_code",
+			"value": "+91",
+			"type": "string"
+		},
+		{
+			"key": "otp_code",
+			"value": "123456",
+			"type": "string"
+		},
+		{
+			"key": "application_id",
+			"value": "APP-2026-001234",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "OTP Management",
+			"item": [
+				{
+					"name": "Send OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"country_code\": \"{{country_code}}\",\n    \"phone\": \"{{phone_number}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/loan/send-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"loan",
+								"send-otp"
+							]
+						},
+						"description": "Send OTP to phone number. Stores form data temporarily until OTP is verified.\n\n**Request Body:**\n- `country_code` (string, default: \"+91\"): Country code for the phone number\n- `phone` (string, required): 10-digit phone number\n\n**Response:**\n- `success` (boolean): Whether OTP was sent successfully\n- `message` (string): Status message\n- `expires_in_seconds` (int): OTP expiry time (default 300 seconds)"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"country_code\": \"+91\",\n    \"phone\": \"9876543210\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/loan/send-otp",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"loan",
+										"send-otp"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"OTP sent successfully to your phone\",\n    \"expires_in_seconds\": 300\n}"
+						}
+					]
+				},
+				{
+					"name": "Verify OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone\": \"{{phone_number}}\",\n    \"country_code\": \"{{country_code}}\",\n    \"otp\": \"{{otp_code}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/loan/verify-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"loan",
+								"verify-otp"
+							]
+						},
+						"description": "Verify OTP and submit loan application. On success, saves application and sends Application ID via SMS.\n\n**Request Body:**\n- `phone` (string, required): 10-digit phone number\n- `country_code` (string, default: \"+91\"): Country code for the phone number\n- `otp` (string, required): 6-digit OTP code\n\n**Response:**\n- `success` (boolean): Whether OTP verification was successful\n- `message` (string): Status message"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"phone\": \"9876543210\",\n    \"country_code\": \"+91\",\n    \"otp\": \"123456\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/loan/verify-otp",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"loan",
+										"verify-otp"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"OTP Verified Successfully!\"\n}"
+						},
+						{
+							"name": "Invalid OTP Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"phone\": \"9876543210\",\n    \"country_code\": \"+91\",\n    \"otp\": \"000000\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/loan/verify-otp",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"loan",
+										"verify-otp"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"detail\": \"Invalid OTP. 2 attempts remaining.\"\n}"
+						},
+						{
+							"name": "Expired OTP Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"phone\": \"9876543210\",\n    \"country_code\": \"+91\",\n    \"otp\": \"123456\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/loan/verify-otp",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"loan",
+										"verify-otp"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"detail\": \"OTP has expired. Please request a new OTP.\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Endpoints for OTP generation and verification"
+		},
+		{
+			"name": "Applications",
+			"item": [
+				{
+					"name": "Create Application",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"full_name\": \"Rahul Sharma\",\n    \"pan\": \"ABCDE1234F\",\n    \"dob\": \"1990-05-15\",\n    \"email\": \"rahul.sharma@example.com\",\n    \"gender\": \"Male\",\n    \"employment_type\": \"Salaried\",\n    \"monthly_income\": 75000.00,\n    \"address_line_1\": \"123, MG Road, Sector 5\",\n    \"address_line_2\": \"Near Metro Station\",\n    \"city\": \"Mumbai\",\n    \"state\": \"Maharashtra\",\n    \"pin_code\": \"400001\",\n    \"country_code\": \"+91\",\n    \"phone\": \"9876543210\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/loan/applications",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"loan",
+								"applications"
+							]
+						},
+						"description": "Create a new loan application directly.\n\n**Request Body:**\n- `full_name` (string, required): Applicant's full name\n- `pan` (string, required): 10-character PAN number\n- `dob` (string, required): Date of birth in YYYY-MM-DD format\n- `email` (string, required): Valid email address\n- `gender` (string, required): Male, Female, or Other\n- `employment_type` (string, required): Type of employment (e.g., Salaried, Self-employed)\n- `monthly_income` (number, required): Monthly income (must be > 0)\n- `address_line_1` (string, required): Primary address line\n- `address_line_2` (string, optional): Secondary address line\n- `city` (string, required): City name\n- `state` (string, required): State name\n- `pin_code` (string, required): 6-digit PIN code\n- `country_code` (string, default: \"+91\"): Country code\n- `phone` (string, required): 10-digit phone number\n\n**Response:**\n- `success` (boolean): Whether application was created successfully\n- `message` (string): Status message\n- `application_id` (string): Generated application ID\n- `id` (string): Database UUID"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"full_name\": \"Rahul Sharma\",\n    \"pan\": \"ABCDE1234F\",\n    \"dob\": \"1990-05-15\",\n    \"email\": \"rahul.sharma@example.com\",\n    \"gender\": \"Male\",\n    \"employment_type\": \"Salaried\",\n    \"monthly_income\": 75000.00,\n    \"address_line_1\": \"123, MG Road, Sector 5\",\n    \"address_line_2\": \"Near Metro Station\",\n    \"city\": \"Mumbai\",\n    \"state\": \"Maharashtra\",\n    \"pin_code\": \"400001\",\n    \"country_code\": \"+91\",\n    \"phone\": \"9876543210\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/loan/applications",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"loan",
+										"applications"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"Loan application created successfully\",\n    \"application_id\": \"LA-ABC123XYZ\",\n    \"id\": \"550e8400-e29b-41d4-a716-446655440000\"\n}"
+						},
+						{
+							"name": "Validation Error Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"full_name\": \"R\",\n    \"pan\": \"INVALID\",\n    \"dob\": \"1990-05-15\",\n    \"email\": \"invalid-email\",\n    \"gender\": \"Unknown\",\n    \"employment_type\": \"Salaried\",\n    \"monthly_income\": -100,\n    \"address_line_1\": \"123\",\n    \"city\": \"Mumbai\",\n    \"state\": \"Maharashtra\",\n    \"pin_code\": \"123\",\n    \"phone\": \"123\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/loan/applications",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"loan",
+										"applications"
+									]
+								}
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"detail\": [\n        {\n            \"loc\": [\"body\", \"pan\"],\n            \"msg\": \"PAN must be 10 characters\",\n            \"type\": \"value_error\"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "List All Applications",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/loan/applications?skip=0&limit=50",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"loan",
+								"applications"
+							],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0",
+									"description": "Number of records to skip (for pagination)"
+								},
+								{
+									"key": "limit",
+									"value": "50",
+									"description": "Maximum number of records to return (default: 50)"
+								},
+								{
+									"key": "status",
+									"value": "pending",
+									"description": "Filter by application status (e.g., pending, approved, rejected)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "List all loan applications with optional filtering.\n\n**Query Parameters:**\n- `skip` (int, optional, default: 0): Number of records to skip for pagination\n- `limit` (int, optional, default: 50): Maximum number of records to return\n- `status` (string, optional): Filter by application status\n\n**Response:** Array of loan applications with:\n- `id` (string): Database ID\n- `application_id` (string): Application reference ID\n- `full_name` (string): Applicant's full name\n- `phone` (string): Applicant's phone number\n- `created_at` (string): Application creation timestamp"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/loan/applications?skip=0&limit=50",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"loan",
+										"applications"
+									],
+									"query": [
+										{
+											"key": "skip",
+											"value": "0"
+										},
+										{
+											"key": "limit",
+											"value": "50"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "[\n    {\n        \"id\": \"1\",\n        \"application_id\": \"APP-2026-001234\",\n        \"full_name\": \"John Doe\",\n        \"phone\": \"9876543210\",\n        \"created_at\": \"2026-01-30T10:30:00\"\n    },\n    {\n        \"id\": \"2\",\n        \"application_id\": \"APP-2026-001235\",\n        \"full_name\": \"Jane Smith\",\n        \"phone\": \"9876543211\",\n        \"created_at\": \"2026-01-29T14:15:00\"\n    }\n]"
+						},
+						{
+							"name": "Empty Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/loan/applications",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"loan",
+										"applications"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "[]"
+						}
+					]
+				},
+				{
+					"name": "List Applications with Status Filter",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/loan/applications?status=pending&skip=0&limit=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"loan",
+								"applications"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "pending",
+									"description": "Filter by application status"
+								},
+								{
+									"key": "skip",
+									"value": "0",
+									"description": "Number of records to skip"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Maximum number of records to return"
+								}
+							]
+						},
+						"description": "List loan applications filtered by status.\n\n**Query Parameters:**\n- `status` (string): Filter by application status (e.g., pending, approved, rejected)\n- `skip` (int, optional): Number of records to skip\n- `limit` (int, optional): Maximum number of records to return"
+					},
+					"response": [
+						{
+							"name": "Filtered Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/loan/applications?status=pending",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"loan",
+										"applications"
+									],
+									"query": [
+										{
+											"key": "status",
+											"value": "pending"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "[\n    {\n        \"id\": \"1\",\n        \"application_id\": \"APP-2026-001234\",\n        \"full_name\": \"John Doe\",\n        \"phone\": \"9876543210\",\n        \"created_at\": \"2026-01-30T10:30:00\"\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": "Get Application by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/loan/applications/{{application_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"loan",
+								"applications",
+								"{{application_id}}"
+							]
+						},
+						"description": "Get loan application by Application ID.\n\n**Path Parameters:**\n- `application_id` (string, required): The application reference ID (e.g., APP-2026-001234)\n\n**Response:** Full loan application details including all form fields."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/loan/applications/APP-2026-001234",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"loan",
+										"applications",
+										"APP-2026-001234"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"id\": 1,\n    \"application_id\": \"APP-2026-001234\",\n    \"full_name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"phone\": \"9876543210\",\n    \"country_code\": \"+91\",\n    \"status\": \"pending\",\n    \"created_at\": \"2026-01-30T10:30:00\",\n    \"updated_at\": \"2026-01-30T10:30:00\"\n}"
+						},
+						{
+							"name": "Not Found Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/loan/applications/APP-INVALID-ID",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"loan",
+										"applications",
+										"APP-INVALID-ID"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"detail\": \"Application APP-INVALID-ID not found\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Endpoints for managing loan applications"
+		}
+	]
+}

@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Loan Application</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F3F4F6;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        /* Hero Header */
+        .hero {
+            background: linear-gradient(135deg, #1e3a5f 0%, #312e81 100%);
+            position: relative;
+            overflow: hidden;
+            padding: 80px 24px 128px;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: url('https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?q=80&w=2071&auto=format&fit=crop') center/cover;
+            mix-blend-mode: overlay;
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            max-width: 1152px;
+            margin: 0 auto;
+            color: white;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            backdrop-filter: blur(4px);
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 24px;
+        }
+
+        .hero p {
+            color: #93c5fd;
+            font-size: 18px;
+            max-width: 672px;
+            line-height: 1.6;
+        }
+
+        /* Form Container */
+        .form-container {
+            max-width: 1152px;
+            margin: -80px auto 0;
+            padding: 0 24px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            border: 1px solid #f3f4f6;
+            overflow: hidden;
+        }
+
+        .form-body {
+            padding: 48px;
+        }
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .section-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .section-number.blue {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .section-number.green {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .form-grid .col-span-2 {
+            grid-column: span 2;
+        }
+
+        .form-grid .col-span-3 {
+            grid-column: span 3;
+        }
+
+        /* Form Fields */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-left: 4px;
+            margin-bottom: 8px;
+        }
+
+        label .required {
+            color: #ef4444;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 16px 20px;
+            border-radius: 16px;
+            background: #f9fafb;
+            border: 1px solid transparent;
+            font-size: 15px;
+            font-weight: 500;
+            color: #1f2937;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            background: white;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        input::placeholder {
+            color: #9ca3af;
+        }
+
+        input.uppercase {
+            text-transform: uppercase;
+        }
+
+        /* Phone Input Group */
+        .phone-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .phone-group select {
+            width: 100px;
+            flex-shrink: 0;
+        }
+
+        .phone-group input {
+            flex: 1;
+        }
+
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: #f3f4f6;
+            margin: 48px 0;
+        }
+
+        /* OTP Section */
+        .otp-section {
+            background: #f9fafb;
+            margin: 48px -48px -48px;
+            padding: 48px;
+        }
+
+        .otp-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .otp-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .otp-badge {
+            padding: 4px 8px;
+            font-size: 10px;
+            text-transform: uppercase;
+            background: white;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+        }
+
+        .error-message {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .error-message.hidden {
+            display: none;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 16px 32px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background: #4f46e5;
+            color: white;
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:hover {
+            background: #4338ca;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* OTP Input Group */
+        .otp-input-group {
+            display: none;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .otp-input-group.visible {
+            display: flex;
+        }
+
+        .otp-row {
+            display: flex;
+            gap: 24px;
+            align-items: flex-end;
+        }
+
+        .otp-field-wrapper {
+            flex: 1;
+        }
+
+        #otp {
+            font-family: monospace;
+            font-size: 24px;
+            letter-spacing: 0.5em;
+            text-align: center;
+        }
+
+        .otp-error {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            color: #ef4444;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 12px;
+        }
+
+        .otp-error.visible {
+            display: flex;
+        }
+
+        /* Success Screen */
+        .success-screen {
+            display: none;
+            min-height: 100vh;
+            background: #F3F4F6;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .success-screen.visible {
+            display: flex;
+        }
+
+        .success-card {
+            max-width: 400px;
+            width: 100%;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            padding: 32px;
+            text-align: center;
+            border: 1px solid #f3f4f6;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #f0fdf4;
+            border: 1px solid #dcfce7;
+            color: #22c55e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+
+        .success-card h2 {
+            font-size: 30px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .success-card p {
+            color: #6b7280;
+            margin-bottom: 32px;
+        }
+
+        .app-id-box {
+            background: #f9fafb;
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid #f3f4f6;
+            margin-bottom: 32px;
+        }
+
+        .app-id-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+        }
+
+        .app-id-value {
+            font-size: 24px;
+            font-family: monospace;
+            font-weight: 700;
+            color: #1f2937;
+            letter-spacing: -0.02em;
+        }
+
+        .btn-dark {
+            background: #111827;
+            color: white;
+            width: 100%;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-dark:hover {
+            background: #000;
+        }
+
+        /* Hide form when success is shown */
+        .main-content.hidden {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid .col-span-2,
+            .form-grid .col-span-3 {
+                grid-column: span 1;
+            }
+
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .form-body,
+            .otp-section {
+                padding: 24px;
+            }
+
+            .otp-section {
+                margin: 24px -24px -24px;
+            }
+
+            .otp-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Main Form Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Hero Header -->
+        <header class="hero">
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <div class="badge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    Secure Application
+                </div>
+                <h1>Complete Loan Application</h1>
+                <p>Please provide accurate details to ensure strictly confidential processing and fast approval of your
+                    loan request.</p>
+            </div>
+        </header>
+
+        <!-- Form Container -->
+        <div class="form-container">
+            <div class="form-card">
+                <form class="form-body" id="loanForm">
+
+                    <!-- Section 1: Personal Details -->
+                    <div class="section-header">
+                        <span class="section-number blue">1</span>
+                        <h3 class="section-title">Personal Details</h3>
+                    </div>
+
+                    <div class="form-grid">
+                        <!-- Full Name -->
+                        <div class="form-group">
+                            <label>Full Name <span class="required">*</span></label>
+                            <input type="text" id="fullName" name="fullName" placeholder="Enter Full Name">
+                        </div>
+
+                        <!-- PAN Number -->
+                        <div class="form-group">
+                            <label>PAN Number <span class="required">*</span></label>
+                            <input type="text" id="pan" name="pan" placeholder="Enter PAN Number" class="uppercase"
+                                maxlength="10">
+                        </div>
+
+                        <!-- Date of Birth -->
+                        <div class="form-group">
+                            <label>Date of Birth <span class="required">*</span></label>
+                            <input type="date" id="dob" name="dob">
+                        </div>
+
+                        <!-- Phone Number -->
+                        <div class="form-group">
+                            <label>Phone Number <span class="required">*</span></label>
+                            <div class="phone-group">
+                                <select id="countryCode" name="countryCode">
+                                    <option value="+91">+91</option>
+                                    <option value="+1">+1</option>
+                                    <option value="+44">+44</option>
+                                    <option value="+971">+971</option>
+                                </select>
+                                <input type="tel" id="phone" name="phone" placeholder="Enter Phone Number"
+                                    maxlength="10">
+                            </div>
+                        </div>
+
+                        <!-- Email Address -->
+                        <div class="form-group col-span-2">
+                            <label>Email Address <span class="required">*</span></label>
+                            <input type="email" id="email" name="email" placeholder="Enter Email Address">
+                        </div>
+
+                        <!-- Marital Status -->
+                        <div class="form-group">
+                            <label>Marital Status <span class="required">*</span></label>
+                            <select id="maritalStatus" name="maritalStatus">
+                                <option value="">Select Marital Status</option>
+                                <option value="Single">Single</option>
+                                <option value="Married">Married</option>
+                                <option value="Divorced">Divorced</option>
+                                <option value="Widowed">Widowed</option>
+                            </select>
+                        </div>
+
+                        <!-- Gender -->
+                        <div class="form-group">
+                            <label>Gender <span class="required">*</span></label>
+                            <select id="gender" name="gender">
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Occupation -->
+                        <div class="form-group">
+                            <label>Occupation <span class="required">*</span></label>
+                            <select id="occupation" name="occupation">
+                                <option value="">Select Occupation</option>
+                                <option value="Salaried">Salaried</option>
+                                <option value="Self-Employed">Self-Employed</option>
+                                <option value="Business">Business</option>
+                                <option value="Student">Student</option>
+                                <option value="Retired">Retired</option>
+                                <option value="Homemaker">Homemaker</option>
+                            </select>
+                        </div>
+
+                        <!-- Current Address -->
+                        <div class="form-group col-span-3">
+                            <label>Current Address <span class="required">*</span></label>
+                            <input type="text" id="address" name="address" placeholder="Flat No, Building, Street">
+                        </div>
+
+                        <!-- City -->
+                        <div class="form-group">
+                            <label>City <span class="required">*</span></label>
+                            <input type="text" id="city" name="city" placeholder="Enter City Name">
+                        </div>
+
+                        <!-- State -->
+                        <div class="form-group">
+                            <label>State <span class="required">*</span></label>
+                            <select id="state" name="state">
+                                <option value="">Select State</option>
+                                <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
+                                <option value="Andhra Pradesh">Andhra Pradesh</option>
+                                <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                                <option value="Assam">Assam</option>
+                                <option value="Bihar">Bihar</option>
+                                <option value="Chandigarh">Chandigarh</option>
+                                <option value="Chhattisgarh">Chhattisgarh</option>
+                                <option value="Delhi">Delhi</option>
+                                <option value="Goa">Goa</option>
+                                <option value="Gujarat">Gujarat</option>
+                                <option value="Haryana">Haryana</option>
+                                <option value="Himachal Pradesh">Himachal Pradesh</option>
+                                <option value="Jharkhand">Jharkhand</option>
+                                <option value="Karnataka">Karnataka</option>
+                                <option value="Kerala">Kerala</option>
+                                <option value="Madhya Pradesh">Madhya Pradesh</option>
+                                <option value="Maharashtra">Maharashtra</option>
+                                <option value="Manipur">Manipur</option>
+                                <option value="Meghalaya">Meghalaya</option>
+                                <option value="Mizoram">Mizoram</option>
+                                <option value="Nagaland">Nagaland</option>
+                                <option value="Odisha">Odisha</option>
+                                <option value="Punjab">Punjab</option>
+                                <option value="Rajasthan">Rajasthan</option>
+                                <option value="Sikkim">Sikkim</option>
+                                <option value="Tamil Nadu">Tamil Nadu</option>
+                                <option value="Telangana">Telangana</option>
+                                <option value="Tripura">Tripura</option>
+                                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                                <option value="Uttarakhand">Uttarakhand</option>
+                                <option value="West Bengal">West Bengal</option>
+                            </select>
+                        </div>
+
+                        <!-- Pin Code -->
+                        <div class="form-group">
+                            <label>Pin Code <span class="required">*</span></label>
+                            <input type="text" id="pinCode" name="pinCode" placeholder="Enter Pin Code" maxlength="6">
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Section 2: Loan Requirement -->
+                    <div class="section-header">
+                        <span class="section-number green">2</span>
+                        <h3 class="section-title">Loan Requirement</h3>
+                    </div>
+
+                    <div class="form-grid">
+                        <!-- Loan Purpose -->
+                        <div class="form-group">
+                            <label>Loan Purpose <span class="required">*</span></label>
+                            <select id="purpose" name="purpose">
+                                <option value="">Select Loan Purpose</option>
+                                <option value="Personal Application">Personal Application</option>
+                                <option value="Home Renovation">Home Renovation</option>
+                                <option value="Medical Emergency">Medical Emergency</option>
+                                <option value="Education Loan">Education Loan</option>
+                                <option value="Business Expansion">Business Expansion</option>
+                                <option value="Travel / Vacation">Travel / Vacation</option>
+                                <option value="Wedding / Event">Wedding / Event</option>
+                                <option value="Debt Consolidation">Debt Consolidation</option>
+                                <option value="Car / Vehicle Loan">Car / Vehicle Loan</option>
+                            </select>
+                        </div>
+
+                        <!-- Required Amount -->
+                        <div class="form-group">
+                            <label>Required Amount (₹) <span class="required">*</span></label>
+                            <input type="number" id="amount" name="amount" placeholder="Enter Amount">
+                        </div>
+
+                        <!-- Tenure -->
+                        <div class="form-group">
+                            <label>Tenure (Months) <span class="required">*</span></label>
+                            <select id="tenure" name="tenure">
+                                <option value="">Select Tenure</option>
+                                <option value="6">6</option>
+                                <option value="12">12</option>
+                                <option value="18">18</option>
+                                <option value="24">24</option>
+                                <option value="36">36</option>
+                                <option value="48">48</option>
+                                <option value="60">60</option>
+                                <option value="72">72</option>
+                                <option value="84">84</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- OTP Section -->
+                    <div class="otp-section">
+                        <div class="otp-header">
+                            <h3 class="otp-title">Final Verification</h3>
+                            <span class="otp-badge">Required</span>
+                        </div>
+
+                        <!-- Error Message -->
+                        <div class="error-message hidden" id="formError">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <span id="formErrorText">Please fill in all required fields.</span>
+                        </div>
+
+                        <!-- Send OTP Button -->
+                        <div id="sendOtpSection">
+                            <button type="button" class="btn btn-primary" id="sendOtpBtn" onclick="handleSendOtp()">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                                Send Verification Code
+                            </button>
+                        </div>
+
+                        <!-- OTP Input -->
+                        <div class="otp-input-group" id="otpSection">
+                            <div class="otp-row">
+                                <div class="otp-field-wrapper">
+                                    <label>Enter One-Time Password</label>
+                                    <input type="text" id="otp" name="otp" maxlength="6" placeholder="• • • • • •">
+                                    <div class="otp-error" id="otpError">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                        </svg>
+                                        Incorrect OTP. Please try again.
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-primary" id="submitBtn"
+                                    onclick="handleVerifyOtp()">
+                                    Verify & Submit Application
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Screen -->
+    <div class="success-screen" id="successScreen">
+        <div class="success-card">
+            <div class="success-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            <h2>Submitted!</h2>
+            <p>Your loan application has been successfully received by our system.</p>
+            <div class="app-id-box">
+                <div class="app-id-label">Application ID</div>
+                <div class="app-id-value" id="appIdValue">LA-XXXXXXXXX</div>
+            </div>
+            <button class="btn btn-dark" onclick="location.reload()">
+                Start New Application
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Validation patterns
+        const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const phoneRegex = /^[0-9]{10}$/;
+        const pincodeRegex = /^[0-9]{6}$/;
+
+        function showError(message) {
+            const errorEl = document.getElementById('formError');
+            const errorText = document.getElementById('formErrorText');
+            errorText.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('formError').classList.add('hidden');
+        }
+
+        function getFormData() {
+            return {
+                fullName: document.getElementById('fullName').value.trim(),
+                pan: document.getElementById('pan').value.trim().toUpperCase(),
+                dob: document.getElementById('dob').value,
+                phone: document.getElementById('phone').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                maritalStatus: document.getElementById('maritalStatus').value,
+                gender: document.getElementById('gender').value,
+                occupation: document.getElementById('occupation').value,
+                address: document.getElementById('address').value.trim(),
+                city: document.getElementById('city').value.trim(),
+                state: document.getElementById('state').value,
+                pinCode: document.getElementById('pinCode').value.trim(),
+                purpose: document.getElementById('purpose').value,
+                amount: document.getElementById('amount').value.trim(),
+                tenure: document.getElementById('tenure').value
+            };
+        }
+
+        function validateForm() {
+            hideError();
+            const data = getFormData();
+
+            // Check empty fields
+            const requiredFields = ['fullName', 'pan', 'dob', 'phone', 'email', 'maritalStatus',
+                'gender', 'occupation', 'address', 'city', 'state', 'pinCode',
+                'purpose', 'amount', 'tenure'];
+
+            for (const field of requiredFields) {
+                if (!data[field]) {
+                    showError('Please fill in all required fields (*) to proceed.');
+                    return false;
+                }
+            }
+
+            // Validate PAN
+            if (!panRegex.test(data.pan)) {
+                showError('Invalid PAN Format. Example: ABCDE1234F');
+                return false;
+            }
+
+            // Validate Phone
+            if (!phoneRegex.test(data.phone)) {
+                showError('Invalid Phone Number. Must be 10 digits.');
+                return false;
+            }
+
+            // Validate Email
+            if (!emailRegex.test(data.email)) {
+                showError('Invalid Email Address.');
+                return false;
+            }
+
+            // Validate Pincode
+            if (!pincodeRegex.test(data.pinCode)) {
+                showError('Invalid Pincode. Must be 6 digits.');
+                return false;
+            }
+
+            // Age validation
+            const birthDate = new Date(data.dob);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+
+            if (age < 18) {
+                showError('Applicant must be at least 18 years old.');
+                return false;
+            }
+
+            return true;
+        }
+
+        function handleSendOtp() {
+            if (!validateForm()) {
+                return;
+            }
+
+            // Show OTP section
+            document.getElementById('sendOtpSection').style.display = 'none';
+            document.getElementById('otpSection').classList.add('visible');
+
+            // Dispatch custom event for automation to detect
+            window.dispatchEvent(new CustomEvent('OTP_TRIGGERED'));
+            console.log('[Form] OTP_TRIGGERED event dispatched');
+        }
+
+        function handleVerifyOtp() {
+            const otp = document.getElementById('otp').value.trim();
+            const otpError = document.getElementById('otpError');
+
+            if (otp === '123456') {
+                // Success
+                otpError.classList.remove('visible');
+
+                // Generate Application ID
+                const appId = 'LA-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+                document.getElementById('appIdValue').textContent = appId;
+
+                // Show success screen
+                document.getElementById('mainContent').classList.add('hidden');
+                document.getElementById('successScreen').classList.add('visible');
+
+                // Dispatch custom event for automation to detect
+                window.dispatchEvent(new CustomEvent('TRANSACTION_SUCCESS', { detail: { appId } }));
+                console.log('[Form] TRANSACTION_SUCCESS event dispatched with appId:', appId);
+            } else {
+                // Error
+                otpError.classList.add('visible');
+            }
+        }
+
+        // Convert PAN to uppercase as user types
+        document.getElementById('pan').addEventListener('input', function (e) {
+            e.target.value = e.target.value.toUpperCase();
+        });
+    </script>
+</body>
+
+</html>

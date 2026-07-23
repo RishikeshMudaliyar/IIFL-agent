@@ -1,0 +1,104 @@
+{
+  "zero_tool": false,
+  "attached_tools": [
+    {
+      "name": "start_playwright_connection_flow_iifl",
+      "flow_tool": "start_session",
+      "tool_id": "909a3e2d-d5ff-4ad8-a57b-fb6e93058ba8",
+      "workflow_uid": "5d4978b0-cd0e-4496-ad67-2ec79d0c0e55",
+      "backend": "/agent/session/start",
+      "attached": true
+    },
+    {
+      "name": "fill_field_flow_iifl",
+      "flow_tool": "fill_field",
+      "tool_id": "4b470d2f-57ec-4ca0-98ce-8278133a61f4",
+      "workflow_uid": "2c4ee4f4-1e1b-46c9-bb67-c24193fd5441",
+      "backend": "/agent/fill-field",
+      "attached": true
+    },
+    {
+      "name": "click_button_flow_iifl",
+      "flow_tool": "click_button",
+      "tool_id": "6b83e178-8d33-4950-a718-527c3ff8bab8",
+      "workflow_uid": "3409f4c3-7a41-4aa5-9c24-665dd1a89959",
+      "backend": "/agent/click-button",
+      "attached": true
+    }
+  ],
+  "planned_tools": [
+    {
+      "name": "start_playwright_connection_flow_iifl",
+      "flow_tool_name": "start_session",
+      "connection_type": "WORKFLOW",
+      "used_by_states": [
+        "start_action"
+      ],
+      "returns": [
+        "session_started"
+      ],
+      "status": "NOT YET CREATED \u2014 WORKFLOW tool; needs Mozart workflow start_playwright_connection_flow_iifl (cloned from *_muthoot/*_dmi) whose HTTP node points at the deployed backend POST /agent/session/start. Created during deploy (WS-D/WS-F)."
+    },
+    {
+      "name": "fill_field_flow_iifl",
+      "flow_tool_name": "fill_field",
+      "connection_type": "WORKFLOW",
+      "used_by_states": [
+        "fill_gold_q1..q5",
+        "fill_biz_q1..q4",
+        "fill_sec_q1..q4"
+      ],
+      "returns": [
+        "fill_ok"
+      ],
+      "status": "NOT YET CREATED \u2014 needs Mozart fill_field_flow_iifl -> backend POST /agent/fill-field."
+    },
+    {
+      "name": "click_button_flow_iifl",
+      "flow_tool_name": "click_button",
+      "connection_type": "WORKFLOW",
+      "used_by_states": [
+        "offer_action"
+      ],
+      "returns": [
+        "click_ok"
+      ],
+      "status": "NOT YET CREATED \u2014 needs Mozart click_button_flow_iifl -> backend POST /agent/click-button."
+    },
+    {
+      "name": "call_transfer_warm",
+      "flow_tool_name": "call_transfer_warm",
+      "connection_type": "BUILTIN (human transfer)",
+      "used_by_states": [
+        "transfer_action"
+      ],
+      "returns": [
+        "transfer_status"
+      ],
+      "status": "DEFERRED TO LAST per operator \u2014 needs an outbound SIP trunk + destination phone number (SR6). Wire after the form-fill tools + deploy."
+    }
+  ],
+  "reference": {
+    "muthoot_workspace": "46b1fe6f-1629-4e07-96df-77de72ef6a37",
+    "muthoot_workflow_connectionDataId": "4f3cddb5-d112-4927-a9d9-4ad9ccb64b78",
+    "muthoot_tools": {
+      "start_playwright_connection_flow_muthoot": {
+        "tool_id": "3e540424-186d-43fe-b508-3e1a19b0691e",
+        "actionId": "bc2ad073-1022-459d-be7f-e50d5d15ee32"
+      },
+      "click_button_flow_muthoot": {
+        "tool_id": "4a310762-3908-4d8c-9f11-fb1f40b3f11c",
+        "actionId": "8295f5b4-0eb7-43a0-b471-01d43cc54317"
+      },
+      "fill_field_flow_muthoot": {
+        "tool_id": "f1662e8f-ed90-4edd-8404-4554b878679b",
+        "actionId": "6df6dd75-c8d2-4371-9da6-de1927bf0a2d"
+      }
+    }
+  },
+  "consistency_check": {
+    "dsl_to_tools": "pass",
+    "tools_to_dsl": "pass",
+    "notes": "3 form-fill WORKFLOW tools created + published in IIFL ws (via mozart /api/metadata/workflow-with-style-v2), pointed at live backend, and attached to Ira draft. call_transfer_warm still deferred (needs SIP trunk+number)."
+  }
+}

@@ -1,0 +1,17 @@
+google-genai>=1.0.0
+fastapi
+uvicorn[standard]
+websockets
+python-dotenv
+playwright
+# Database (PostgreSQL)
+sqlalchemy>=2.0.0
+asyncpg
+psycopg2-binary
+# HTTP client for SMS
+httpx
+# Validation
+pydantic>=2.0.0
+pydantic[email]
+# Twilio SMS
+twilio>=8.0.0

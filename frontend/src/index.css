@@ -1,0 +1,436 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base height for mobile viewport */
+html,
+body,
+#root {
+  min-height: 100%;
+  min-height: 100dvh;
+}
+
+/* ABC Theme Custom Styles */
+.abc-gradient {
+  background: linear-gradient(135deg, #003652 0%, #0071A9 50%, #003652 100%);
+}
+
+.abc-button {
+  background: linear-gradient(90deg, #0071A9 0%, #003652 100%);
+  color: #ffffff;
+  transition: all 0.3s ease;
+}
+
+.abc-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 113, 169, 0.4);
+}
+
+.abc-input {
+  @apply w-full px-4 py-3 bg-gray-100 rounded-lg border border-transparent focus:border-gray-300 focus:bg-white focus:outline-none transition-all;
+}
+
+.abc-checkbox {
+  @apply w-5 h-5 rounded border-2 border-abc-red focus:ring-abc-red focus:ring-offset-0 cursor-pointer;
+  accent-color: #0071A9;
+}
+
+/* OTP Input Boxes */
+.otp-box {
+  @apply w-12 h-14 text-center text-xl font-bold border-2 border-gray-200 rounded-lg focus:border-abc-red focus:outline-none transition-all;
+}
+
+/* Background for desktop */
+@media (min-width: 1024px) {
+  body {
+    background: #f5f5f5;
+  }
+}
+
+/* Toggle Button Styles */
+.toggle-btn {
+  @apply px-5 py-3.5 rounded-xl text-sm font-semibold transition-all duration-200;
+}
+
+.toggle-btn.active {
+  @apply bg-sky-100 text-sky-800 border-2 border-sky-300 shadow-sm;
+}
+
+.toggle-btn:not(.active) {
+  @apply bg-white text-gray-500 border-2 border-gray-200 hover:border-sky-200 hover:text-gray-700;
+}
+
+/* Loan Offer Card */
+.offer-card {
+  @apply bg-white rounded-xl border border-gray-100 p-4 mb-3 shadow-sm;
+}
+
+/* Animation for smooth transitions */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+/* Date Picker Modern Styling */
+input[type="date"] {
+  position: relative;
+  cursor: pointer;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  background: transparent;
+  bottom: 0;
+  color: transparent;
+  cursor: pointer;
+  height: auto;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: auto;
+}
+
+input[type="date"]::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%230071A9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  pointer-events: none;
+}
+
+/* Chrome/Edge date picker popup accent */
+input[type="date"]::-webkit-datetime-edit {
+  padding: 0;
+}
+
+input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
+
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  padding: 2px 4px;
+}
+
+input[type="date"]::-webkit-datetime-edit-day-field:focus,
+input[type="date"]::-webkit-datetime-edit-month-field:focus,
+input[type="date"]::-webkit-datetime-edit-year-field:focus {
+  background-color: #EBF8FF;
+  border-radius: 4px;
+  outline: none;
+}
+
+/* Firefox date input */
+input[type="date"]::-moz-calendar-picker-indicator {
+  opacity: 0;
+}
+
+/* Accent color for date picker */
+::-webkit-calendar-picker-indicator:hover {
+  opacity: 0.7;
+}
+
+/* Modern date picker popup styling (limited browser support) */
+::-webkit-datetime-edit-text {
+  color: #9ca3af;
+}
+
+/* ========== React DatePicker Custom Theme ========== */
+.react-datepicker {
+  font-family: 'Inter', sans-serif;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.react-datepicker__header {
+  background: linear-gradient(135deg, #0071A9 0%, #00699E 100%);
+  border-bottom: none;
+  padding: 16px;
+  border-radius: 0;
+}
+
+.react-datepicker__current-month {
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.react-datepicker__day-names {
+  margin-top: 8px;
+}
+
+.react-datepicker__day-name {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  width: 2.5rem;
+  line-height: 2.5rem;
+}
+
+.react-datepicker__navigation {
+  top: 16px;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: white;
+}
+
+.react-datepicker__navigation:hover *::before {
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.react-datepicker__month {
+  margin: 0;
+  padding: 12px;
+}
+
+.react-datepicker__day {
+  width: 2.5rem;
+  line-height: 2.5rem;
+  border-radius: 50%;
+  margin: 2px;
+  transition: all 0.15s ease;
+}
+
+.react-datepicker__day:hover {
+  background-color: #EBF8FF;
+  border-radius: 50%;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background-color: #0071A9 !important;
+  color: white !important;
+  font-weight: 600;
+}
+
+.react-datepicker__day--selected:hover {
+  background-color: #003652 !important;
+}
+
+.react-datepicker__day--today {
+  font-weight: 700;
+  color: #0071A9;
+}
+
+.react-datepicker__day--outside-month {
+  color: #d1d5db;
+}
+
+/* Month/Year Dropdown Styling */
+.react-datepicker__month-dropdown-container,
+.react-datepicker__year-dropdown-container {
+  margin: 0 4px;
+}
+
+/* Scrollable Dropdown Styles */
+.react-datepicker__header {
+  /* Ensure header container allows white text visibility */
+  color: white;
+}
+
+.react-datepicker__month-read-view--selected-month,
+.react-datepicker__year-read-view--selected-year {
+  color: white !important;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  /* Add dropdown arrow indicator */
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Keep month/year text visible when dropdown is open */
+.react-datepicker__month-read-view,
+.react-datepicker__year-read-view {
+  visibility: visible !important;
+}
+
+.react-datepicker__month-read-view--selected-month:hover,
+.react-datepicker__year-read-view--selected-year:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Down arrow */
+.react-datepicker__month-read-view--down-arrow,
+.react-datepicker__year-read-view--down-arrow,
+.react-datepicker__month-read-view--down-arrow::before,
+.react-datepicker__year-read-view--down-arrow::before {
+  display: none !important;
+  visibility: hidden !important;
+  border: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  content: none !important;
+}
+
+/* The actual dropdown list */
+.react-datepicker__month-dropdown,
+.react-datepicker__year-dropdown {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 120px;
+  /* Force width if needed */
+  z-index: 50;
+  /* Control height here - same for both dropdowns */
+  min-height: 180px;
+  max-height: 180px;
+  overflow-y: auto;
+  /* Position dropdown below the header text */
+  margin-top: 31.5px;
+}
+
+.react-datepicker__month-option,
+.react-datepicker__year-option {
+  color: #374151;
+  padding: 8px 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+.react-datepicker__month-option:hover,
+.react-datepicker__year-option:hover {
+  background-color: #f3f4f6;
+  color: #0071A9;
+}
+
+.react-datepicker__month-option--selected_month,
+.react-datepicker__year-option--selected_year {
+  background-color: #EBF8FF;
+  color: #0071A9;
+  font-weight: 700;
+}
+
+/* Remove default checkmark if desired, or style it */
+.react-datepicker__month-option--selected_month::before,
+.react-datepicker__year-option--selected_year::before {
+  display: none;
+}
+
+/* Scrollbar styling for the dropdowns */
+.react-datepicker__month-dropdown::-webkit-scrollbar,
+.react-datepicker__year-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.react-datepicker__month-dropdown::-webkit-scrollbar-track,
+.react-datepicker__year-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.react-datepicker__month-dropdown::-webkit-scrollbar-thumb,
+.react-datepicker__year-dropdown::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 3px;
+}
+
+.react-datepicker__month-select:hover,
+.react-datepicker__year-select:hover {
+  background-color: white;
+}
+
+/* Triangle pointer */
+.react-datepicker__triangle {
+  display: none;
+}
+
+/* Input wrapper full width */
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+/* Limit year dropdown scroll */
+.react-datepicker__year-select {
+  overflow-y: auto;
+}
+
+/* ========== Select Dropdown Theme Styling ========== */
+select.abc-input {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230071A9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 40px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+select.abc-input:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+}
+
+select.abc-input:focus {
+  background-color: white;
+  border-color: #0071A9;
+  box-shadow: 0 0 0 3px rgba(0, 113, 169, 0.1);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230071A9' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* Style for the selected value text */
+select.abc-input option {
+  padding: 12px 16px;
+  background-color: white;
+  color: #374151;
+  font-weight: 500;
+}
+
+select.abc-input option:hover,
+select.abc-input option:focus {
+  background-color: #EBF8FF;
+  color: #0071A9;
+}
+
+select.abc-input option:checked {
+  background: linear-gradient(135deg, #0071A9 0%, #00699E 100%);
+  color: white;
+  font-weight: 600;
+}
+
+/* Placeholder/default option styling */
+select.abc-input option[value=""] {
+  color: #9ca3af;
+}
+
+/* Error state for select */
+select.abc-input.border-red-500 {
+  border-color: #ef4444;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ef4444' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+select.abc-input.border-red-500:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
