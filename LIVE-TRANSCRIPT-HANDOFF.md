@@ -3,6 +3,22 @@
 **For:** satyala.srikanth@nurix.ai
 **Context:** IIFL demo. Agent "Ira" (voice agent id `56dfd3b8-5426-44c3-b1ea-3db962638948`, workspace `ed51dad4-783e-4adf-8ec0-1b14b8938a5d`) on `agentx-prod.nurixlabs.tech`.
 
+## ✅ Update — live source found & wired
+
+The listen WebSocket **is deployed** on `agentx-prod` after all. The earlier "all 404" was an artifact of probing with **HTTP GET** — the route is **WebSocket-only**, so a plain GET returns 404 while the **WS upgrade succeeds**:
+
+```
+wss://agentx-prod.nurixlabs.tech/voice/web/call/{call_id}/listen
+  HTTP GET      -> 404   (misleading — no upgrade header)
+  WS handshake  -> OPEN  (closes immediately only because the call_id was a dummy)
+```
+
+`frontend/src/hooks/use-nurix-outbound.ts` now subscribes to it and parses the `connected` / `data` / `disconnected` frames into transcript turns, with the post-call REST poll kept as a fallback. The hook's public interface is unchanged, so `AgentVoicePage` needs no edit. IIFL workspace/agent IDs are filled in from the context above.
+
+**Still to confirm on a live PSTN call:** the exact shape of the `data` frames (LiveKit segment-list vs. flat `{text, role}`, and the speaker field). The parser probes the common shapes and logs raw frames in DEV (`console.debug("[listen]", …)`), so one real call locks the mapping. If PSTN transcription rides the LiveKit `lk.transcription` text-stream rather than the data channel, the listener service must forward that (option A tail below).
+
+---
+
 ## The two variants in this repo
 
 | Branch | Call type | Live transcript? | Where it runs |
