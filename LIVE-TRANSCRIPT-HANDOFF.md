@@ -15,7 +15,21 @@ wss://agentx-prod.nurixlabs.tech/voice/web/call/{call_id}/listen
 
 `frontend/src/hooks/use-nurix-outbound.ts` now subscribes to it and parses the `connected` / `data` / `disconnected` frames into transcript turns, with the post-call REST poll kept as a fallback. The hook's public interface is unchanged, so `AgentVoicePage` needs no edit. IIFL workspace/agent IDs are filled in from the context above.
 
-**Still to confirm on a live PSTN call:** the exact shape of the `data` frames (LiveKit segment-list vs. flat `{text, role}`, and the speaker field). The parser probes the common shapes and logs raw frames in DEV (`console.debug("[listen]", …)`), so one real call locks the mapping. If PSTN transcription rides the LiveKit `lk.transcription` text-stream rather than the data channel, the listener service must forward that (option A tail below).
+### Verified on a live PSTN call (2026-07-24)
+
+Drove a real call (`call_id a1dad2f3-…`, `room_id "sip-room-…"`, `livekit_instance "secondary"`, `direction "outbound"`) and captured the listener WS from the browser during an **answered, `IN_PROGRESS`** call:
+
+```
++141ms   [open]
++1369ms  {"type":"connected","call_id":"a1dad2f3-…","room":"sip-room-a1dad2f3-…","listener_identity":"listener_…","ts_ms":…}
++16832ms [error] → [close code=1006]     # no data frames in 25s, then abnormal close
+```
+
+So on PSTN the listener sends **only `connected`, then zero transcript `data` frames** (and drops at ~17s). The transcript is NOT on the relayed LiveKit data channel — it rides the `lk.transcription` **text-stream** (the same one the web-call browser reads). Post-call poll also returns `{"transcript":[],"error":"Transcript not available yet …"}` until the call ends.
+
+**→ This is now confirmed platform-side.** To give the browser a live PSTN transcript, `VoiceCallListenerService` must forward the room's `lk.transcription` text-stream over the WS (option A), **or** expose a subscribe-only LiveKit token for `room_id` so the browser reads it directly (option B). The frontend hook already connects to the listener WS and will parse `data` frames the moment they carry text — no further client change needed for the transcript itself.
+
+**Also fixed in this branch:** the call status is **`IN_PROGRESS`** (not `CONNECTED`) once answered; the hook now maps it, so the page shows "Connected — talk to Ira" instead of being stuck on "please pick up".
 
 ---
 

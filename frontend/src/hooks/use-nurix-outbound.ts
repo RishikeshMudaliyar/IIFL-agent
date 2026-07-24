@@ -45,6 +45,7 @@ export type CallStatus =
   | "dialing"
   | "INITIATED"
   | "CONNECTED"
+  | "IN_PROGRESS"
   | "COMPLETED"
   | "FAILED"
   | "VOICEMAIL"
@@ -183,7 +184,7 @@ export function useNurixOutbound(
         if (r.ok) {
           const d = await r.json();
           const s = (d.status || "").toUpperCase();
-          if (!cancelled && ["INITIATED", "CONNECTED", "COMPLETED", "FAILED", "VOICEMAIL"].includes(s)) {
+          if (!cancelled && ["INITIATED", "CONNECTED", "IN_PROGRESS", "COMPLETED", "FAILED", "VOICEMAIL"].includes(s)) {
             setStatus(s as CallStatus);
           }
         }

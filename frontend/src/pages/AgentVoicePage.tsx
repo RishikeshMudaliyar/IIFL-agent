@@ -19,6 +19,7 @@ function statusLabel(status: CallStatus, phone: string): { text: string; tone: "
     case "INITIATED":
       return { text: `Calling ${pretty} — please pick up…`, tone: "info" };
     case "CONNECTED":
+    case "IN_PROGRESS":
       return { text: "Connected — talk to Ira on your phone", tone: "ok" };
     case "COMPLETED":
       return { text: "Call ended", tone: "info" };
