@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import IiflHeader from '../components/iifl/IiflHeader';
 import IiflHero from '../components/iifl/IiflHero';
-import IiflOfferings from '../components/iifl/IiflOfferings';
 import IiflFooter from '../components/iifl/IiflFooter';
 
 const Home = () => {
@@ -15,7 +14,6 @@ const Home = () => {
         <div className="min-h-screen bg-white font-roboto">
             <IiflHeader onOpenAgent={openAgent} />
             <IiflHero onOpenAgent={openAgent} />
-            <IiflOfferings />
             <IiflFooter />
         </div>
     );

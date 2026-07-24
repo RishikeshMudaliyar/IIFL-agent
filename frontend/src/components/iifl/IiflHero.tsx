@@ -78,13 +78,6 @@ const IiflHero = ({ onOpenAgent }: IiflHeroProps) => {
                         <span className="w-1.5 h-1.5 rounded-full bg-white/30" />
                         <span className="w-1.5 h-1.5 rounded-full bg-white/30" />
                     </div>
-
-                    {/* Model image, mobile-hidden to keep layout tight on desktop demo */}
-                    <img
-                        src={HERO_IMG}
-                        alt="IIFL Finance Gold Loan"
-                        className="hidden xl:block absolute -bottom-16 right-[-40px] w-[220px] xl:w-[260px] h-auto object-contain drop-shadow-2xl pointer-events-none select-none"
-                    />
                 </div>
 
                 {/* Right: lead capture card */}
@@ -176,7 +169,16 @@ const IiflHero = ({ onOpenAgent }: IiflHeroProps) => {
                 </div>
             </div>
 
-            <div className="relative bg-black/10 border-t border-white/10">
+            {/* Model image — anchored to the bottom edge of the hero so she stands
+                on the ground instead of floating. Sits centred between the copy
+                column and the form card; hidden on smaller screens for a clean layout. */}
+            <img
+                src={HERO_IMG}
+                alt="IIFL Finance Gold Loan"
+                className="hidden lg:block absolute bottom-0 left-1/2 -translate-x-[62%] w-[300px] xl:w-[360px] h-auto object-contain object-bottom drop-shadow-2xl pointer-events-none select-none z-10"
+            />
+
+            <div className="relative bg-black/10 border-t border-white/10 z-20">
                 <p className="max-w-[1440px] mx-auto px-4 sm:px-6 xl:px-10 py-1.5 text-white/40 text-[10px]">*T&amp;C apply</p>
             </div>
         </section>
