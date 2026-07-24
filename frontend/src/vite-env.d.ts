@@ -12,6 +12,9 @@ interface ImportMetaEnv {
     readonly VITE_NURIX_VOICE_CHANNEL_CONNECTION_ID?: string
     readonly VITE_NURIX_VOICE_API_KEY?: string
     readonly VITE_NURIX_VOICE_GATEWAY_API_KEY?: string
+    readonly VITE_NURIX_AGENTX_BASE?: string
+    readonly VITE_NURIX_WORKSPACE_ID?: string
+    readonly VITE_NURIX_VOICE_AGENT_ID?: string
 }
 
 interface ImportMeta {

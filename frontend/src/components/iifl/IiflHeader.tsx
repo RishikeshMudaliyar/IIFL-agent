@@ -1,14 +1,10 @@
-import { Sparkles } from 'lucide-react';
 import { CLIENT_LOGO } from '../../config/branding';
 
-interface IiflHeaderProps {
-    onOpenAgent?: () => void;
-}
-
-// Deliberately minimal header for the demo: just the client logo and a single
-// "Talk to AI Agent" CTA. The real IIFL site's utility strip + mega-menus are
-// intentionally stripped so the focus stays on the AI capability, not banking IA.
-const IiflHeader = ({ onOpenAgent }: IiflHeaderProps) => {
+// Deliberately minimal header for the demo: just the client logo and the Nurix
+// trust-mark. The single "Talk to AI Agent" CTA lives only on the hero lead form
+// now (one button, per the demo flow); the real IIFL site's utility strip +
+// mega-menus are intentionally stripped so the focus stays on the AI capability.
+const IiflHeader = () => {
     return (
         <header className="sticky top-0 z-50 w-full font-roboto shadow-sm">
             {/* Top orange accent bar */}
@@ -34,15 +30,6 @@ const IiflHeader = ({ onOpenAgent }: IiflHeaderProps) => {
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                             Powered by <span className="font-semibold text-gray-500">Nurix&nbsp;AI</span>
                         </span>
-                        {onOpenAgent && (
-                            <button
-                                onClick={onOpenAgent}
-                                className="inline-flex items-center gap-2 bg-iifl-orange hover:bg-iifl-orange-dark text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold shadow-sm transition-colors"
-                            >
-                                <Sparkles size={15} />
-                                Talk to AI Agent
-                            </button>
-                        )}
                     </div>
                 </div>
             </div>

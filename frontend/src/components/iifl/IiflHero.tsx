@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, MessageCircle, Phone, Sparkles } from 'lucide-react';
+import { Check, Phone, Sparkles } from 'lucide-react';
 
 const HERO_IMG =
     'https://nbfciiflprodstg.blob.core.windows.net/iifl-storage/files/images/themes/custom/iifl_finance/hero-banner/tb-eleven/tbm-carousel-06-min-1200.webp';
@@ -18,18 +18,23 @@ export interface HeroLead {
 }
 
 interface IiflHeroProps {
-    onOpenAgent?: () => void;         // Path B: chat agent (Talk to AI)
-    onApply?: (lead: HeroLead) => void; // Path A: form submit -> live call page
+    // Single path: submit the lead form -> outbound phone call from the AI agent.
+    onApply?: (lead: HeroLead) => void;
 }
 
-const IiflHero = ({ onOpenAgent, onApply }: IiflHeroProps) => {
+const IiflHero = ({ onApply }: IiflHeroProps) => {
     const [loanType, setLoanType] = useState<'gold' | 'business' | 'secured'>('gold');
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [pincode, setPincode] = useState('');
     const [agreed, setAgreed] = useState(false);
 
+    // The agent places a real outbound call to this number, so require a valid
+    // 10-digit Indian mobile + a name + T&C before we let the call fire.
+    const canSubmit = name.trim().length > 0 && phone.length === 10 && agreed;
+
     const handleApply = () => {
+        if (!canSubmit) return;
         onApply?.({ name: name.trim(), phone: phone.trim(), pincode: pincode.trim(), loanType });
     };
 
@@ -72,17 +77,6 @@ const IiflHero = ({ onOpenAgent, onApply }: IiflHeroProps) => {
                         </div>
                     </div>
 
-                    {/* Single AI CTA (Refer Now dropped) */}
-                    {onOpenAgent && (
-                        <button
-                            onClick={onOpenAgent}
-                            className="group inline-flex items-center gap-2.5 bg-iifl-orange hover:bg-iifl-orange-dark text-white font-bold px-7 py-4 rounded-full shadow-xl shadow-iifl-orange/30 transition-colors text-base"
-                        >
-                            <Sparkles size={18} />
-                            Talk to AI Agent
-                        </button>
-                    )}
-
                     {/* Carousel dots */}
                     <div className="flex items-center gap-2 mt-10">
                         <span className="w-6 h-1.5 rounded-full bg-iifl-orange" />
@@ -93,7 +87,7 @@ const IiflHero = ({ onOpenAgent, onApply }: IiflHeroProps) => {
 
                 {/* Right: lead capture card -> Apply Now goes to the live-call page */}
                 <div className="relative bg-white rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-[420px] mx-auto lg:mx-0 lg:ml-auto z-10 mb-10 lg:mb-14">
-                    {/* Floating action icons on right edge */}
+                    {/* Floating call-us icon on right edge */}
                     <div className="hidden sm:flex flex-col gap-3 absolute -right-5 top-8 z-20">
                         <a
                             href="tel:18602673000"
@@ -102,30 +96,14 @@ const IiflHero = ({ onOpenAgent, onApply }: IiflHeroProps) => {
                         >
                             <Phone size={16} />
                         </a>
-                        {onOpenAgent && (
-                            <button
-                                onClick={onOpenAgent}
-                                className="w-10 h-10 rounded-full bg-iifl-navy text-white flex items-center justify-center shadow-lg hover:bg-iifl-navy-light transition-colors"
-                                aria-label="Chat with agent"
-                            >
-                                <MessageCircle size={16} />
-                            </button>
-                        )}
                     </div>
 
                     <h2 className="text-gray-800 font-bold text-base sm:text-lg mb-1">
                         Choose the type of loan you are looking for?
                     </h2>
-                    {onOpenAgent && (
-                        <button
-                            onClick={onOpenAgent}
-                            className="group inline-flex items-center gap-1.5 text-[12px] font-semibold text-iifl-orange hover:text-iifl-orange-dark mb-4 transition-colors"
-                        >
-                            <Sparkles size={12} />
-                            Or let our AI fill this for you
-                            <span className="transition-transform group-hover:translate-x-0.5">→</span>
-                        </button>
-                    )}
+                    <p className="text-[12px] text-gray-500 mb-4">
+                        Enter your details and our AI agent will call you to complete the application.
+                    </p>
 
                     <div className="grid grid-cols-3 gap-2 mb-4">
                         {LOAN_TYPES.map((t) => (
@@ -190,28 +168,15 @@ const IiflHero = ({ onOpenAgent, onApply }: IiflHeroProps) => {
                     <button
                         type="button"
                         onClick={handleApply}
-                        className="w-full bg-iifl-orange hover:bg-iifl-orange-dark text-white font-bold py-3.5 rounded-full shadow-md transition-colors text-sm"
+                        disabled={!canSubmit}
+                        className="w-full inline-flex items-center justify-center gap-2 bg-iifl-orange hover:bg-iifl-orange-dark disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-full shadow-md transition-colors text-sm"
                     >
-                        Apply Now
+                        <Sparkles size={16} />
+                        Talk to AI Agent
                     </button>
-
-                    {onOpenAgent && (
-                        <>
-                            <div className="flex items-center gap-3 my-3">
-                                <span className="flex-1 h-px bg-gray-200" />
-                                <span className="text-[11px] text-gray-400 font-medium">or</span>
-                                <span className="flex-1 h-px bg-gray-200" />
-                            </div>
-                            <button
-                                type="button"
-                                onClick={onOpenAgent}
-                                className="w-full inline-flex items-center justify-center gap-2 border-2 border-iifl-orange text-iifl-orange-dark hover:bg-iifl-cream font-bold py-3 rounded-full transition-colors text-sm"
-                            >
-                                <Sparkles size={15} />
-                                Talk to AI Agent
-                            </button>
-                        </>
-                    )}
+                    <p className="mt-2 text-[11px] text-gray-400 text-center">
+                        Our AI agent will call {phone.length === 10 ? `+91 ${phone}` : 'your mobile number'} in a few seconds.
+                    </p>
                 </div>
             </div>
 

@@ -5,9 +5,6 @@ import { LiveClientOptions } from "./types";
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import ABCDLoanJourney from './pages/ABCDLoanJourney';
-import Chat from './pages/Chat';
-import AgentPage from './pages/AgentPage';
-import AgentChatPage from './pages/AgentChatPage';
 import AgentVoicePage from './pages/AgentVoicePage';
 import LoanApplicationList from './pages/LoanApplicationList';
 import LoanDetailsPage from './pages/LoanDetailsPage';
@@ -27,10 +24,11 @@ function App() {
             <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/home" element={<Home />} />
             <Route path="/loan-application" element={<ABCDLoanJourney />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/agent/chat" element={<AgentChatPage />} />
             <Route path="/agent/voice" element={<AgentVoicePage />} />
-            <Route path="/agent/:mode" element={<AgentPage />} />
+            {/* Chat front-door + chat/voice picker retired — flow is voice-only now.
+                Redirect any stale links back to the landing page. */}
+            <Route path="/chat" element={<Navigate to="/home" replace />} />
+            <Route path="/agent/chat" element={<Navigate to="/home" replace />} />
             <Route path="/applications" element={<LoanApplicationList />} />
             <Route path="/application/:applicationId" element={<LoanDetailsPage />} />
           </Routes>

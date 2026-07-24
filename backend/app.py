@@ -49,7 +49,7 @@ from playwright_service import playwright_service, test_playwright_service
 from database import init_db, close_db
 from loan_routes import loan_router
 from agent_routes import agent_router
-from proxy_routes import proxy_router
+from proxy_routes import proxy_router, agentx_router
 
 # Configure logging using config module
 logging.basicConfig(
@@ -301,6 +301,7 @@ app.add_middleware(
 app.include_router(loan_router)
 app.include_router(agent_router)
 app.include_router(proxy_router)
+app.include_router(agentx_router)
 
 @app.get("/api/config")
 async def get_config() -> Dict[str, Any]:
