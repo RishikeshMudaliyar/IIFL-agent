@@ -21,22 +21,29 @@ const IiflHeader = ({ onOpenAgent }: IiflHeaderProps) => {
                 </div>
             </div>
 
-            {/* Main bar: logo + single AI CTA */}
+            {/* Main bar: logo + Nurix trust-mark + single AI CTA */}
             <div className="bg-white px-4 sm:px-6 xl:px-10">
                 <div className="flex items-center justify-between h-[64px] max-w-[1440px] mx-auto">
                     <a href="#top" className="flex items-center shrink-0">
                         <img src={CLIENT_LOGO} alt="IIFL Finance" className="h-9 sm:h-10 w-auto object-contain" />
                     </a>
 
-                    {onOpenAgent && (
-                        <button
-                            onClick={onOpenAgent}
-                            className="inline-flex items-center gap-2 bg-iifl-orange hover:bg-iifl-orange-dark text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold shadow-sm transition-colors"
-                        >
-                            <Sparkles size={15} />
-                            Talk to AI Agent
-                        </button>
-                    )}
+                    <div className="flex items-center gap-3 sm:gap-4">
+                        {/* Discreet vendor trust-mark for the CTO in the room */}
+                        <span className="hidden md:inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-400">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            Powered by <span className="font-semibold text-gray-500">Nurix&nbsp;AI</span>
+                        </span>
+                        {onOpenAgent && (
+                            <button
+                                onClick={onOpenAgent}
+                                className="inline-flex items-center gap-2 bg-iifl-orange hover:bg-iifl-orange-dark text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold shadow-sm transition-colors"
+                            >
+                                <Sparkles size={15} />
+                                Talk to AI Agent
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
         </header>

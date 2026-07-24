@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type VoiceConnectionDetails = {
   serverUrl: string;
@@ -33,12 +33,27 @@ const DEFAULT_CONFIG: NurixVoiceConfig = {
 
 type Status = "idle" | "starting" | "ready" | "error";
 
-export function useNurixVoice(config: Partial<NurixVoiceConfig> = {}) {
+export interface UseNurixVoiceOptions {
+  /** Passed to the voice agent as custom_dynamic_variables so it greets the
+   *  caller already knowing them (name / phone / pincode / loan_type). */
+  dynamicVars?: Record<string, string>;
+}
+
+export function useNurixVoice(
+  config: Partial<NurixVoiceConfig> = {},
+  options: UseNurixVoiceOptions = {},
+) {
   const { apiBase, channelConnectionId, apiKey, gatewayApiKey } = { ...DEFAULT_CONFIG, ...config };
+  const { dynamicVars } = options;
   const [details, setDetails] = useState<VoiceConnectionDetails | null>(null);
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [userId] = useState(() => crypto.randomUUID());
+
+  // Keep the latest vars in a ref so start() has a stable identity (won't
+  // re-fire the auto-start effect every time the lead object changes).
+  const dynamicVarsRef = useRef<Record<string, string>>(dynamicVars ?? {});
+  dynamicVarsRef.current = dynamicVars ?? {};
 
   const start = useCallback(async () => {
     setStatus("starting");
@@ -56,7 +71,7 @@ export function useNurixVoice(config: Partial<NurixVoiceConfig> = {}) {
         },
         body: JSON.stringify({
           overide_previous_context: true,
-          custom_dynamic_variables_config: {},
+          custom_dynamic_variables_config: dynamicVarsRef.current,
         }),
       });
       if (!resp.ok) {

@@ -1,5 +1,6 @@
 import { LiveAPIProvider } from "./contexts/LiveAPIContext";
 import { ModeProvider } from "./contexts/ModeContext";
+import { LeadProvider } from "./contexts/LeadContext";
 import { LiveClientOptions } from "./types";
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
@@ -20,6 +21,7 @@ function App() {
   return (
     <div className="App">
       <ModeProvider>
+        <LeadProvider>
         <LiveAPIProvider options={apiOptions}>
           <Routes>
             <Route path="/" element={<Navigate to="/home" replace />} />
@@ -33,6 +35,7 @@ function App() {
             <Route path="/application/:applicationId" element={<LoanDetailsPage />} />
           </Routes>
         </LiveAPIProvider>
+        </LeadProvider>
       </ModeProvider>
     </div>
   );

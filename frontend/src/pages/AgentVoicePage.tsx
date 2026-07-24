@@ -9,10 +9,11 @@ import {
 import { Mic, MicOff, PhoneOff, Send, ChevronLeft, Loader2 } from "lucide-react";
 import { CLIENT_NAME } from "../config/branding";
 import { useNurixVoice } from "../hooks/use-nurix-voice";
+import { useLead, leadToDynamicVars } from "../contexts/LeadContext";
 import LiveFormPanel from "../components/LiveFormPanel";
 
-const BRAND_COLOR = "#0071A9";
-const BRAND_TEXT_COLOR = "#1f2937";
+const BRAND_COLOR = "#F56E28";      // IIFL orange
+const BRAND_TEXT_COLOR = "#ffffff";
 const DISCLAIMER = "This is an AI powered call";
 
 type Bubble = {
@@ -26,12 +27,17 @@ const newId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
 const AgentVoicePage = () => {
   const navigate = useNavigate();
-  const { details, status, errorMessage, restart } = useNurixVoice();
+  const { lead } = useLead();
+  // Pass the four collected fields so the agent's greeting already knows them.
+  const { details, status, errorMessage, restart } = useNurixVoice(
+    {},
+    { dynamicVars: leadToDynamicVars(lead) },
+  );
 
   return (
     <div className="h-[100dvh] flex flex-col font-sans bg-gray-50">
       <header className="px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between border-b border-gray-100 bg-white">
-        <button onClick={() => navigate("/chat")} className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
+        <button onClick={() => navigate("/home")} className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
           <ChevronLeft size={20} />
           <span className="font-semibold text-sm">Back</span>
         </button>
@@ -82,7 +88,7 @@ const AgentVoicePage = () => {
           connect={true}
           audio={true}
           video={false}
-          onDisconnected={() => navigate("/chat")}
+          onDisconnected={() => navigate("/home")}
           className="flex-1 flex flex-col"
         >
           <RoomAudioRenderer />

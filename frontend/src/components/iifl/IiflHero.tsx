@@ -8,40 +8,58 @@ const LOAN_TYPES = [
     { id: 'gold', label: 'Gold Loans' },
     { id: 'business', label: 'Business Loans' },
     { id: 'secured', label: 'Secured Business Loans' },
-];
+] as const;
 
-interface IiflHeroProps {
-    onOpenAgent?: () => void;
+export interface HeroLead {
+    name: string;
+    phone: string;
+    pincode: string;
+    loanType: 'gold' | 'business' | 'secured';
 }
 
-const IiflHero = ({ onOpenAgent }: IiflHeroProps) => {
-    const [loanType, setLoanType] = useState('gold');
+interface IiflHeroProps {
+    onOpenAgent?: () => void;         // Path B: chat agent (Talk to AI)
+    onApply?: (lead: HeroLead) => void; // Path A: form submit -> live call page
+}
+
+const IiflHero = ({ onOpenAgent, onApply }: IiflHeroProps) => {
+    const [loanType, setLoanType] = useState<'gold' | 'business' | 'secured'>('gold');
+    const [name, setName] = useState('');
+    const [phone, setPhone] = useState('');
+    const [pincode, setPincode] = useState('');
     const [agreed, setAgreed] = useState(false);
+
+    const handleApply = () => {
+        onApply?.({ name: name.trim(), phone: phone.trim(), pincode: pincode.trim(), loanType });
+    };
 
     return (
         <section id="top" className="relative bg-iifl-navy overflow-hidden font-roboto">
             {/* Decorative glows */}
-            <div className="absolute -top-24 -left-24 w-[420px] h-[420px] bg-iifl-orange/20 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 right-0 w-[360px] h-[360px] bg-iifl-blue/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -top-24 -left-24 w-[440px] h-[440px] bg-iifl-orange/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 right-1/3 w-[360px] h-[360px] bg-iifl-blue/20 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 xl:px-10 py-10 sm:py-14 lg:py-16 grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-10 lg:gap-8 items-center">
-                {/* Left: copy + model image */}
-                <div className="relative">
-                    <p className="text-white/70 font-roboto-condensed uppercase tracking-wide text-sm sm:text-base mb-1">
+            <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 xl:px-10 pt-10 sm:pt-14 grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-8 items-center min-h-[560px]">
+                {/* Left: real IIFL hero copy + model image */}
+                <div className="relative pb-10 lg:pb-16 self-center">
+                    <p className="text-white/70 font-roboto-condensed uppercase tracking-[0.12em] text-base sm:text-lg mb-1">
                         Har Business, Ke Liye
                     </p>
-                    <h1 className="text-white font-black uppercase text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-none mb-1">
+                    <h1
+                        className="font-black uppercase text-5xl sm:text-6xl lg:text-7xl tracking-tight leading-[0.9] mb-1 bg-clip-text text-transparent"
+                        style={{ backgroundImage: 'linear-gradient(180deg, #FBE7A8 0%, #E7B84B 45%, #C68A24 100%)' }}
+                    >
                         Gold Loan
                     </h1>
-                    <p className="text-white/70 font-roboto-condensed uppercase tracking-wide text-sm sm:text-base mb-6">
+                    <p className="text-white font-black uppercase tracking-tight text-3xl sm:text-4xl lg:text-5xl mb-6 leading-none">
                         Hai Taiyaar!
                     </p>
 
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-3 mb-1">
                         <span className="text-iifl-orange-light font-extrabold text-2xl sm:text-3xl">80 Lakh+</span>
                         <span className="text-white/90 text-base sm:text-lg">Trusted, Happy Customers#</span>
                     </div>
-                    <p className="text-white/40 text-[11px] mb-7">#Customer base as on 31st December, 2025</p>
+                    <p className="text-white/40 text-[11px] mb-6">#Customer base as on 31st December, 2025</p>
 
                     <div className="flex flex-wrap items-center gap-6 mb-8">
                         <div className="flex items-center gap-2 text-white/90 text-sm">
@@ -54,23 +72,16 @@ const IiflHero = ({ onOpenAgent }: IiflHeroProps) => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                        <a
-                            href="#refer"
-                            className="inline-flex items-center gap-2 bg-iifl-orange hover:bg-iifl-orange-dark text-white font-bold px-7 py-3.5 rounded-full shadow-lg shadow-black/20 transition-colors text-sm sm:text-base"
+                    {/* Single AI CTA (Refer Now dropped) */}
+                    {onOpenAgent && (
+                        <button
+                            onClick={onOpenAgent}
+                            className="group inline-flex items-center gap-2.5 bg-iifl-orange hover:bg-iifl-orange-dark text-white font-bold px-7 py-4 rounded-full shadow-xl shadow-iifl-orange/30 transition-colors text-base"
                         >
-                            Refer Now
-                        </a>
-                        {onOpenAgent && (
-                            <button
-                                onClick={onOpenAgent}
-                                className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold px-6 py-3.5 rounded-full transition-colors text-sm sm:text-base backdrop-blur-sm"
-                            >
-                                <Sparkles size={16} />
-                                Talk to AI Agent
-                            </button>
-                        )}
-                    </div>
+                            <Sparkles size={18} />
+                            Talk to AI Agent
+                        </button>
+                    )}
 
                     {/* Carousel dots */}
                     <div className="flex items-center gap-2 mt-10">
@@ -80,10 +91,10 @@ const IiflHero = ({ onOpenAgent }: IiflHeroProps) => {
                     </div>
                 </div>
 
-                {/* Right: lead capture card */}
-                <div className="relative bg-white rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-[420px] mx-auto lg:mx-0 lg:ml-auto">
+                {/* Right: lead capture card -> Apply Now goes to the live-call page */}
+                <div className="relative bg-white rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-[420px] mx-auto lg:mx-0 lg:ml-auto z-10 mb-10 lg:mb-14">
                     {/* Floating action icons on right edge */}
-                    <div className="hidden sm:flex flex-col gap-3 absolute -right-5 top-8">
+                    <div className="hidden sm:flex flex-col gap-3 absolute -right-5 top-8 z-20">
                         <a
                             href="tel:18602673000"
                             className="w-10 h-10 rounded-full bg-iifl-orange text-white flex items-center justify-center shadow-lg hover:bg-iifl-orange-dark transition-colors"
@@ -102,9 +113,19 @@ const IiflHero = ({ onOpenAgent }: IiflHeroProps) => {
                         )}
                     </div>
 
-                    <h2 className="text-gray-800 font-bold text-base sm:text-lg mb-4">
+                    <h2 className="text-gray-800 font-bold text-base sm:text-lg mb-1">
                         Choose the type of loan you are looking for?
                     </h2>
+                    {onOpenAgent && (
+                        <button
+                            onClick={onOpenAgent}
+                            className="group inline-flex items-center gap-1.5 text-[12px] font-semibold text-iifl-orange hover:text-iifl-orange-dark mb-4 transition-colors"
+                        >
+                            <Sparkles size={12} />
+                            Or let our AI fill this for you
+                            <span className="transition-transform group-hover:translate-x-0.5">→</span>
+                        </button>
+                    )}
 
                     <div className="grid grid-cols-3 gap-2 mb-4">
                         {LOAN_TYPES.map((t) => (
@@ -131,18 +152,24 @@ const IiflHero = ({ onOpenAgent }: IiflHeroProps) => {
                         <input
                             type="text"
                             placeholder="Full Name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
                             className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-iifl-orange focus:ring-2 focus:ring-iifl-orange/10 transition-all"
                         />
                         <input
                             type="tel"
                             placeholder="Mobile Number"
                             maxLength={10}
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                             className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-iifl-orange focus:ring-2 focus:ring-iifl-orange/10 transition-all"
                         />
                         <input
                             type="tel"
                             placeholder="Enter Pincode"
                             maxLength={6}
+                            value={pincode}
+                            onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
                             className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-iifl-orange focus:ring-2 focus:ring-iifl-orange/10 transition-all"
                         />
                     </div>
@@ -162,24 +189,44 @@ const IiflHero = ({ onOpenAgent }: IiflHeroProps) => {
 
                     <button
                         type="button"
+                        onClick={handleApply}
                         className="w-full bg-iifl-orange hover:bg-iifl-orange-dark text-white font-bold py-3.5 rounded-full shadow-md transition-colors text-sm"
                     >
                         Apply Now
                     </button>
+
+                    {onOpenAgent && (
+                        <>
+                            <div className="flex items-center gap-3 my-3">
+                                <span className="flex-1 h-px bg-gray-200" />
+                                <span className="text-[11px] text-gray-400 font-medium">or</span>
+                                <span className="flex-1 h-px bg-gray-200" />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={onOpenAgent}
+                                className="w-full inline-flex items-center justify-center gap-2 border-2 border-iifl-orange text-iifl-orange-dark hover:bg-iifl-cream font-bold py-3 rounded-full transition-colors text-sm"
+                            >
+                                <Sparkles size={15} />
+                                Talk to AI Agent
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
 
-            {/* Model image — anchored to the bottom edge of the hero so she stands
-                on the ground instead of floating. Sits centred between the copy
-                column and the form card; hidden on smaller screens for a clean layout. */}
+            {/* Model image — section-level so her straight bottom edge sits exactly
+                on top of the orange T&C bar (she "stands" on it). Centred in the gap
+                between the copy column and the form card. */}
             <img
                 src={HERO_IMG}
-                alt="IIFL Finance Gold Loan"
-                className="hidden lg:block absolute bottom-0 left-1/2 -translate-x-[62%] w-[300px] xl:w-[360px] h-auto object-contain object-bottom drop-shadow-2xl pointer-events-none select-none z-10"
+                alt="IIFL Finance"
+                className="hidden lg:block absolute bottom-7 left-1/2 -translate-x-1/2 w-[300px] xl:w-[360px] h-auto object-contain object-bottom drop-shadow-2xl pointer-events-none select-none z-0"
             />
 
-            <div className="relative bg-black/10 border-t border-white/10 z-20">
-                <p className="max-w-[1440px] mx-auto px-4 sm:px-6 xl:px-10 py-1.5 text-white/40 text-[10px]">*T&amp;C apply</p>
+            {/* Orange bottom bar — matches the main IIFL site's orange strip */}
+            <div className="relative bg-iifl-orange z-20">
+                <p className="max-w-[1440px] mx-auto px-4 sm:px-6 xl:px-10 py-1.5 text-white/90 text-[10px]">*T&amp;C apply</p>
             </div>
         </section>
     );

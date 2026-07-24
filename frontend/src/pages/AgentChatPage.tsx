@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, MessageSquare, Send } from "lucide-react";
+import { ChevronLeft, MessageSquare, Phone, Send } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { CLIENT_NAME } from "../config/branding";
 import { useNurixChat } from "../hooks/use-nurix-chat";
 import LiveFormPanel from "../components/LiveFormPanel";
 
-const DISCLAIMER = "Please note that the policy wording remains the final authoritative reference";
-const BRAND_COLOR = "#0071A9";
-const BRAND_TEXT_COLOR = "#1f2937";
+const DISCLAIMER = "This is an AI-powered assistant. Verify key details with an IIFL representative.";
+const BRAND_COLOR = "#F56E28";      // IIFL orange
+const BRAND_TEXT_COLOR = "#ffffff";
 
 const AgentChatPage = () => {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ const AgentChatPage = () => {
     <div className="h-[100dvh] flex flex-col font-sans bg-gray-50">
       <header className="px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between border-b border-gray-100 bg-white">
         <button
-          onClick={() => navigate("/chat")}
+          onClick={() => navigate("/home")}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
         >
           <ChevronLeft size={20} />
@@ -53,7 +53,14 @@ const AgentChatPage = () => {
             title={isConnected ? "Connected" : "Connecting…"}
           />
         </div>
-        <span className="text-xs text-gray-400 hidden sm:inline">{CLIENT_NAME}</span>
+        {/* Call Now handoff — collected context carries into the voice call. */}
+        <button
+          onClick={() => navigate("/agent/voice")}
+          className="inline-flex items-center gap-1.5 bg-iifl-orange hover:bg-iifl-orange-dark text-white px-3.5 py-2 rounded-full text-xs sm:text-sm font-bold shadow-sm transition-colors"
+        >
+          <Phone size={14} />
+          Call Now
+        </button>
       </header>
 
       <div className="flex-1 min-h-0 flex">
