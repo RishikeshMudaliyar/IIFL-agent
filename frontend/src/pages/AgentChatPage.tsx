@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, MessageSquare, Phone, Send } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { CLIENT_NAME } from "../config/branding";
 import { useNurixChat } from "../hooks/use-nurix-chat";
+import { useLead } from "../contexts/LeadContext";
+import { parseLeadMarker } from "../lib/leadMarker";
 import LiveFormPanel from "../components/LiveFormPanel";
 
 const DISCLAIMER = "This is an AI-powered assistant. Verify key details with an IIFL representative.";
@@ -13,14 +15,45 @@ const BRAND_TEXT_COLOR = "#ffffff";
 const AgentChatPage = () => {
   const navigate = useNavigate();
   const { messages, sendMessage, isConnected, isLoading } = useNurixChat();
+  const { setLead } = useLead();
   const [draft, setDraft] = useState("");
   const [dots, setDots] = useState("");
+  const [leadReady, setLeadReady] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
+
+  // Scan assistant messages for the LEAD_COMPLETE marker. When found, populate
+  // the shared lead context and flip the inline "Call Now" button on. We also
+  // strip the marker from what the user sees (see displayMessages below).
+  useEffect(() => {
+    for (const m of messages) {
+      if (m.role !== "assistant") continue;
+      const parsed = parseLeadMarker(m.text);
+      if (parsed) {
+        setLead(parsed.lead);
+        setLeadReady(true);
+        break;
+      }
+    }
+  }, [messages, setLead]);
+
+  // Displayed messages have the marker stripped so it never shows in the chat.
+  const displayMessages = useMemo(
+    () =>
+      messages
+        .map((m) => {
+          if (m.role !== "assistant") return m;
+          const parsed = parseLeadMarker(m.text);
+          return parsed ? { ...m, text: parsed.cleanedText } : m;
+        })
+        // Drop any message that became empty after stripping the marker.
+        .filter((m) => m.text.trim().length > 0),
+    [messages],
+  );
 
   // Auto-scroll on new message or while typing indicator is visible
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, isLoading]);
+  }, [displayMessages, isLoading, leadReady]);
 
   // Animate the "Typing" trailing dots: "" → "." → ".." → "..." → repeat
   useEffect(() => {
@@ -34,6 +67,8 @@ const AgentChatPage = () => {
     sendMessage(draft);
     setDraft("");
   };
+
+  const startCall = () => navigate("/agent/voice");
 
   return (
     <div className="h-[100dvh] flex flex-col font-sans bg-gray-50">
@@ -53,14 +88,7 @@ const AgentChatPage = () => {
             title={isConnected ? "Connected" : "Connecting…"}
           />
         </div>
-        {/* Call Now handoff — collected context carries into the voice call. */}
-        <button
-          onClick={() => navigate("/agent/voice")}
-          className="inline-flex items-center gap-1.5 bg-iifl-orange hover:bg-iifl-orange-dark text-white px-3.5 py-2 rounded-full text-xs sm:text-sm font-bold shadow-sm transition-colors"
-        >
-          <Phone size={14} />
-          Call Now
-        </button>
+        <span className="text-xs text-gray-400 hidden sm:inline">{CLIENT_NAME}</span>
       </header>
 
       <div className="flex-1 min-h-0 flex">
@@ -71,7 +99,7 @@ const AgentChatPage = () => {
             <div className="self-start text-gray-400 text-sm italic px-3 py-2">Connecting…</div>
           )}
 
-          {messages.map((m) => (
+          {displayMessages.map((m) => (
             <Bubble key={m.id} role={m.role} text={m.text} />
           ))}
 
@@ -79,6 +107,24 @@ const AgentChatPage = () => {
             <div className="self-start flex items-center gap-2 text-gray-500 text-sm italic px-3 py-2">
               <span className="inline-block w-2 h-2 rounded-full bg-gray-400 animate-pulse" />
               Typing{dots}
+            </div>
+          )}
+
+          {/* Inline Call Now — appears once the agent has collected all 4 fields
+              (LEAD_COMPLETE marker). Click starts the voice call with the context. */}
+          {leadReady && (
+            <div className="self-stretch mt-1 rounded-2xl border border-iifl-orange/30 bg-iifl-cream p-4 flex flex-col sm:flex-row sm:items-center gap-3 animate-fade-up">
+              <div className="flex-1">
+                <p className="text-sm font-bold text-gray-800">All set — ready to connect you</p>
+                <p className="text-xs text-gray-500">Our IIFL loan specialist will take it from here on a quick call.</p>
+              </div>
+              <button
+                onClick={startCall}
+                className="inline-flex items-center justify-center gap-2 bg-iifl-orange hover:bg-iifl-orange-dark text-white font-bold px-5 py-3 rounded-full shadow-md transition-colors text-sm shrink-0"
+              >
+                <Phone size={16} />
+                Call Now
+              </button>
             </div>
           )}
         </div>
