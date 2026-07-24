@@ -5,11 +5,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 // room for the browser to join — the audio is on the person's phone. The page
 // instead shows a near-live transcript (polled) + the live form-fill (noVNC).
 //
-// These endpoints live on agentx-prod (the platform host), proxied via the
-// backend /agentx-proxy route — NOT the api-in widget gateway.
+// These endpoints live ONLY on agentx-prod (the platform host) — NOT the
+// api-in widget gateway. The browser calls agentx-prod DIRECTLY: it CORS-allows
+// the frontend origin (preflight + GET both return ACAO), and Railway's backend
+// egress can't reach agentx-prod, so a server-side proxy would just time out.
 
 export type OutboundConfig = {
-  /** Backend agentx-proxy base, e.g. https://…/agentx-proxy */
+  /** agentx platform base, e.g. https://agentx-prod.nurixlabs.tech */
   apiBase: string;
   workspaceId: string;
   agentId: string;
@@ -18,7 +20,7 @@ export type OutboundConfig = {
 const DEFAULT_CONFIG: OutboundConfig = {
   apiBase:
     import.meta.env.VITE_NURIX_AGENTX_BASE ??
-    "https://iifl-backend-production.up.railway.app/agentx-proxy",
+    "https://agentx-prod.nurixlabs.tech",
   workspaceId: import.meta.env.VITE_NURIX_WORKSPACE_ID ?? "REPLACE_WITH_IIFL_WORKSPACE_ID",
   agentId: import.meta.env.VITE_NURIX_VOICE_AGENT_ID ?? "REPLACE_WITH_IIFL_VOICE_AGENT_ID",
 };

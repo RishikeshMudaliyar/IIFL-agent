@@ -24,7 +24,7 @@ ARG VITE_NURIX_VOICE_GATEWAY_API_KEY
 ENV VITE_NURIX_VOICE_GATEWAY_API_KEY=$VITE_NURIX_VOICE_GATEWAY_API_KEY
 # Outbound PHONE call flow — agent dials the number in the form. Trigger +
 # transcript live on agentx-prod (proxied via backend /agentx-proxy).
-ARG VITE_NURIX_AGENTX_BASE=https://iifl-backend-production.up.railway.app/agentx-proxy
+ARG VITE_NURIX_AGENTX_BASE=https://agentx-prod.nurixlabs.tech
 ENV VITE_NURIX_AGENTX_BASE=$VITE_NURIX_AGENTX_BASE
 ARG VITE_NURIX_WORKSPACE_ID
 ENV VITE_NURIX_WORKSPACE_ID=$VITE_NURIX_WORKSPACE_ID

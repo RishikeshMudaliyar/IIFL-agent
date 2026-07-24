@@ -31,7 +31,7 @@ cd "$REPO_ROOT/frontend"
 railway variables --service "$FRONTEND_SVC" \
   --set VITE_NURIX_WORKSPACE_ID=ed51dad4-783e-4adf-8ec0-1b14b8938a5d \
   --set VITE_NURIX_VOICE_AGENT_ID=56dfd3b8-5426-44c3-b1ea-3db962638948 \
-  --set VITE_NURIX_AGENTX_BASE=https://iifl-backend-production.up.railway.app/agentx-proxy
+  --set VITE_NURIX_AGENTX_BASE=https://agentx-prod.nurixlabs.tech
 
 echo "==> Deploying frontend…"
 railway up --service "$FRONTEND_SVC"
