@@ -49,6 +49,7 @@ export type CallStatus =
   | "COMPLETED"
   | "FAILED"
   | "VOICEMAIL"
+  | "RNR"
   | "error";
 
 export type TranscriptTurn = {
@@ -71,7 +72,7 @@ export function toE164India(raw: string): string {
   return digits ? `+${digits}` : "";
 }
 
-const TERMINAL: CallStatus[] = ["COMPLETED", "FAILED", "VOICEMAIL", "error"];
+const TERMINAL: CallStatus[] = ["COMPLETED", "FAILED", "VOICEMAIL", "RNR", "error"];
 
 export function useNurixOutbound(
   config: Partial<OutboundConfig> = {},
@@ -184,7 +185,7 @@ export function useNurixOutbound(
         if (r.ok) {
           const d = await r.json();
           const s = (d.status || "").toUpperCase();
-          if (!cancelled && ["INITIATED", "CONNECTED", "IN_PROGRESS", "COMPLETED", "FAILED", "VOICEMAIL"].includes(s)) {
+          if (!cancelled && ["INITIATED", "CONNECTED", "IN_PROGRESS", "COMPLETED", "FAILED", "VOICEMAIL", "RNR"].includes(s)) {
             setStatus(s as CallStatus);
           }
         }

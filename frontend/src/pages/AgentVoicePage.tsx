@@ -16,15 +16,19 @@ function statusLabel(status: CallStatus, phone: string): { text: string; tone: "
   switch (status) {
     case "dialing":
       return { text: "Placing the call…", tone: "info" };
+    // /voice/call status is eventually-consistent — it lags the live call by a phase,
+    // so we don't split "ringing" vs "connected" off it. One stable line for the whole
+    // active call, until a terminal status arrives.
     case "INITIATED":
-      return { text: `Calling ${pretty} — please pick up…`, tone: "info" };
     case "CONNECTED":
     case "IN_PROGRESS":
-      return { text: "Connected — talk to Ira on your phone", tone: "ok" };
+      return { text: `Calling ${pretty} — pick up and talk to Ira`, tone: "ok" };
     case "COMPLETED":
       return { text: "Call ended", tone: "info" };
     case "VOICEMAIL":
       return { text: "Reached voicemail — no answer", tone: "bad" };
+    case "RNR":
+      return { text: "No answer — please try again", tone: "bad" };
     case "FAILED":
       return { text: "Call failed — please try again", tone: "bad" };
     case "error":
@@ -72,7 +76,7 @@ const AgentVoicePage = () => {
                 label.tone === "ok" ? "bg-green-50" : label.tone === "bad" ? "bg-red-50" : "bg-amber-50"
               }`}
             >
-              {status === "CONNECTED" ? (
+              {label.tone === "ok" ? (
                 <PhoneCall size={18} className="text-green-600" />
               ) : label.tone === "bad" ? (
                 <PhoneOff size={18} className="text-red-600" />
@@ -97,7 +101,7 @@ const AgentVoicePage = () => {
             )}
           </div>
 
-          <TranscriptView turns={turns} connecting={status === "dialing" || status === "INITIATED"} />
+          <TranscriptView turns={turns} connecting={status === "dialing"} />
 
           <footer className="border-t border-gray-100 bg-white px-4 py-3 sm:px-6">
             <p className="text-[12px] text-gray-500 text-center">
