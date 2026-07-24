@@ -202,7 +202,7 @@ export function useNurixOutbound(
             setPollTurns(
               arr
                 .map((t, i) => ({ id: `p${i}`, role: normalizeRole(t), text: String(t?.text ?? t?.content ?? t?.message ?? "").trim() }))
-                .filter((t) => t.text),
+                .filter((t) => t.text && !looksEncrypted(t.text)),
             );
           }
         }
@@ -267,6 +267,13 @@ function roleFrom(raw: any): "user" | "assistant" {
 
 function normalizeRole(t: any): "user" | "assistant" {
   return roleFrom(t?.role ?? t?.speaker ?? t?.sender ?? t?.source);
+}
+
+/** When the workspace has transcript encryption on, the post-call endpoint returns
+ *  base64 CIPHERTEXT (not decryptable in the browser). Detect that so we don't render
+ *  blobs as transcript text — real utterances contain spaces/punctuation. */
+function looksEncrypted(s: string): boolean {
+  return s.length > 24 && !/\s/.test(s) && /^[A-Za-z0-9+/]+={0,2}$/.test(s);
 }
 
 function tryJson(s: string): any {

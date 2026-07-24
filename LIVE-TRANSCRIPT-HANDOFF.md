@@ -29,7 +29,13 @@ So on PSTN the listener sends **only `connected`, then zero transcript `data` fr
 
 **→ This is now confirmed platform-side.** To give the browser a live PSTN transcript, `VoiceCallListenerService` must forward the room's `lk.transcription` text-stream over the WS (option A), **or** expose a subscribe-only LiveKit token for `room_id` so the browser reads it directly (option B). The frontend hook already connects to the listener WS and will parse `data` frames the moment they carry text — no further client change needed for the transcript itself.
 
-**Also fixed in this branch:** the call status is **`IN_PROGRESS`** (not `CONNECTED`) once answered; the hook now maps it, so the page shows "Connected — talk to Ira" instead of being stuck on "please pick up".
+**Post-call transcript is ALSO encrypted.** After hangup, `GET /voice/web/transcript/{id}` returns items, but `content` is base64 **ciphertext** (the call's `is_encrypted` flag) — it base64-decodes to non-UTF8 binary, and there's no client key or `?decrypt` param, so it can't be shown in the browser. So even the fallback can't render readable text; naively rendering it showed base64 blobs on the page. **To display the transcript at all: disable transcript encryption for this demo workspace, or add a server-side decrypt path.** The client now filters these blobs out (heuristic in `looksEncrypted`) so the panel stays clean.
+
+**Fixed in this branch (client-side):**
+- Call status: mapped `IN_PROGRESS`; then collapsed `INITIATED`/`CONNECTED`/`IN_PROGRESS` to one stable "Calling … pick up and talk to Ira" line (the `/voice/call` status is eventually-consistent and lagged a phase, showing "please pick up" during the call and "Connected" after hangup). Added `RNR` (no-answer) as terminal.
+- Transcript: subscribe to the listener WS (ready for live `data` frames); post-call poll fallback now filters out encrypted base64 blobs.
+
+**Still needs platform/config (to actually show a transcript):** (a) forward `lk.transcription` over the listener WS for the *live* transcript, and (b) disable transcript encryption OR expose a decrypt path for the *post-call* transcript.
 
 ---
 
