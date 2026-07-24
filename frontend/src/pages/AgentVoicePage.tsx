@@ -20,10 +20,10 @@ function statusLabel(status: CallStatus, phone: string): { text: string; tone: "
     // so we don't split "ringing" vs "connected" off it. One stable line for the whole
     // active call, until a terminal status arrives.
     case "INITIATED":
-    case "CONNECTED":
     case "IN_PROGRESS":
       return { text: `Calling ${pretty} — pick up and talk to Ira`, tone: "ok" };
     case "COMPLETED":
+    case "CONNECTED": // this platform marks an answered+ended call as CONNECTED
       return { text: "Call ended", tone: "info" };
     case "VOICEMAIL":
       return { text: "Reached voicemail — no answer", tone: "bad" };

@@ -184,8 +184,14 @@ export function useNurixOutbound(
         });
         if (r.ok) {
           const d = await r.json();
-          const s = (d.status || "").toUpperCase();
-          if (!cancelled && ["INITIATED", "CONNECTED", "IN_PROGRESS", "COMPLETED", "FAILED", "VOICEMAIL", "RNR"].includes(s)) {
+          let s = (d.status || "").toUpperCase();
+          // Platform quirk: an answered call that has ENDED is reported as CONNECTED
+          // (with call_end_reason/duration/end_time). IN_PROGRESS is the active state.
+          // Treat CONNECTED / any end_reason as terminal COMPLETED (unless it's a failure).
+          if ((s === "CONNECTED" || d.call_end_reason || d.end_time) && !["FAILED", "VOICEMAIL", "RNR"].includes(s)) {
+            s = "COMPLETED";
+          }
+          if (!cancelled && ["INITIATED", "IN_PROGRESS", "COMPLETED", "FAILED", "VOICEMAIL", "RNR"].includes(s)) {
             setStatus(s as CallStatus);
           }
         }
