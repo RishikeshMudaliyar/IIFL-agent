@@ -24,11 +24,34 @@ logger = logging.getLogger(__name__)
 agent_router = APIRouter(prefix="/agent", tags=["Agent Tool Calls"])
 
 
-def _get_form_url() -> str:
-    url = os.getenv("FORM_URL")
-    if not url:
+def _get_form_url(loan_type: Optional[str] = None) -> str:
+    """Resolve the form URL for a given loan type.
+
+    FORM_URL is treated as a BASE origin (e.g. https://iifl-frontend…app). We
+    append the per-loan-type page so the agent's browser opens the right form:
+      gold             -> /gold-application
+      business         -> /business-application
+      secured_business -> /secured-application
+    If FORM_URL already points at a specific page (legacy), it's used as-is.
+    """
+    base = os.getenv("FORM_URL")
+    if not base:
         raise HTTPException(status_code=500, detail="FORM_URL environment variable is not set")
-    return url
+    base = base.rstrip("/")
+
+    # Legacy: FORM_URL already includes a page path -> use verbatim.
+    if base.endswith("-application") or base.endswith("/loan-application"):
+        return base
+
+    lt = (loan_type or "").strip().lower().replace("-", "_").replace(" ", "_")
+    page_by_type = {
+        "gold": "/gold-application",
+        "business": "/business-application",
+        "secured_business": "/secured-application",
+        "secured": "/secured-application",
+    }
+    page = page_by_type.get(lt, "/gold-application")  # default to gold for the demo
+    return f"{base}{page}"
 
 
 # ---------- request models ----------
@@ -41,6 +64,7 @@ def _unwrap_payload(data: Any) -> Any:
 
 class StartSessionRequest(BaseModel):
     session_id: str
+    loan_type: Optional[str] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -77,10 +101,12 @@ async def start_session(
     request: Request,
     body: Optional[StartSessionRequest] = None,
     session_id: Optional[str] = Query(default=None),
+    loan_type: Optional[str] = Query(default=None),
 ):
     raw_body = await request.body()
     logger.info(f"start_session raw body: {raw_body}")
     sid = (body.session_id if body else None) or session_id
+    lt = (body.loan_type if body else None) or loan_type
     if not sid:
         try:
             raw = await request.json()
@@ -88,9 +114,11 @@ async def start_session(
             raw = {}
         logger.info(f"start_session parsed json: {raw}")
         sid = raw.get("session_id")
+        lt = lt or raw.get("loan_type")
     if not sid:
         raise HTTPException(status_code=422, detail="session_id is required")
-    form_url = _get_form_url()
+    form_url = _get_form_url(lt)
+    logger.info(f"start_session loan_type={lt!r} -> form_url={form_url}")
     result = await playwright_service.start_session(form_url, sid)
     if not result.get("success"):
         raise HTTPException(status_code=500, detail=result.get("message", "Failed to start session"))
