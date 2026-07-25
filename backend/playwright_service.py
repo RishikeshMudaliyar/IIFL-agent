@@ -49,6 +49,23 @@ FIELD_SELECTORS = {
     "pincode": "#pincode-input",
     "pin_code": "#pincode-input",
     "city": "#city-input",
+
+    # ---- IIFL per-loan-type "page 2" live-fill forms (must match frontend ids) ----
+    # Gold (/gold-application)
+    "gold_weight": "#gold-weight-input",
+    "aadhaar": "#aadhaar-input",
+    "aadhar": "#aadhaar-input",
+    # Business (/business-application)
+    "biz_years": "#biz-years-input",
+    "business_years": "#biz-years-input",
+    "biz_turnover": "#biz-turnover-input",
+    "annual_turnover": "#biz-turnover-input",
+    # Secured business (/secured-application)
+    "collateral_value": "#collateral-value-input",
+    # Shared across the 3 forms
+    "loan_amount": "#loan-amount-input",
+    "amount": "#loan-amount-input",
+    # (pan already mapped above -> #pan-input; reused on all 3 forms)
 }
 
 # Checkbox field selectors
@@ -66,6 +83,14 @@ CHECKBOX_SELECTORS = {
     "consent_2": "#consent2-checkbox",
     "regulatory_consent": "#consent2-checkbox",
     "income_declaration": "#consent2-checkbox",
+
+    # ---- IIFL per-loan-type "page 2" forms ----
+    "consent": "#consent-checkbox",                 # T&C consent (all 3 forms)
+    "existing_loan": "#existing-loan-checkbox",     # gold: existing gold loan
+    "existing_gold_loan": "#existing-loan-checkbox",
+    "gst": "#gst-checkbox",                          # business: GST registered
+    "gst_registered": "#gst-checkbox",
+    "existing_emi": "#existing-emi-checkbox",        # secured: existing EMI/loan
 }
 
 # Toggle button selectors (for gender and employment type)
@@ -88,6 +113,39 @@ TOGGLE_SELECTORS = {
         "self-employed": "#employment-selfemployed-btn",
         "self_employed": "#employment-selfemployed-btn",
         "selfemployed": "#employment-selfemployed-btn",
+    },
+
+    # ---- IIFL per-loan-type "page 2" radio groups ----
+    # Gold purity (karat) -> #gold-purity-{18|22|24}
+    "gold_purity": {
+        "18": "#gold-purity-18", "18k": "#gold-purity-18", "18_karat": "#gold-purity-18",
+        "22": "#gold-purity-22", "22k": "#gold-purity-22", "22_karat": "#gold-purity-22",
+        "24": "#gold-purity-24", "24k": "#gold-purity-24", "24_karat": "#gold-purity-24",
+    },
+    "purity": {
+        "18": "#gold-purity-18", "22": "#gold-purity-22", "24": "#gold-purity-24",
+    },
+    # Business type -> #biz-type-{retail|manufacturing|services}
+    "biz_type": {
+        "retail": "#biz-type-retail",
+        "manufacturing": "#biz-type-manufacturing", "mfg": "#biz-type-manufacturing",
+        "services": "#biz-type-services", "service": "#biz-type-services",
+    },
+    "business_type": {
+        "retail": "#biz-type-retail",
+        "manufacturing": "#biz-type-manufacturing",
+        "services": "#biz-type-services",
+    },
+    # Collateral type -> #collateral-type-{property|machinery|other}
+    "collateral_type": {
+        "property": "#collateral-type-property",
+        "machinery": "#collateral-type-machinery",
+        "other": "#collateral-type-other",
+    },
+    "collateral": {
+        "property": "#collateral-type-property",
+        "machinery": "#collateral-type-machinery",
+        "other": "#collateral-type-other",
     },
 }
 
