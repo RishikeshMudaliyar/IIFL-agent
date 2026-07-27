@@ -52,7 +52,10 @@ export function FormShell({ title, children }: { title: string; children: ReactN
   );
 }
 
-/** Read-only text/number field (the agent types into it via Playwright). */
+/** Text/number field the agent types into via Playwright.
+ *  NOTE: the input must NOT be `readOnly` — Playwright's `.fill()` refuses to
+ *  type into a readonly input and hangs until its 30s action timeout. The field
+ *  is agent-driven in the demo, so a plain editable input is correct. */
 export function TextField({
   id, label, hint, placeholder, prefix, suffix, value = "",
 }: {
@@ -69,7 +72,6 @@ export function TextField({
         {prefix && <span className="text-gray-500 text-sm">{prefix}</span>}
         <input
           id={id}
-          readOnly
           defaultValue={value}
           placeholder={placeholder}
           className="flex-1 bg-transparent text-sm text-gray-900 tabular-nums outline-none placeholder:text-gray-300"
@@ -121,14 +123,15 @@ export function RadioField({
   );
 }
 
-/** Checkbox — the agent toggles it by id. */
+/** Checkbox — the agent toggles it by id.
+ *  NOTE: must NOT be `readOnly` — Playwright's `.check()` requires an editable
+ *  element and hangs 30s on a readonly checkbox (same trap as TextField). */
 export function CheckField({ id, label }: { id: string; label: string }) {
   return (
     <label className="flex items-center gap-3 text-sm text-gray-800 cursor-default">
       <input
         id={id}
         type="checkbox"
-        readOnly
         className="w-4 h-4 rounded border-gray-300 text-iifl-orange focus:ring-iifl-orange accent-iifl-orange"
       />
       {label}
