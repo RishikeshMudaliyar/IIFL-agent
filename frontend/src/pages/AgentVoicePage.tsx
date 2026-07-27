@@ -9,7 +9,7 @@ import {
 import { Mic, MicOff, PhoneOff, Send, ChevronLeft, Loader2 } from "lucide-react";
 import { CLIENT_NAME } from "../config/branding";
 import { useNurixVoice } from "../hooks/use-nurix-voice";
-import { useLead, leadToDynamicVars } from "../contexts/LeadContext";
+import { useLead, leadToDynamicVars, useFormSessionId } from "../contexts/LeadContext";
 import LiveFormPanel from "../components/LiveFormPanel";
 
 const BRAND_COLOR = "#F56E28";      // IIFL orange
@@ -50,10 +50,12 @@ function sanitizeTranscript(text: string): string {
 const AgentVoicePage = () => {
   const navigate = useNavigate();
   const { lead } = useLead();
+  // One stable session id for this call — the Playwright fill tools key off it.
+  const formSessionId = useFormSessionId();
   // Pass the four collected fields so the agent's greeting already knows them.
   const { details, status, errorMessage, restart } = useNurixVoice(
     {},
-    { dynamicVars: leadToDynamicVars(lead) },
+    { dynamicVars: leadToDynamicVars(lead, formSessionId) },
   );
 
   return (

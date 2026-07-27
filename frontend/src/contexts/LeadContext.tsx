@@ -78,13 +78,38 @@ export const useLead = () => {
     return ctx;
 };
 
+// Space out an identifier so the TTS reads it digit-by-digit. ElevenLabs
+// pronounces "560068" as "five lakh sixty thousand sixty-eight"; it pronounces
+// "5 6 0 0 6 8" as separate digits. The SOP says the pincode aloud, so we hand
+// the agent a pre-spaced copy rather than relying on the model to space it.
+export function spaceOutDigits(value: string): string {
+    return value.replace(/\s+/g, "").split("").join(" ");
+}
+
 // Map our Lead into the shape the voice agent expects as custom_dynamic_variables.
 // Keys mirror the SOP call variables: name / phone / pincode / loan_type.
-export function leadToDynamicVars(lead: Lead): Record<string, string> {
+// sessionId must stay STABLE for the whole call: start_session and every
+// fill_field have to agree on one id, so it cannot be regenerated on re-render.
+// Callers pass the id they minted once (see useFormSessionId).
+export function leadToDynamicVars(lead: Lead, sessionId: string): Record<string, string> {
     const vars: Record<string, string> = {};
     if (lead.name) vars.name = lead.name;
     if (lead.phone) vars.phone = lead.phone;
-    if (lead.pincode) vars.pincode = lead.pincode;
+    if (lead.pincode) {
+        vars.pincode = lead.pincode;
+        // What the agent actually speaks (see confirm_context() in the SOP).
+        vars.pincode_spoken = spaceOutDigits(lead.pincode);
+    }
     if (lead.loanType) vars.loan_type = lead.loanType;
+    // The Playwright tools key every fill_field off this id. It MUST be present:
+    // an empty/unresolved <<session_id>> made every fill fail with
+    // "Session not found", so the form never filled on screen.
+    vars.session_id = sessionId;
     return vars;
+}
+
+/** Mint one form-session id per page mount, stable across re-renders. */
+export function useFormSessionId(): string {
+    const [sessionId] = useState(() => `web-${crypto.randomUUID()}`);
+    return sessionId;
 }

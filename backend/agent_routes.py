@@ -12,6 +12,8 @@ Endpoints:
 
 import logging
 import os
+import uuid
+from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, model_validator
@@ -52,6 +54,68 @@ def _get_form_url(loan_type: Optional[str] = None) -> str:
     }
     page = page_by_type.get(lt, "/gold-application")  # default to gold for the demo
     return f"{base}{page}"
+
+
+# ---------- session-id resolution (demo robustness) ----------
+#
+# The voice agent's DSL passes `session_id: <<session_id>>`. If that call
+# variable is not populated at call time the LLM sends an empty string or the
+# literal, unresolved "<<session_id>>" token -- and every fill_field then failed
+# with "Session ... not found", so the form never visibly filled.
+#
+# Since the noVNC live view watches the single X display (it is not keyed by
+# session), the only thing that actually matters is that start_session and the
+# subsequent fill_field calls agree on ONE id. So we treat a missing/unresolved
+# id as "the current demo session" and pin it to the most recent live session.
+
+_PLACEHOLDER_SIDS = {"", "<<session_id>>", "session_id", "none", "null", "undefined", "{{session_id}}"}
+
+
+def _is_placeholder_sid(sid: Optional[str]) -> bool:
+    """True when the model sent nothing usable (empty or an unresolved token)."""
+    if sid is None:
+        return True
+    s = str(sid).strip()
+    if s.lower() in _PLACEHOLDER_SIDS:
+        return True
+    # Any leftover templating braces/angle-brackets means it never interpolated.
+    return ("<<" in s and ">>" in s) or ("{{" in s and "}}" in s)
+
+
+def _resolve_sid(sid: Optional[str], *, create: bool = False) -> str:
+    """Resolve the session id a tool call should act on.
+
+    create=True  (start_session): mint a stable id when none was supplied.
+    create=False (fill_field/click_button): fall back to the most recently
+                 started live session so fills land on the open form.
+    """
+    from playwright_service import PLAYWRIGHT_SESSIONS
+
+    if not _is_placeholder_sid(sid):
+        resolved = str(sid).strip()
+        # Known session -> use it. Unknown but sessions exist -> the agent sent a
+        # different id than start_session did; prefer the live one over failing.
+        if resolved in PLAYWRIGHT_SESSIONS or create or not PLAYWRIGHT_SESSIONS:
+            return resolved
+        latest = _latest_sid(PLAYWRIGHT_SESSIONS)
+        logger.warning(
+            "Unknown session_id %r from agent; using live session %r instead", resolved, latest
+        )
+        return latest
+
+    if PLAYWRIGHT_SESSIONS:
+        latest = _latest_sid(PLAYWRIGHT_SESSIONS)
+        logger.warning("Placeholder session_id %r; using live session %r", sid, latest)
+        return latest
+
+    minted = f"demo-{uuid.uuid4().hex[:12]}"
+    logger.warning("Placeholder session_id %r and no live session; minted %r", sid, minted)
+    return minted
+
+
+def _latest_sid(sessions: dict) -> str:
+    """Most recently created session id."""
+    return max(sessions.items(), key=lambda kv: kv[1].get("created_at") or datetime.min)[0]
 
 
 # ---------- request models ----------
@@ -115,8 +179,8 @@ async def start_session(
         logger.info(f"start_session parsed json: {raw}")
         sid = raw.get("session_id")
         lt = lt or raw.get("loan_type")
-    if not sid:
-        raise HTTPException(status_code=422, detail="session_id is required")
+    # A missing/unresolved session_id must not break the demo -- mint one.
+    sid = _resolve_sid(sid, create=True)
     form_url = _get_form_url(lt)
     logger.info(f"start_session loan_type={lt!r} -> form_url={form_url}")
     result = await playwright_service.start_session(form_url, sid)
@@ -141,8 +205,10 @@ async def fill_field(
         sid = session_id or raw.get("session_id")
         fn = field_name or raw.get("field_name")
         val = value or str(raw.get("value")) if raw.get("value") is not None else value
-    if not all([sid, fn, val is not None]):
-        raise HTTPException(status_code=422, detail="session_id, field_name and value are required")
+    if not all([fn, val is not None]):
+        raise HTTPException(status_code=422, detail="field_name and value are required")
+    # Resolve to the live session even if the agent sent an empty/unresolved id.
+    sid = _resolve_sid(sid)
     result = await playwright_service.fill_field(sid, fn, val)
     if not result.get("success"):
         return result
@@ -162,8 +228,9 @@ async def click_button(
         raw = await request.json()
         sid = session_id or raw.get("session_id")
         btn = button or raw.get("button")
-    if not all([sid, btn]):
-        raise HTTPException(status_code=422, detail="session_id and button are required")
+    if not btn:
+        raise HTTPException(status_code=422, detail="button is required")
+    sid = _resolve_sid(sid)
     result = await playwright_service.click_button(sid, btn)
     return result
 

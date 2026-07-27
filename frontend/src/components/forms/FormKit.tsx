@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { CLIENT_LOGO } from "../../config/branding";
 import { useLead } from "../../contexts/LeadContext";
 
@@ -90,6 +90,11 @@ export function RadioField({
   idBase: string; label: string; hint?: string;
   options: { value: string; label: string }[];
 }) {
+  // Selection MUST live in React state, not as a raw DOM attribute. FormShell
+  // consumes useLead(), so any lead update re-renders this subtree — and a
+  // hand-set `data-on` attribute gets wiped by that re-render, silently losing
+  // the highlight (text inputs survive because the browser owns their value).
+  const [selected, setSelected] = useState<string | null>(null);
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-sm font-semibold text-gray-800">
@@ -103,16 +108,11 @@ export function RadioField({
             id={`${idBase}-${o.value}`}
             type="button"
             data-radio-group={idBase}
-            onClick={(e) => {
-              // Visually select this option and clear siblings — so the agent's
-              // click shows up on the noVNC panel. Works whether clicked by a
-              // human or by Playwright.
-              const btn = e.currentTarget;
-              document
-                .querySelectorAll<HTMLElement>(`[data-radio-group="${idBase}"]`)
-                .forEach((el) => el.removeAttribute("data-on"));
-              btn.setAttribute("data-on", "true");
-            }}
+            // Rendered from state, so it survives re-renders. Works the same
+            // whether a human or Playwright does the clicking.
+            data-on={selected === o.value ? "true" : undefined}
+            aria-pressed={selected === o.value}
+            onClick={() => setSelected(o.value)}
             className="radio-option rounded-lg border-2 border-gray-200 px-2 py-2.5 text-xs font-semibold text-gray-500 text-center transition-colors hover:border-gray-300 data-[on=true]:border-iifl-orange data-[on=true]:bg-iifl-cream data-[on=true]:text-iifl-orange-dark"
           >
             {o.label}
@@ -125,13 +125,20 @@ export function RadioField({
 
 /** Checkbox — the agent toggles it by id.
  *  NOTE: must NOT be `readOnly` — Playwright's `.check()` requires an editable
- *  element and hangs 30s on a readonly checkbox (same trap as TextField). */
+ *  element and hangs 30s on a readonly checkbox (same trap as TextField).
+ *  Kept UNCONTROLLED on purpose: Playwright drives it via .check()/.uncheck()
+ *  and reads .is_checked(), so the DOM must stay the source of truth. We mirror
+ *  the state into React only so a re-render (FormShell consumes useLead()) can
+ *  restore `checked` via defaultChecked instead of resetting it to false. */
 export function CheckField({ id, label }: { id: string; label: string }) {
+  const [checked, setChecked] = useState(false);
   return (
     <label className="flex items-center gap-3 text-sm text-gray-800 cursor-default">
       <input
         id={id}
         type="checkbox"
+        defaultChecked={checked}
+        onChange={(e) => setChecked(e.currentTarget.checked)}
         className="w-4 h-4 rounded border-gray-300 text-iifl-orange focus:ring-iifl-orange accent-iifl-orange"
       />
       {label}
