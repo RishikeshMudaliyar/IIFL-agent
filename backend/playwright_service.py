@@ -125,6 +125,31 @@ TOGGLE_SELECTORS = {
     "purity": {
         "18": "#gold-purity-18", "22": "#gold-purity-22", "24": "#gold-purity-24",
     },
+    # LTV scheme choice -> #scheme-{saver|balance|max}. The caller picks one of
+    # the three LTV tiers after hearing them; the agent clicks their choice.
+    # Aliases cover how the LLM is likely to phrase it: by id, by LTV percent,
+    # by the "low/medium/high" shorthand the SOP uses, and by scheme name.
+    "scheme": {
+        "saver": "#scheme-saver", "swarna_saver": "#scheme-saver",
+        "iifl_swarna_saver": "#scheme-saver",
+        "55": "#scheme-saver", "55%": "#scheme-saver", "low": "#scheme-saver",
+        "balance": "#scheme-balance", "swarna_balance": "#scheme-balance",
+        "iifl_swarna_balance": "#scheme-balance",
+        "65": "#scheme-balance", "65%": "#scheme-balance", "medium": "#scheme-balance",
+        "mid": "#scheme-balance", "middle": "#scheme-balance",
+        "max": "#scheme-max", "swarna_max": "#scheme-max",
+        "iifl_swarna_max": "#scheme-max",
+        "75": "#scheme-max", "75%": "#scheme-max", "high": "#scheme-max",
+    },
+    "ltv_scheme": {
+        "saver": "#scheme-saver", "balance": "#scheme-balance", "max": "#scheme-max",
+        "55": "#scheme-saver", "65": "#scheme-balance", "75": "#scheme-max",
+        "low": "#scheme-saver", "medium": "#scheme-balance", "high": "#scheme-max",
+    },
+    "ltv": {
+        "55": "#scheme-saver", "65": "#scheme-balance", "75": "#scheme-max",
+        "saver": "#scheme-saver", "balance": "#scheme-balance", "max": "#scheme-max",
+    },
     # Business type -> #biz-type-{retail|manufacturing|services}
     "biz_type": {
         "retail": "#biz-type-retail",
@@ -184,6 +209,33 @@ BUTTON_SELECTORS = {
     "back_to_step4": "#back-to-step4-btn",
     "connect_rm": "#connect-rm-btn",
     
+    # LTV scheme choice on the gold form. The caller picks one of three; the
+    # agent clicks it. Aliases cover how the DSL and the LLM phrase it —
+    # "scheme_saver" (the DSL's templated form), bare "saver", and the LTV number.
+    "scheme_saver": "#scheme-saver",
+    "scheme_balance": "#scheme-balance",
+    "scheme_max": "#scheme-max",
+    "saver": "#scheme-saver",
+    "balance": "#scheme-balance",
+    "max": "#scheme-max",
+    "swarna_saver": "#scheme-saver",
+    "swarna_balance": "#scheme-balance",
+    "swarna_max": "#scheme-max",
+    "scheme_55": "#scheme-saver",
+    "scheme_65": "#scheme-balance",
+    "scheme_75": "#scheme-max",
+    "scheme_low": "#scheme-saver",
+    "scheme_medium": "#scheme-balance",
+    "scheme_high": "#scheme-max",
+
+    # Branch hero (page 1) -> application form. The hero is what start_session
+    # now opens; the agent clicks this once the caller agrees to apply.
+    "start_application": "#start-application-btn",
+    "start_apply": "#start-application-btn",
+    "apply_now_hero": "#start-application-btn",
+    "proceed": "#start-application-btn",
+    "continue_to_form": "#start-application-btn",
+
     # Misc
     "view_rates": "#view-rates-btn",
 }
@@ -1082,6 +1134,36 @@ class PlaywrightService:
             "success": True,
             "form_state": form_state
         }
+
+    async def navigate(self, session_id: str, url: str, wait_for: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Move the live browser to another page of the demo site.
+
+        Used for the hero -> application-form hop. This is a real navigation
+        rather than a DOM click because the hero's CTA is a plain button with no
+        router binding: a click would highlight and do nothing, and the caller
+        would watch a dead page. Navigating directly is deterministic and shows
+        up identically on the noVNC view.
+        """
+        extra = {'session_id': session_id}
+
+        if session_id not in PLAYWRIGHT_SESSIONS:
+            logger.error("Invalid session_id", extra=extra)
+            return {"success": False, "error": f"Session {session_id} not found."}
+
+        session = PLAYWRIGHT_SESSIONS[session_id]
+        session["last_activity_at"] = datetime.now()
+        page = session["page"]
+
+        logger.info(f"Navigating to: {url}", extra=extra)
+        try:
+            await page.goto(url, timeout=60000, wait_until="domcontentloaded")
+            if wait_for:
+                await page.wait_for_selector(wait_for, timeout=15000)
+            return {"success": True, "url": url, "message": f"Navigated to {url}"}
+        except Exception as e:
+            logger.error(f"Navigation failed: {e}", extra=extra)
+            return {"success": False, "error": f"Could not load {url}: {e}"}
 
     async def show_offers(self, session_id: str, offers_url: str) -> Dict[str, Any]:
         """

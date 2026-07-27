@@ -6,6 +6,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import ABCDLoanJourney from './pages/ABCDLoanJourney';
 import AgentVoicePage from './pages/AgentVoicePage';
+import BranchHero from './pages/BranchHero';
 import GoldApplication from './pages/GoldApplication';
 import BusinessApplication from './pages/BusinessApplication';
 import SecuredApplication from './pages/SecuredApplication';
@@ -28,6 +29,11 @@ function App() {
             <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/home" element={<Home />} />
             <Route path="/loan-application" element={<ABCDLoanJourney />} />
+            {/* Page 1 — the hyperlocal branch hero. This is what the agent's
+                browser opens when a gold call connects, keyed to the caller's
+                pincode. The form only appears once they agree to apply. */}
+            <Route path="/branch/:pincode" element={<BranchHero />} />
+            <Route path="/branch" element={<BranchHero />} />
             {/* Per-loan-type live-fill forms (page 2). The agent's browser opens
                 the one matching the caller's loan_type. */}
             <Route path="/gold-application" element={<GoldApplication />} />

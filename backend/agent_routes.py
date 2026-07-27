@@ -27,6 +27,37 @@ logger = logging.getLogger(__name__)
 agent_router = APIRouter(prefix="/agent", tags=["Agent Tool Calls"])
 
 
+def _origin() -> str:
+    """The frontend origin, derived from FORM_URL (which may be a full page URL)."""
+    base = os.getenv("FORM_URL")
+    if not base:
+        raise HTTPException(status_code=500, detail="FORM_URL environment variable is not set")
+    base = base.rstrip("/")
+    for suffix in ("/gold-application", "/business-application",
+                   "/secured-application", "/loan-application"):
+        if base.endswith(suffix):
+            return base[: -len(suffix)]
+    return base
+
+
+# The four pincodes with real branch data (mirrors frontend src/lib/branches.ts).
+# An unsupported pincode falls back to Andheri East rather than an empty hero.
+SUPPORTED_PINCODES = {"400059", "400086", "400097", "400014"}
+FALLBACK_PINCODE = "400059"
+
+
+def _hero_url(pincode: Optional[str] = None) -> str:
+    """The branch hero (page 1) for this caller's pincode.
+
+    This is what the browser opens when the call connects — the caller sees
+    their own neighbourhood branch before any form appears.
+    """
+    pin = "".join(ch for ch in str(pincode or "") if ch.isdigit())
+    if pin not in SUPPORTED_PINCODES:
+        pin = FALLBACK_PINCODE
+    return f"{_origin()}/branch/{pin}"
+
+
 def _get_form_url(loan_type: Optional[str] = None) -> str:
     """Resolve the form URL for a given loan type.
 
@@ -130,6 +161,18 @@ def _unwrap_payload(data: Any) -> Any:
 class StartSessionRequest(BaseModel):
     session_id: str
     loan_type: Optional[str] = None
+    # Drives which branch hero variant opens. Optional so an older DSL that
+    # doesn't send it still works (falls back to Andheri East).
+    pincode: Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def unwrap(cls, v): return _unwrap_payload(v)
+
+
+class GoToFormRequest(BaseModel):
+    session_id: Optional[str] = None
+    loan_type: Optional[str] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -167,11 +210,13 @@ async def start_session(
     body: Optional[StartSessionRequest] = None,
     session_id: Optional[str] = Query(default=None),
     loan_type: Optional[str] = Query(default=None),
+    pincode: Optional[str] = Query(default=None),
 ):
     raw_body = await request.body()
     logger.info(f"start_session raw body: {raw_body}")
     sid = (body.session_id if body else None) or session_id
     lt = (body.loan_type if body else None) or loan_type
+    pin = (body.pincode if body else None) or pincode
     if not sid:
         try:
             raw = await request.json()
@@ -180,15 +225,49 @@ async def start_session(
         logger.info(f"start_session parsed json: {raw}")
         sid = raw.get("session_id")
         lt = lt or raw.get("loan_type")
+        pin = pin or raw.get("pincode")
     # A missing/unresolved session_id must not break the demo -- mint one.
     sid = _resolve_sid(sid, create=True)
-    form_url = _get_form_url(lt)
-    logger.info(f"start_session loan_type={lt!r} -> form_url={form_url}")
-    result = await playwright_service.start_session(form_url, sid)
+
+    # The call now OPENS ON THE BRANCH HERO, not the form. Gold is the focus, so
+    # gold callers land on their neighbourhood branch page and only move to the
+    # form once they agree to apply (go_to_form). The other two loan types keep
+    # the old behaviour and open their form directly.
+    lt_norm = (lt or "").strip().lower().replace("-", "_").replace(" ", "_")
+    if lt_norm in ("", "gold"):
+        start_url = _hero_url(pin)
+    else:
+        start_url = _get_form_url(lt)
+    logger.info(f"start_session loan_type={lt!r} pincode={pin!r} -> url={start_url}")
+    result = await playwright_service.start_session(start_url, sid)
     if not result.get("success"):
         raise HTTPException(status_code=500, detail=result.get("message", "Failed to start session"))
     logger.info(f"Agent session started: {sid}")
     return {"session_id": sid, "message": result.get("message")}
+
+
+@agent_router.post("/go-to-form")
+async def go_to_form(
+    request: Request,
+    body: Optional[GoToFormRequest] = None,
+    session_id: Optional[str] = Query(default=None),
+    loan_type: Optional[str] = Query(default=None),
+):
+    """Hero -> application form. Called once the caller agrees to apply."""
+    if body:
+        sid, lt = body.session_id, body.loan_type
+    else:
+        try:
+            raw = await request.json()
+        except Exception:
+            raw = {}
+        sid = session_id or raw.get("session_id")
+        lt = loan_type or raw.get("loan_type")
+    sid = _resolve_sid(sid)
+    url = _get_form_url(lt or "gold")
+    logger.info(f"go_to_form loan_type={lt!r} -> {url}")
+    # Wait for the amount field so the agent never starts filling a blank page.
+    return await playwright_service.navigate(sid, url, wait_for="#loan-amount-input")
 
 
 @agent_router.post("/fill-field")
@@ -243,14 +322,37 @@ class ShowOffersRequest(BaseModel):
     loan_amount: Optional[str] = None
     gold_weight: Optional[str] = None
     gold_purity: Optional[str] = None
+    # The LTV scheme the caller chose — decides which offer leads the page.
+    scheme: Optional[str] = None
+    # Keeps the branch CTA on the offers page local to the caller.
+    pincode: Optional[str] = None
 
     @model_validator(mode="before")
     @classmethod
     def unwrap(cls, v): return _unwrap_payload(v)
 
 
+# How the LLM might name a scheme -> the canonical id the frontend expects.
+_SCHEME_ALIASES = {
+    "saver": "saver", "swarna_saver": "saver", "iifl_swarna_saver": "saver",
+    "55": "saver", "low": "saver",
+    "balance": "balance", "swarna_balance": "balance", "iifl_swarna_balance": "balance",
+    "65": "balance", "medium": "balance", "mid": "balance", "middle": "balance",
+    "max": "max", "swarna_max": "max", "iifl_swarna_max": "max",
+    "75": "max", "high": "max",
+}
+
+
+def _canon_scheme(raw: Optional[str]) -> Optional[str]:
+    if not raw:
+        return None
+    key = str(raw).strip().lower().replace("-", "_").replace(" ", "_").replace("%", "")
+    return _SCHEME_ALIASES.get(key)
+
+
 def _offers_url(loan_type: Optional[str], amount: Optional[str],
-                grams: Optional[str], purity: Optional[str]) -> str:
+                grams: Optional[str], purity: Optional[str],
+                scheme: Optional[str] = None, pincode: Optional[str] = None) -> str:
     """Build the /offers/{type} URL, carrying the caller's answers as params."""
     base = os.getenv("FORM_URL")
     if not base:
@@ -267,7 +369,8 @@ def _offers_url(loan_type: Optional[str], amount: Optional[str],
     slug = {"business": "business", "secured_business": "secured", "secured": "secured"}.get(lt, "gold")
 
     params = []
-    for key, val in (("amount", amount), ("grams", grams), ("purity", purity)):
+    for key, val in (("amount", amount), ("grams", grams), ("purity", purity),
+                     ("scheme", _canon_scheme(scheme)), ("pincode", pincode)):
         if val is None:
             continue
         s = str(val).strip()
@@ -290,6 +393,7 @@ async def show_offers(
     if body:
         sid, lt = body.session_id, body.loan_type
         amount, grams, purity = body.loan_amount, body.gold_weight, body.gold_purity
+        scheme, pin = body.scheme, body.pincode
     else:
         try:
             raw = await request.json()
@@ -299,9 +403,10 @@ async def show_offers(
         sid = session_id or raw.get("session_id")
         lt = loan_type or raw.get("loan_type")
         amount, grams, purity = raw.get("loan_amount"), raw.get("gold_weight"), raw.get("gold_purity")
+        scheme, pin = raw.get("scheme"), raw.get("pincode")
 
     sid = _resolve_sid(sid)
-    url = _offers_url(lt, amount, grams, purity)
+    url = _offers_url(lt, amount, grams, purity, scheme, pin)
     logger.info(f"show_offers loan_type={lt!r} -> {url}")
     return await playwright_service.show_offers(sid, url)
 

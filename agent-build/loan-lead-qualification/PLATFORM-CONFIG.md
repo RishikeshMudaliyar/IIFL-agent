@@ -66,7 +66,38 @@ or the create 409s as a duplicate.
 
 ## 3. Action: `click_button_flow_iifl`
 `action_id` `1a89739c-09d6-4901-96fd-fec3e03c25d3` · tool_id `6b83e178-8d33-4950-a718-527c3ff8bab8`
-Untouched (button enum still the legacy ABCD set). The v3+ flow no longer clicks a loan-offer button.
+
+**Rewritten 2026-07-27 (v7).** Was still the legacy ABCD button enum, which would have made the
+LTV scheme choice unsendable — the same class of bug as the muthoot `field_name` enum. Now:
+
+```
+button enum: scheme_saver, scheme_balance, scheme_max,
+             start_application, get_loan_offer,
+             apply_now, verify_continue, continue, back_to_step4   <- legacy, harmless
+required:    [session_id, button]
+```
+`scheme_*` is how the caller's chosen LTV tier gets highlighted on screen.
+
+## 3b. Action: `go_to_form_flow_iifl`  (NEW 2026-07-27, v7)
+`action_id` **`14c2318d-78dd-43da-81d2-7903092d89c6`** · tool_id **`642a0840-fada-4e06-9411-9180cf08ac0e`**
+workflow uid **`0cdbd9bf-b370-4718-a164-3d8a9b71bccf`** → `POST /agent/go-to-form`
+
+```
+properties: session_id (string), loan_type (string, enum: gold|business|secured_business|secured)
+required:   [session_id]
+```
+The branch-hero → application-form hop. Verified executing through Mozart end-to-end
+(`status: COMPLETED`, backend `success: true`) on 2026-07-27.
+
+⚠️ **Creation gotchas, both hit on the way in:**
+- `POST /api/metadata/workflow` returns **500 "Request method 'POST' is not supported"**.
+  The real creation route is **`POST /api/metadata/workflow-with-style-v2`** (nodes + edges graph).
+  Extract the real id from `nodes[0].data.workflow_def_id` — the `displayName` you pass is ignored.
+- MCP `nurix_create_workflow_tool` wants an **UNWRAPPED** ActionDTO (`{"name": ...}`), unlike
+  `nurix_update_action`, which requires the **wrapped** form (`{"action": {...}}`). Passing the
+  wrapped form to create fails with `Column 'action' cannot be null` — *and still creates the row*,
+  so the retry then 409s. If you see that 409, the tool already exists: look it up with
+  `nurix_get_server_tool_by_name` rather than trying to create it again.
 
 ## 4. Mozart workflow bodies (what actually reaches the backend)
 Read: `GET mozart-in.nurixlabs.tech/api/metadata/workflow/{DISPLAY_NAME}?isDisplayName=true` → `.name` is the uid.
@@ -75,9 +106,23 @@ Edit: `GET /api/metadata/workflow/{uid}/draft` → patch `nodes[type=="http"].da
 
 | workflow | uid | body |
 |---|---|---|
-| `start_playwright_connection_flow_iifl` | `5d4978b0-cd0e-4496-ad67-2ec79d0c0e55` | `{session_id, loan_type}` ← `loan_type` ADDED 2026-07-27 |
+| `start_playwright_connection_flow_iifl` | `5d4978b0-cd0e-4496-ad67-2ec79d0c0e55` | `{session_id, loan_type}` ← `loan_type` ADDED 2026-07-27. **v7: `pincode` added to the ACTION schema; the workflow body still needs it** (see below) |
 | `fill_field_flow_iifl` | `2c4ee4f4-1e1b-46c9-bb67-c24193fd5441` | `{session_id, field_name, value}` |
 | `click_button_flow_iifl` | `3409f4c3-7a41-4aa5-9c24-665dd1a89959` | `{session_id, button}` |
+| `show_offers_flow_iifl` | `ee177d5d-fbcd-472b-a048-86a972496c8c` | `{session_id, loan_type, loan_amount, gold_weight, gold_purity, scheme, pincode}` ← `scheme`+`pincode` ADDED 2026-07-27 (v7) |
+| `go_to_form_flow_iifl` | `0cdbd9bf-b370-4718-a164-3d8a9b71bccf` | `{session_id, loan_type}` ← NEW 2026-07-27 (v7) |
+
+💡 **Both halves of a tool argument must be updated — the ACTION schema *and* the workflow BODY.**
+The action schema is what the LLM can send; the Mozart HTTP body is what actually reaches the
+backend. `pincode` was added to `start_playwright_connection_flow_iifl` in both places on
+2026-07-27 — the schema alone would have let the LLM send a pincode that the body silently
+dropped, giving every caller the Andheri East hero. Same applies to `scheme` on show_offers.
+
+**Verified end-to-end 2026-07-27** (Mozart `sync/execute` → backend log):
+```
+pincode 400086 -> /branch/400086      pincode 400014 -> /branch/400014
+pincode 400097 -> /branch/400097      go_to_form     -> /gold-application
+```
 
 All point at `https://iifl-backend-production.up.railway.app/agent/*`.
 Backend safely tolerates an unresolved `${workflow.input.loan_type}` token (falls back to gold) — verified.

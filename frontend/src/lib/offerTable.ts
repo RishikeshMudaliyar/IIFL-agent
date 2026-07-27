@@ -16,6 +16,8 @@
 // confirms the final number. If IIFL publishes new figures, change them HERE —
 // this is the single source of truth for both the UI and what the agent says.
 
+import { GOLD_SCHEMES, GoldScheme, getScheme, parseGrams } from "./goldSchemes";
+
 export type OfferLoanType = "gold" | "business" | "secured";
 
 export interface Offer {
@@ -98,6 +100,47 @@ export interface OfferInputs {
     /** Gold only. */
     goldGrams?: string | number;
     goldPurity?: string;
+    /** Gold only — the LTV scheme the caller chose ("saver"|"balance"|"max"). */
+    scheme?: string;
+}
+
+// ---------------------------------------------------- gold, scheme-driven
+// Purity adjusts the per-gram figure, which is quoted on a 22K basis.
+const PURITY_FACTOR: Record<string, number> = { "18": 18 / 22, "20": 20 / 22, "22": 1, "24": 24 / 22 };
+
+/**
+ * Offers for a caller who picked an LTV scheme. Card 0 is always their choice.
+ * The amount is capped by what their gold actually supports — a demo that
+ * promises more than the pledge allows falls apart at the branch.
+ */
+function goldSchemeOffers(input: OfferInputs, requested: number): Offer[] {
+    const chosen = getScheme(input.scheme);
+    const grams = parseGrams(input.goldGrams);
+    const purity = String(input.goldPurity ?? "22").replace(/[^0-9]/g, "") || "22";
+    const factor = PURITY_FACTOR[purity] ?? 1;
+
+    const build = (s: GoldScheme, badge: string): Offer => {
+        const perGram = Math.round(s.perGram * factor);
+        const supported = grams > 0 ? Math.floor((grams * perGram) / 500) * 500 : 0;
+        const amount = Math.max(
+            10000,
+            requested > 0 && supported > 0 ? Math.min(requested, supported)
+                : supported || requested,
+        );
+        return {
+            scheme: s.name,
+            amount,
+            ratePctYr: s.ratePctYr,
+            tenureMonths: s.tenureMonths,
+            emi: emi(amount, s.ratePctYr, s.tenureMonths),
+            highlight: `${badge} · ${s.ltvPct}% LTV · ${formatINR(perGram)}/gram · ${s.tradeoff}`,
+        };
+    };
+
+    // Their pick first, then the neighbouring tier so the trade-off stays visible.
+    const others = GOLD_SCHEMES.filter((s) => s.id !== chosen.id);
+    const comparison = others.find((s) => s.ltvPct > chosen.ltvPct) ?? others[others.length - 1];
+    return [build(chosen, "Your choice"), build(comparison, "Also available")];
 }
 
 /**
@@ -106,6 +149,14 @@ export interface OfferInputs {
  */
 export function getOffers(input: OfferInputs): Offer[] {
     const requested = parseAmount(input.requestedAmount);
+
+    // Gold with a chosen LTV scheme -> the scheme IS the offer. The caller
+    // already picked their LTV tier on the form, so we must not re-band them
+    // into a different scheme here; we show what they chose, sized by their
+    // gold, plus the next tier up as a comparison.
+    if (input.loanType === "gold" && input.scheme) {
+        return goldSchemeOffers(input, requested);
+    }
 
     if (input.loanType === "gold") {
         const grams = typeof input.goldGrams === "number"

@@ -3,6 +3,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { CLIENT_LOGO } from "../config/branding";
 import { useLead } from "../contexts/LeadContext";
 import { getOffers, formatINR, OfferLoanType } from "../lib/offerTable";
+import { getBranch } from "../lib/branches";
 
 // The "page 3" offer results the agent lands on after the form is complete —
 // mirrors the muthoot/DMI flow (form -> offers -> human handover).
@@ -22,6 +23,7 @@ export default function OffersPage() {
     const { loanType } = useParams<{ loanType: string }>();
     const [params] = useSearchParams();
     const { lead } = useLead();
+    const branch = getBranch(lead.pincode || params.get("pincode"));
 
     const lt: OfferLoanType =
         loanType === "business" ? "business"
@@ -34,6 +36,7 @@ export default function OffersPage() {
             requestedAmount: params.get("amount") ?? undefined,
             goldGrams: params.get("grams") ?? undefined,
             goldPurity: params.get("purity") ?? undefined,
+            scheme: params.get("scheme") ?? undefined,
         }),
         [lt, params],
     );
@@ -107,6 +110,28 @@ export default function OffersPage() {
                             </div>
                         </div>
                     ))}
+                </div>
+
+                {/* Urgency CTA + branch nudge — the "aaj hi paisa" close. */}
+                {lt === "gold" && (
+                    <div className="mt-5 rounded-2xl bg-iifl-navy text-white p-5 shadow-sm">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-iifl-orange-light mb-1">
+                            Get your money today
+                        </p>
+                        <p className="text-[15px] font-semibold leading-snug">
+                            Reach IIFL {branch.area} before 3 PM with your gold and KYC — disbursal
+                            can happen the same day, in as little as 30 minutes.
+                        </p>
+                        <p className="text-xs text-white/70 mt-2">
+                            {branch.landmark} · Open {branch.hours}, {branch.closed.toLowerCase()}.
+                        </p>
+                    </div>
+                )}
+
+                <div className="mt-4 rounded-xl border border-dashed border-iifl-orange bg-iifl-cream px-4 py-3">
+                    <p className="text-sm font-semibold text-iifl-orange-dark">
+                        An IIFL gold loan specialist will call you shortly to confirm your offer.
+                    </p>
                 </div>
 
                 <p className="mt-6 text-[11px] leading-relaxed text-gray-400">

@@ -1,34 +1,91 @@
-# IIFL demo — state of the world as of 2026-07-27
+# IIFL demo — state of the world as of 2026-07-27 (v7, gold-first rebuild)
 
-Checkpoint written at the end of the build session, immediately before a **major scope
-change**. Read this first, then `agent-build/loan-lead-qualification/PLATFORM-CONFIG.md`
-for every ID and the platform gotchas.
+The **scope change landed**. This describes the NEW flow. Read this first, then
+`agent-build/loan-lead-qualification/PLATFORM-CONFIG.md` for every ID and the platform gotchas.
 
-Git tag for this state: **`handover-callback-2026-07-27`**.
+Previous checkpoint tag (pre-scope-change): **`handover-callback-2026-07-27`**.
 
 ---
 
-## What the demo does today (all live, all deployed)
+## What changed in v7 — the short version
 
-A caller lands on the IIFL site, fills a 4-field hero form (name / phone / pincode /
-loan type), and starts a web voice call. Then:
+The demo is now **gold-loan-first and hyperlocal**. Two structural changes:
 
-1. **Ira** (main voice agent) opens the matching loan form in a real Chromium browser the
-   caller watches over noVNC, greets them by name with their loan type and pincode.
-2. She shares an IIFL differentiator, invites questions, then asks the qualifying
-   questions for their loan type — **filling each answer into the form live on screen**.
-3. PAN and Aadhaar are captured, read back digit-by-digit, and confirmed before filling.
-4. She **asks** for T&C consent (never auto-ticks). If they ask what it covers she gives
-   one or two short points, then asks again. A "no" is respected and not argued with.
-5. An **offers page** appears with 2 indicative offers derived from their answers; she
-   reads out the best one or two.
-6. She says the team will call them back, and ends.
-7. A **post-call workflow** fires on hangup and dials the caller back with **Priya**, a
-   second agent whose only real job is to warm-transfer them to a human on
-   **+91 93565 98610**. Ira is completely out of the transfer path.
+1. **The call opens on a BRANCH HERO, not a form.** The caller's pincode selects one of
+   four real Mumbai branch pages. Ira asks "application shuru karein, ya pehle aapki
+   nearest branch ke baare mein bata doon?" — and only moves to the form when they agree.
+2. **The gold form is built around three LTV schemes.** The caller states an amount, hears
+   three options, and picks one — which highlights on screen and drives the offer.
+
+Business and secured loans are **untouched** and still work exactly as before.
+
+## The four branches (real data, IIFL's own locator)
+
+| Pincode | Branch | Landmark the agent actually says |
+|---|---|---|
+| 400059 | Andheri East (Marol) | Marol Maroshi Rd, Tarani Business Centre, opp. Lok Bharti Complex |
+| 400086 | Ghatkopar West | LBS Marg, Anupam Building, 5 min from Ghatkopar station |
+| 400097 | Malad East (Kurar) | Shantaram Talao Rd, near St George High School |
+| 400014 | Dadar East | Parasmani Shopping Centre, 2nd floor, next to Dadar station |
+
+All 9:30 AM–6:00 PM, Sunday closed. An unsupported pincode falls back to Andheri East.
+Addresses/landmarks/timings are **real**; the per-branch "local colour" line is fabricated
+demo material, confined to one field (`hyperlocal`) in `frontend/src/lib/branches.ts` so it
+can be reviewed or swapped in one place.
+
+## The three LTV schemes
+
+| Scheme | LTV | ₹/gram (22K) | Rate | Tenure |
+|---|---|---|---|---|
+| IIFL Swarna Saver | 55% | ₹7,300 | 11.88% p.a. (0.99%/mo) | 12 mo |
+| IIFL Swarna Balance | 65% | ₹8,635 | 14.4% p.a. (1.2%/mo) | 18 mo |
+| IIFL Swarna Max | 75% | ₹9,960 | 17.4% p.a. (1.45%/mo) | 24 mo |
+
+⚠️ **75% is the RBI/IIFL published LTV CEILING.** The original ask specified 0.8/1.0/1.25
+LTV, which cannot legally exist (>100% LTV = lending more than the collateral is worth).
+The tiers were placed **at and below** the cap instead, preserving the intended trade-off:
+low LTV = cheaper rate but more gold pledged. Per-gram = 22K Mumbai rate (₹13,285/g,
+26 Jul 2026) × LTV. Rates sit inside IIFL's published 11.88–27% p.a. band.
+Single source of truth: `frontend/src/lib/goldSchemes.ts`. **Never invent a rate.**
+
+## The flow end to end
+
+A caller fills the 4-field hero form (name / phone / pincode / loan type) and starts a web
+voice call. Then:
+
+1. **Ira** opens the **branch hero for their pincode** in a real Chromium browser they watch
+   over noVNC, and greets them by name.
+2. She thanks them for the enquiry and offers the choice: **apply now, or hear about the
+   nearest branch first?** If they want the branch, she gives address-by-landmark, timings,
+   and (if it lands naturally) the local colour line.
+3. On agreement she calls **`go_to_form`** — the browser moves to `/gold-application`.
+4. **Loan amount** → she presents the **three schemes** with grams-needed for *their* amount
+   → the caller picks one → **the chosen card highlights on screen**.
+5. **Gold weight** → **purity** → **PAN** → **Aadhaar** (both read back digit-by-digit and
+   confirmed before filling) → **existing loan** → **T&C consent** (asked, never auto-ticked).
+6. An **offers page** appears led by *their chosen scheme*, with the next tier up for
+   comparison, plus a same-day-disbursal CTA naming their own branch.
+7. She adds **one** urgency line ("teen baje tak aa jaayein to paisa aaj hi mil sakta hai"),
+   skipping it if the caller sounds hesitant, and says the team will call back.
+8. A **post-call workflow** fires on hangup and dials the caller back with **Priya**, who
+   warm-transfers to a human on **+91 93565 98610**. Ira is out of the transfer path.
 
 Live URLs: frontend `https://iifl-frontend-production.up.railway.app`,
 backend `https://iifl-backend-production.up.railway.app`.
+
+## Verified end-to-end 2026-07-27 (through Mozart, not just the raw endpoint)
+
+```
+pincode 400086 -> /branch/400086     pincode 400097 -> /branch/400097
+pincode 400014 -> /branch/400014     go_to_form     -> /gold-application
+every gold field fills · scheme_balance click OK · offers page returns 2 cards
+30g 22K, asked ₹2,00,000, scheme=balance
+  -> IIFL Swarna Balance ₹2,00,000 @14.4% EMI ₹12,421 (18mo)   [their choice, leads]
+  -> IIFL Swarna Max     ₹2,00,000 @17.4% EMI ₹9,927  (24mo)   [comparison]
+```
+
+**v7 SOP is pushed to Ira's DRAFT and passes all 15 gates. It is NOT published —
+publishing stays the operator's gate.**
 
 ---
 

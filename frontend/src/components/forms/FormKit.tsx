@@ -1,14 +1,26 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { CLIENT_LOGO } from "../../config/branding";
 import { useLead } from "../../contexts/LeadContext";
+import { formatINR, parseAmount, quoteAllSchemes } from "../../lib/goldSchemes";
+import { getBranch } from "../../lib/branches";
 
 // Shared IIFL-branded primitives for the "page 2" live-fill loan forms.
 // Every input carries a stable id so the backend Playwright fill_field map can
 // target it. Keep these ids in sync with backend/playwright_service.py.
 
-export function FormShell({ title, children }: { title: string; children: ReactNode }) {
+export function FormShell({
+  title,
+  step = "Step 2 of 3",
+  children,
+}: {
+  title: string;
+  /** Progress label. Gold flow is hero -> form -> offers, so "Step 2 of 3". */
+  step?: string;
+  children: ReactNode;
+}) {
   const { lead } = useLead();
   const phone = lead.phone ? (lead.phone.length === 10 ? `+91 ${lead.phone}` : lead.phone) : "—";
+  const branch = getBranch(lead.pincode);
   return (
     <div className="min-h-screen bg-[#f4f2ef] font-roboto text-gray-900">
       {/* Orange accent bar */}
@@ -30,14 +42,15 @@ export function FormShell({ title, children }: { title: string; children: ReactN
             {title}
           </h1>
           <span className="text-[11px] font-bold uppercase tracking-wider text-iifl-orange-dark">
-            Step 2 of 2
+            {step}
           </span>
         </div>
 
-        {/* Applicant strip — proves "we already know you, this is page 2" */}
+        {/* Applicant strip — proves "we already know you" and keeps the branch
+            visible so the application still feels local, not generic. */}
         <div className="mb-6 rounded-xl border border-dashed border-iifl-orange bg-iifl-cream px-4 py-2.5">
           <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-iifl-orange-dark">
-            Applicant (from step 1)
+            Applicant · IIFL {branch.area}
           </p>
           <p className="text-sm text-gray-800 font-medium tabular-nums">
             {lead.name || "—"} · {phone} · {lead.pincode || "—"}
@@ -143,6 +156,85 @@ export function CheckField({ id, label }: { id: string; label: string }) {
       />
       {label}
     </label>
+  );
+}
+
+/** The three LTV scheme cards. The agent quotes them aloud, then clicks the one
+ *  the caller picks (`scheme` toggle -> `#scheme-{saver|balance|max}`).
+ *
+ *  Selection lives in React state for the same reason RadioField's does: a
+ *  hand-set DOM attribute is wiped by the re-render FormShell triggers.
+ *
+ *  `requiredGrams` is recomputed from whatever is currently typed in the loan
+ *  amount box, so the cards answer "for the amount I asked for, how much gold
+ *  do I need under each scheme?" — the exact trade-off the agent explains. */
+export function SchemeCards({ amountFieldId }: { amountFieldId: string }) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const [amount, setAmount] = useState(0);
+
+  // Poll the amount input rather than lifting its state: Playwright fills it
+  // directly via .fill(), which does not notify React. A light interval keeps
+  // the grams-required figures in sync with what the agent typed.
+  useEffect(() => {
+    const read = () => {
+      const el = document.getElementById(amountFieldId) as HTMLInputElement | null;
+      const next = parseAmount(el?.value ?? "");
+      setAmount((prev) => (prev === next ? prev : next));
+    };
+    read();
+    const t = setInterval(read, 400);
+    return () => clearInterval(t);
+  }, [amountFieldId]);
+
+  const quotes = quoteAllSchemes(amount);
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-sm font-semibold text-gray-800">
+        Choose your scheme
+        <span className="ml-2 text-[11px] font-normal italic text-gray-400">
+          कौन सी scheme लेना चाहेंगे?
+        </span>
+      </span>
+      <div className="grid gap-2.5 sm:grid-cols-3">
+        {quotes.map((q) => (
+          <button
+            key={q.id}
+            id={`scheme-${q.id}`}
+            type="button"
+            data-radio-group="scheme"
+            data-on={selected === q.id ? "true" : undefined}
+            aria-pressed={selected === q.id}
+            onClick={() => setSelected(q.id)}
+            className="scheme-option rounded-xl border-2 border-gray-200 bg-white p-3.5 text-left transition-colors hover:border-gray-300 data-[on=true]:border-iifl-orange data-[on=true]:bg-iifl-cream"
+          >
+            <p className="text-[9px] font-bold uppercase tracking-[0.08em] text-iifl-orange-dark">
+              {q.tagline}
+            </p>
+            <p className="font-roboto-condensed uppercase font-bold text-[15px] text-iifl-navy leading-tight mt-0.5">
+              {q.name}
+            </p>
+            <p className="mt-1.5 text-lg font-bold text-gray-900 tabular-nums">
+              {formatINR(q.perGram)}
+              <span className="text-[10px] font-medium text-gray-500"> /gram</span>
+            </p>
+            <p className="text-[11px] text-gray-500 tabular-nums">
+              {q.ltvPct}% LTV · {q.ratePctYr}% p.a. · {q.tenureMonths} mo
+            </p>
+            {amount > 0 && (
+              <p className="mt-2 rounded-md bg-white/70 border border-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-700 tabular-nums">
+                Need ~{q.grams}g gold
+              </p>
+            )}
+          </button>
+        ))}
+      </div>
+      {amount > 0 && (
+        <p className="text-[11px] text-gray-400 mt-0.5">
+          Gold required to raise {formatINR(amount)}. Indicative, 22K basis.
+        </p>
+      )}
+    </div>
   );
 }
 
