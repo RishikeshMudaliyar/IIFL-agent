@@ -10,23 +10,21 @@ export type VoiceConnectionDetails = {
 
 export type NurixVoiceConfig = {
   apiBase: string;
-  channelConnectionId: string;
-  apiKey: string;
+  agentId: string;
   gatewayApiKey: string;
 };
 
-// Configure via VITE_NURIX_VOICE_* env vars (set on Railway / .env), or replace the placeholder
-// defaults below. Values come from the IIFL voice agent's channel-connection.
-// The agent_id is resolved server-side from channel-connection-id; we don't
-// send it in the REST body.
+// WEB-CALL (browser mic + LiveKit) path — the local/demo variant kept alongside
+// the deployed outbound-phone flow. Auth uses agent_id + the account gateway key,
+// NOT the channel-connection-id (that path is ORIGIN-SCOPED and 500s from
+// localhost). agent_id + gateway key is origin-agnostic — verified working from
+// http://localhost:3000. Points at agentx-prod directly so it works off-network too.
 const DEFAULT_CONFIG: NurixVoiceConfig = {
   apiBase:
-    import.meta.env.VITE_NURIX_VOICE_API_BASE ??
-    "https://iifl-backend-production.up.railway.app/nurix-proxy/agentx",
-  channelConnectionId: import.meta.env.VITE_NURIX_VOICE_CHANNEL_CONNECTION_ID ?? "REPLACE_WITH_IIFL_VOICE_CHANNEL_CONNECTION_ID",
-  apiKey: import.meta.env.VITE_NURIX_VOICE_API_KEY ?? "REPLACE_WITH_IIFL_VOICE_API_KEY",
-  // gateway_api_key is account-shared (works for /voice/web/call); the voice widget key
-  // does not work as the gateway key. Provide the IIFL account's gateway key.
+    import.meta.env.VITE_NURIX_AGENTX_BASE ??
+    "https://agentx-prod.nurixlabs.tech",
+  agentId: import.meta.env.VITE_NURIX_VOICE_AGENT_ID ?? "REPLACE_WITH_IIFL_VOICE_AGENT_ID",
+  // gateway_api_key is account-shared (works for /voice/web/call cross-origin).
   gatewayApiKey:
     import.meta.env.VITE_NURIX_VOICE_GATEWAY_API_KEY ?? "REPLACE_WITH_IIFL_GATEWAY_API_KEY",
 };
@@ -43,7 +41,7 @@ export function useNurixVoice(
   config: Partial<NurixVoiceConfig> = {},
   options: UseNurixVoiceOptions = {},
 ) {
-  const { apiBase, channelConnectionId, apiKey, gatewayApiKey } = { ...DEFAULT_CONFIG, ...config };
+  const { apiBase, agentId, gatewayApiKey } = { ...DEFAULT_CONFIG, ...config };
   const { dynamicVars } = options;
   const [details, setDetails] = useState<VoiceConnectionDetails | null>(null);
   const [status, setStatus] = useState<Status>("idle");
@@ -64,12 +62,11 @@ export function useNurixVoice(
         headers: {
           "accept": "application/json",
           "content-type": "application/json",
-          "api-key": apiKey,
-          "channel-connection-id": channelConnectionId,
           "user-id": userId,
           "x-api-key": gatewayApiKey,
         },
         body: JSON.stringify({
+          agent_id: agentId,
           overide_previous_context: true,
           custom_dynamic_variables_config: dynamicVarsRef.current,
         }),
@@ -94,7 +91,7 @@ export function useNurixVoice(
       setStatus("error");
       setErrorMessage(err instanceof Error ? err.message : "Failed to start voice call");
     }
-  }, [apiBase, channelConnectionId, apiKey, gatewayApiKey, userId]);
+  }, [apiBase, agentId, gatewayApiKey, userId]);
 
   // Auto-start on mount
   useEffect(() => { start(); }, [start]);
