@@ -1,4 +1,5 @@
 import { createContext, FC, ReactNode, useContext, useState } from "react";
+import { toE164India } from "../lib/phone";
 
 // The four fields collected before the voice call — either from the hero form
 // (Path A: Apply Now) or from the chat agent (Path B: Talk to AI → Call Now).
@@ -94,7 +95,13 @@ export function spaceOutDigits(value: string): string {
 export function leadToDynamicVars(lead: Lead, sessionId: string): Record<string, string> {
     const vars: Record<string, string> = {};
     if (lead.name) vars.name = lead.name;
-    if (lead.phone) vars.phone = lead.phone;
+    if (lead.phone) {
+        vars.phone = lead.phone;
+        // The post-call handover workflow dials this to call the customer back
+        // with the warm-up agent, and /voice/outbound-call requires E.164 — a
+        // bare 10-digit number will not dial.
+        vars.phone_e164 = toE164India(lead.phone);
+    }
     if (lead.pincode) {
         vars.pincode = lead.pincode;
         // What the agent actually speaks (see confirm_context() in the SOP).

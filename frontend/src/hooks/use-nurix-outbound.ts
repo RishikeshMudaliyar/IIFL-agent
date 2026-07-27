@@ -49,14 +49,8 @@ export interface UseNurixOutboundOptions {
   dynamicVars?: Record<string, string>;
 }
 
-/** Normalize a 10-digit Indian mobile to E.164 (+91…). Leaves already-prefixed numbers alone. */
-export function toE164India(raw: string): string {
-  const digits = (raw || "").replace(/[^\d+]/g, "");
-  if (digits.startsWith("+")) return digits;
-  if (digits.length === 10) return `+91${digits}`;
-  if (digits.length === 12 && digits.startsWith("91")) return `+${digits}`;
-  return digits ? `+${digits}` : "";
-}
+export { toE164India } from "../lib/phone";
+import { toE164India } from "../lib/phone";
 
 const TERMINAL: CallStatus[] = ["COMPLETED", "FAILED", "VOICEMAIL", "error"];
 

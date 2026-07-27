@@ -92,6 +92,34 @@ DSL **v4** = `dsl-prompt/iifl-loan-v4-sop-content.txt` (compiled 56285 chars).
 LLM `gemma-4-31b` / cerebras · TTS `eleven_turbo_v2_5`.
 Push with `push_sop_v5_pincode_session.py` (has fail-closed gates); publishing stays the operator's gate.
 
+## 6b. HANDOVER = CALLBACK via a second agent (changed 2026-07-27, v6)
+
+Ira no longer warm-transfers. She promises a callback and ends. A post-call workflow then
+dials the customer back with a second agent, **Priya**, who answers a quick question or two
+and does the actual warm transfer to the human.
+
+| piece | id |
+|---|---|
+| Warm-up agent **Priya** | `52bbc61b-8ba5-4801-9286-0f9c8eccebd0` (cloned from Ira, PUBLISHED, `call_direction: outbound`) |
+| Priya's SOP | `dsl-prompt/iifl-warmup-v1-sop-content.txt` (compiled 35374) |
+| Post-call workflow | `iifl_handover_callback`, `workflow_def_id` **`bdf1bba0-fb79-42c4-b034-fff3dc96a34b`** |
+| Attached to Ira via | `PUT /agent/{ira}/post-conversation-workflow?check_draft=false` `{"post_conversation_workflow": "<def_id>"}` |
+| Trunk (shared with Ira) | `ST_aGf9DfQ4w48v`, number `+918035462787` |
+
+- Priya keeps ONLY the `warm_transfer` tool (+ save_conversation_variable). The 4 form/offer
+  tools were deleted from her — she does not fill forms. Ira keeps the form/offer tools and
+  **lost** her `warm_transfer` tool.
+- The workflow POSTs `http://agentx.agentx/voice/outbound-call` — **cluster-internal**, which is
+  why this works at all: the Railway backend *cannot* reach agentx-prod (blocked egress), so
+  routing the callback through our backend would have failed.
+- ⚠️ **It dials `${workflow.input.agent_input.phone_e164}`, not `phone`.** `/voice/outbound-call`
+  requires E.164; the frontend's raw `phone` is 10 digits and would not dial. `phone_e164` is a
+  registered input variable on Ira, computed by `toE164India()` in `frontend/src/lib/phone.ts`.
+- Trunk assignment route (the one that actually works):
+  `POST /voice/sip-trunk/{trunk_id}/assign-agent` with `{"agent_id", "phone_number_id"}`.
+  MCP `nurix_assign_phone_to_agent` **422s** — it omits the required phone field.
+  `/telephony/trunk/...` paths all 404.
+
 ## 7. Warm transfer
 Tool id (literal name) `Transfer to loan expert`, `tool_type: warm_transfer`, static → **+919356598610**.
 Runtime fn the LLM calls: `Transfer_To_Loan_Expert`.
