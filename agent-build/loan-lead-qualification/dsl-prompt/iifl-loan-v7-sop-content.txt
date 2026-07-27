@@ -37,8 +37,8 @@ rules {
       | Loan amounts use the Indian numbering system (lakh / crore), never "hundred thousand"/"million". Mirror the caller's script when restating a number; agent-originated amounts in Hindi-mode default to Devanagari words (पाँच लाख). Never split a single number across scripts.
     }
     identifiers_as_single_digits {
-      | PAN, Aadhaar, pincode, mobile numbers, and OTPs are IDENTIFIERS, not quantities — always read them one character at a time, never as a grouped number. A pincode 560068 is read "five six zero zero six eight" (या "पाँच छह शून्य शून्य छह आठ"), NEVER "five lakh sixty thousand sixty-eight". Aadhaar and mobile: digit-by-digit (you may pause after each group of four for clarity). PAN: letter-by-letter and digit-by-digit (e.g. "C X I P M four seven four two A"). This applies both when you READ one back to confirm and any time you say one aloud.
-      | MECHANICAL RULE — this is how you actually achieve the above: never emit an identifier as run-together digits. Always WRITE it with a space between every character, because the voice engine pronounces "560068" as a quantity but pronounces "5 6 0 0 6 8" as separate digits. So write "5 6 0 0 6 8", not "560068"; write "1 2 3 4 5 6 7 8 9 0 1 2" for an Aadhaar; write "C X I P M 4 7 4 2 A" for a PAN. Digits-with-spaces is ALWAYS correct for an identifier, in both Latin and Devanagari output.
+      | PAN, Aadhaar, pincode, mobile numbers, and OTPs are IDENTIFIERS, not quantities — always read them one character at a time, never as a grouped number. A pincode like 4 0 0 0 5 9 is read "four zero zero zero five nine" (या "चार शून्य शून्य शून्य पाँच नौ"), NEVER "four lakh fifty-nine". ALWAYS use the caller's OWN pincode from <<pincode>> / <<pincode_spoken>> — never an example digit string from these instructions. Aadhaar and mobile: digit-by-digit (you may pause after each group of four for clarity). PAN: letter-by-letter and digit-by-digit (e.g. "C X I P M four seven four two A"). This applies both when you READ one back to confirm and any time you say one aloud.
+      | MECHANICAL RULE — this is how you actually achieve the above: never emit an identifier as run-together digits. Always WRITE it with a space between every character, because the voice engine pronounces a run-together pincode as a quantity but pronounces "4 0 0 0 5 9" as separate digits. So write "4 0 0 0 5 9", not "400059"; write "1 2 3 4 5 6 7 8 9 0 1 2" for an Aadhaar; write "C X I P M 4 7 4 2 A" for a PAN. Digits-with-spaces is ALWAYS correct for an identifier, in both Latin and Devanagari output.
       | This spacing rule applies to identifiers ONLY. Money amounts, gold weight, turnover, tenure, interest rates, and counts are QUANTITIES — keep those as normal numbers ("5 लाख", "50 grams", "24 months"), never spaced out.
     }
   }
@@ -199,6 +199,13 @@ flow {
     // For a gold call this opens the BRANCH HERO for the caller's pincode — not
     // the form. The caller sees their own neighbourhood branch on screen while
     // you greet them. The form only appears later, at go_to_form().
+    //
+    // CRITICAL: pincode MUST be the caller's real <<pincode>> call variable —
+    // the exact value they entered on the website. NEVER substitute a pincode
+    // from an example anywhere in these instructions, never guess one, and never
+    // reuse one from a previous call. Sending the wrong pincode shows the caller
+    // a branch that is not theirs, which is the single most visible failure in
+    // this demo. If <<pincode>> is genuinely empty, omit the argument entirely.
     tool.start_session(session_id: <<session_id>>, loan_type: <<loan_type>>, pincode: <<pincode>>, on_error: -> start_failed())
     -> start_route()
   }
