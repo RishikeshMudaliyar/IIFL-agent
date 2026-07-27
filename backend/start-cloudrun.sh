@@ -28,13 +28,15 @@ echo "[3/6] Starting x11vnc..."
 x11vnc -display :99 -forever -shared -nopw -rfbport 5900 >/dev/null 2>&1 &
 
 # Start noVNC/websockify (non-blocking)
-# --heartbeat 30: sends a WebSocket ping every 30s. The container is healthy
+# --heartbeat 10: sends a WebSocket ping every 10s. The container is healthy
 # during form fills but there are 5-25s idle gaps between Playwright actions
-# (LLM thinking, user typing) when zero bytes flow. Without a heartbeat, the
-# Railway edge proxy idle-closes the VNC WebSocket and noVNC drops back to
-# the connect screen. The ping keeps the connection registered as active.
+# (LLM thinking, user typing) when zero bytes flow. Without a frequent-enough
+# heartbeat, the Railway edge proxy idle-closes the VNC WebSocket and noVNC
+# drops back to the connect screen ("Reconnecting…", progress appears lost).
+# 30s was too slow — Railway's idle timeout fired first during a long gemma
+# thinking gap. 10s stays well under any reasonable edge idle window.
 echo "[4/6] Starting noVNC on internal port 6080..."
-websockify --heartbeat 30 --web=/usr/share/novnc/ 6080 localhost:5900 >/dev/null 2>&1 &
+websockify --heartbeat 10 --web=/usr/share/novnc/ 6080 localhost:5900 >/dev/null 2>&1 &
 
 # Configure Nginx early to listen on the correct PORT (Cloud Run requirement)
 PORT=${PORT:-8080}
