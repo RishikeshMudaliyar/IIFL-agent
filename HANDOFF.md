@@ -44,17 +44,16 @@ The right half (`LiveFormPanel` / noVNC) is untouched.
    `/home`) rather than rewinding the phase. There is no room to disconnect during a ring because
    it was never mounted.
 
-### One deploy surprise worth knowing
+### Two deploy facts worth knowing
 
-`railway up --service iifl-frontend` printed `reqwest error … operation timed out` at the end.
-That is only the CLI's **log-streaming socket** dropping — the upload and build had already
-started. Check `railway status` rather than retrying; a blind retry queues a second redundant build.
-
-Also: **the git push appeared to trigger an `iifl-backend` redeploy** (it went Deploying → Online
-~40 s after the push) even though no backend file changed. This **contradicts** §"Where things
-live", which says the frontend does not auto-deploy from a git push. Backend came back healthy, so
-nothing is broken, but the trigger wiring is not what the note claims. Unconfirmed — verify before
-relying on either behaviour.
+1. **`railway up` may end with `reqwest error … operation timed out`. That is NOT a build failure** —
+   it is only the CLI's log-streaming socket dropping after the upload and build have already
+   started. Check `railway status`; a blind retry queues a second redundant build.
+2. **The push to `main` redeployed `iifl-backend`, and that is expected** — investigated and
+   resolved, no longer an open question. `iifl-backend` **is** GitHub-connected and auto-deploys on
+   every push to `main`; `iifl-frontend` is **not** connected at all and deploys only via
+   `railway up`. So the old note "the frontend does not auto-deploy" was only half the story.
+   Full table in §"Where things live".
 
 ---
 
@@ -140,6 +139,7 @@ compiled prompt, `post_conversation_workflow` attachment, both agents' tool list
 |---|---|
 | ✅ Verified live (through Mozart, not just the raw endpoint) | pincode → correct branch hero (400086/400097/400014 each tested); `go_to_form` → form; every gold field fills; scheme click lands; offers page leads with the chosen tier; callback gate returns correct decisions across 6 cases |
 | ✅ **v10, confirmed by the operator on a live call** | the **phone-call UI**: the ring shows, auto-answers after ~3 s, and the transcript renders inside the phone frame with Ira's greeting landing on pickup. Live bundle hash verified serving |
+| ✅ **The WHOLE TAIL re-verified on live prod 2026-07-27** (v10 checkpoint) | one session driven end to end against the live backend: `start_session` → `go_to_form(gold)` → `loan_amount`/`gold_weight`/`gold_purity` → `click_button scheme_saver` → `pan`/`aadhaar`/`existing_loan` → `consent` → `show_offers`. **Every step returned success**, offers led with the caller's chosen **Swarna Saver @ 11.88%** (not Max — v9 behaviour holds), amount correctly capped by the gold at **₹1,82,500** (25g × ₹7,300, below the ₹7,00,000 requested). Callback gate correct both ways. Session torn down, `count:0` |
 | ✅ **v9, verified live** | **session teardown, now safe** — a genuine hang-up destroys the browser (`count:0`), while a stray mid-call beacon is REFUSED (`teardown refused to protect a live call`). The v8 version of this killed live calls — see the v9 section at the top |
 | ⚠️ PARTLY proven on a real voice call | call `f218771b` confirmed live: the **area name** is spoken ("आप दादर ईस्ट side में हैं"), the proactive IIFL line lands, `start_session`/`go_to_form`/`fill_field` all fire. It also exposed the two v9 defects. The rest of the flow past scheme selection has still NOT been heard end-to-end |
 | ❌ Never once observed working | **the Priya callback actually ringing.** All five links now verified individually (see §"The callback" below) — but no test call has ever produced the callback. Still a pre-existing unknown |
@@ -375,6 +375,14 @@ Mitigation shipped in v6: a MECHANICAL response_rule telling the model to call `
 **in the same response**, before speaking, and that short answers ("4", "18") still count.
 This is a nudge, not a guarantee — **it has not yet been confirmed on a live call.**
 
+**Re-confirmed 2026-07-27 (v10 checkpoint) that the defect is purely model-side:** the three
+fields that gemma skipped (`loan_amount`, `gold_weight`, `gold_purity`) were each driven directly
+against the live backend and **all three filled successfully**, as did `pan`/`aadhaar`/
+`existing_loan`/`consent` and `click_button scheme_saver`. So the executor, selectors, schemas and
+session handling are all healthy — **if a field is blank on a demo, the tool was never called; do
+not go looking in `playwright_service.py`.** The lever remains structural (force a turn boundary
+per question), not more prompt wording.
+
 **If it is still flaky, the next lever is structural, not more prompt wording:** give every
 form question the same shape that already works — an intermediate state that forces a turn
 boundary between the answer and the next question (mirror the PAN/Aadhaar confirm pattern).
@@ -408,12 +416,46 @@ schemas. PLATFORM-CONFIG.md lists the exact calls.
 | Platform IDs + gotchas | `agent-build/loan-lead-qualification/PLATFORM-CONFIG.md` ← **the important one** |
 | Factory (not in this repo) | `../V-agent-Factory/clients/iifl/loan-lead-qualification/` — push scripts, judge/sim reports |
 
-Deploy: `railway up --service iifl-frontend` / `--service iifl-backend` from the respective
-directory. The frontend does **not** auto-deploy from a git push.
+Deploy — **the two services behave DIFFERENTLY** (confirmed 2026-07-27 via `railway status --json`):
+
+| Service | GitHub connected? | How it deploys |
+|---|---|---|
+| **`iifl-frontend`** | **No** (`source.repo: null`) | **Only** `railway up --service iifl-frontend` from `frontend/`. A git push does nothing. Its deployments carry no commit hash |
+| **`iifl-backend`** | **Yes** — `RishikeshMudaliyar/IIFL-agent`, config `/backend/railway.json` | **Auto-deploys on every push to `main`**, even when no backend file changed. `railway up --service iifl-backend` also works |
+
+Consequences, both real:
+- **A frontend change is NOT live until you run `railway up`.** Pushing to `main` is not enough.
+- **Any push to `main` redeploys the backend.** Harmless for frontend-only commits (it rebuilds the
+  same backend image), but it means a broken backend commit goes live the moment you push — there is
+  no "push now, deploy later" safety gap on that service.
+
+Verify a frontend deploy really landed by matching the served bundle hash to your local build —
+the hashes are content-derived, so equality is proof:
+`curl -s <frontend-url>/ | grep -oE 'assets/index-[A-Za-z0-9_-]+\.js'` vs `ls frontend/dist/assets/`.
 
 ---
 
 ## Things that cost real time to discover — don't rediscover them
+
+0. **The `/agent/*` JSON field names are NOT what you'd guess** — hit twice while verifying v10.
+   Getting one wrong does **not** error loudly; the value silently arrives as `None` and you get a
+   plausible-but-wrong result. Copy these exactly (source of truth: the Pydantic models in
+   `backend/agent_routes.py`):
+   - `POST /agent/click-button` → **`button`**, *not* `button_name`. (A wrong key here **does** 422.)
+   - `POST /agent/show-offers` → **`loan_amount`, `gold_weight`, `gold_purity`**, *not*
+     `amount`/`grams`/`purity`. Sending the guessable names made grams parse as 0, so the offer
+     collapsed to the `Math.max(10000, …)` floor in `frontend/src/lib/offerTable.ts` and showed
+     **₹10,000** for a ₹7,00,000 request. Nothing was broken — the call was wrong. If offers ever
+     read ₹10,000, suspect the payload keys **before** the offer logic.
+   - `POST /agent/go-to-form` → **`loan_type`** (`gold` | `business` | `secured_business`), *not*
+     `form`. A wrong key silently defaults to **gold**, so business/secured appear "broken" and land
+     on `/gold-application` when in fact the request never named a type.
+   - `POST /agent/fill-field` → `field_name` + `value` (this one is as expected).
+
+   **The pattern:** these endpoints accept an unknown key without complaint and fall back to a
+   default. Three of my four verification calls hit this and each *looked* like an app bug. Read the
+   Pydantic model before writing a curl, and when a result looks wrong, **re-check your payload keys
+   first**.
 
 1. **Tool schema enums gate what the LLM can send.** IIFL's tools were cloned from muthoot
    and kept muthoot's `field_name` enum, so 13 of 14 IIFL fields were unsendable. The model
@@ -459,11 +501,19 @@ is the single source of truth for both the UI and what the agent says.
 
 **Do first**
 1. ~~Republish Ira~~ — **DONE.** Ira is published on SOP v9 (version 24843) and re-verified.
-2. **Run a real voice call through the whole v8 flow.** Nothing in v7 or v8 has been exercised by
-   gemma on a live call yet — only via the API and Mozart. `TEST-SCRIPT-v7.md` plus the five v8
-   scenarios above. **This is now the single highest-value thing left.**
+2. **Run a real voice call through the whole v8 flow — ONE THING LEFT, and it needs a human.**
+   Everything mechanical is now verified on live prod (see the table above: the full tail from
+   `start_session` through `show_offers`, both non-gold loan types, and the callback gate both
+   ways). What remains is **whether gemma actually calls the tools in the right order while
+   talking** — the `fill_field` turn-boundary defect is the only real risk, and it cannot be
+   reproduced or cleared through the API, because the API path always calls the tool correctly.
+   Run `TEST-SCRIPT-v7.md` + the five v8 scenarios on a real voice call. **This is the single
+   highest-value thing left and the only genuinely open item.**
 3. **While on that call, run the callback diagnostic** (§"The callback" above) — it is the one
-   experiment that separates the two remaining candidate causes.
+   experiment that separates the two remaining candidate causes. The gate itself is confirmed
+   correct on live prod (`should_call:true` + number when ready, `false` + empty when not), so if a
+   *complete* call still produces no callback, **the gate is exonerated** and the cause is
+   downstream in the workflow/telephony leg.
 
 **Known unknowns (not regressions)**
 - **The fill_field turn-boundary defect** — the one genuinely fragile thing. Mitigated by a
@@ -471,14 +521,18 @@ is the single source of truth for both the UI and what the agent says.
   **structural** (give every form question the PAN/Aadhaar-style confirm state that already
   works), then a model A/B against `gpt-4.1-mini`. Note the scheme step is a `click_button`,
   not a fill, and carries its own rule.
-- **The callback has never actually rung.** All pieces verified individually. If a *complete*
-  call produces no callback, check the backend log for `handover_gate: … should_call=True` —
-  that separates "my gate suppressed it" from the pre-existing unknown.
+- **The callback has never actually rung.** All pieces verified individually, and the **gate is now
+  confirmed correct against live prod** (ready+valid phone → `should_call:true` with the number;
+  not-ready → `should_call:false` with an empty number). So the gate can be ruled out: if a
+  *complete* call produces no callback, the cause is downstream (workflow trigger or telephony leg),
+  not suppression. Still check the backend log for `handover_gate: … should_call=True` to confirm.
 - The 30s cold-start `start_session` timeout is mitigated by warming, not fixed.
 
 **Nice to have**
-- Business and secured loans are untouched by v7 and still work, but have not been re-tested
-  since the change. Worth one smoke test each if the client might ask.
+- ~~Business and secured loans have not been re-tested~~ — **DONE 2026-07-27 (v10).** Both smoke
+  tested on live prod: `go_to_form` routes correctly (`business` → `/business-application`,
+  `secured_business` → `/secured-application`) and offers render — Vyapar Starter 19% / Growth 17.5%
+  at ₹5,00,000; Sampatti Base 13% / Plus 12% at ₹25,00,000. Safe if the client asks.
 - The fabricated hyperlocal lines (one `hyperlocal` field per branch in
   `frontend/src/lib/branches.ts`, plus the matching "local colour" line in the prompt) are the
   **only** invented content. Worth a read-through before the client sees it.
