@@ -1,21 +1,79 @@
-# IIFL demo — state of the world as of 2026-07-27 (v8, persuasion + cleanup)
+# IIFL demo — state of the world as of 2026-07-27 (v9)
 
-**v8 IS BUILT, DEPLOYED AND PUBLISHED.** It adds hyperlocal area names, proactive benefits and
-hesitation handling on top of v7's gold-first branch-hero flow, and fixes the session-teardown
-defect. Read this first, then `agent-build/loan-lead-qualification/PLATFORM-CONFIG.md` for every
+**v9 IS BUILT, DEPLOYED AND PUBLISHED.** v8 added hyperlocal area names, proactive benefits and
+hesitation handling; v9 fixes the two defects the first live call exposed (below). Read this first, then `agent-build/loan-lead-qualification/PLATFORM-CONFIG.md` for every
 ID and the platform gotchas.
 
-Previous tags: `v7-checkpoint-2026-07-27`, `handover-callback-2026-07-27`.
+Tags: `v9-checkpoint-2026-07-27` (this state), `v8-checkpoint-2026-07-27`, `v7-checkpoint-2026-07-27`.
+
+---
+
+## 🔴 v9 — TWO LIVE-CALL DEFECTS FOUND AND FIXED (call `f218771b`)
+
+The first real voice call exposed two serious bugs. **Both are fixed, deployed and published
+(Ira version 24843).** Read this before anything else.
+
+### Defect 1 — the cleanup killed the LIVE call's browser (a v8 REGRESSION)
+
+Symptoms the operator saw: noVNC showed **"Reconnecting…"** mid-call, and the demo **jumped back
+to the branch hero** even though the conversation was already past scheme selection.
+
+Cause: v8's teardown was wired to fire on component **unmount**. `<React.StrictMode>`
+(`index.tsx`) deliberately mounts → unmounts → remounts every component, so the unmount fired the
+teardown beacon **during the call**, and the remount minted a **new** `useFormSessionId()`.
+
+Evidence from the call:
+
+```
+12:17:25  start_session  -> web-6c978c49   OK
+12:17:57  go_to_form     -> /gold-application   OK
+12:18:12  fill_field loan_amount=700000   OK
+12:19:17  *** a second session web-d20ec74a appears — nothing asked for it ***
+12:19:30  click_button scheme_max -> "Button 'scheme_max' not found"   FAILED
+```
+
+Ira's click went to the original session whose browser had just been destroyed; the form silently
+stopped filling from that point.
+
+**Two-part fix (both shipped):**
+1. **Never tear down on unmount.** Cleanup now runs ONLY on a genuine end — explicit hang-up,
+   LiveKit `onDisconnected`, or `pagehide` (which StrictMode does not fire). Leaving the page any
+   other way is covered by the backend's lazy teardown, which is what that safety net is for.
+2. **The session id survives a remount.** `useFormSessionId()` now keeps the id in a module-scope
+   variable, not `useState` (which is per-mount), and `resetFormSessionId()` clears it only when a
+   call really ends.
+3. **Backend guard — `IN_FLIGHT_GRACE_SECONDS = 8`.** `/agent/session/end` now REFUSES to destroy
+   a session touched within the last 8s. The frontend is not a trustworthy source of "the call
+   ended"; a real hang-up is followed by silence, so the window costs nothing.
+
+Verified live: a stray beacon mid-call → `"teardown refused to protect a live call"`, session
+survives. After 10s of silence → `{"closed":["guard-test"]}`, `count:0`.
+
+### Defect 2 — Ira chose the scheme, and chose the most expensive one
+
+The caller said *"जो सबसे best रहेगा मेरे लिए… मेरे पास ज़्यादा पैसे नहीं है"* and Ira replied
+*"तो क्या मैं आपके लिए **Swarna Max** select कर दूँ?"* — the **highest-interest** scheme (17.4%),
+recommended to the most cost-sensitive signal in the call, and chosen *for* them.
+
+**Fix (SOP v9):** new `gold_scheme_help()` state for "which is best for me?", plus hard rules:
+never select for the caller; never default to Max; when money is tight the honest answer is
+**Saver** (the cheapest); and never say *"क्या मैं आपके लिए select कर दूँ?"* — recommend, then have
+the caller confirm the scheme **by name**. The three-scheme pitch was also cut from nine numbers
+to three names (the cards on screen carry the detail).
+
+Verified by replaying the exact failing exchange against the published prompt:
+now recommends **Saver** with the reason, and asks *"क्या आप Swarna Saver लेना चाहेंगे?"*.
+All five gates are enforced in `push_sop_v9_scheme_choice.py`.
 
 ---
 
 ## ⏭️ START HERE IN A NEW SESSION
 
 **Everything is deployed and published — nothing is pending.** Ira runs published version
-**24832** (SOP v8), and both Railway services are live with the v8 code.
+**24843** (SOP v9), and both Railway services are live with the v9 code.
 
 > ⚠️ The old "🔴 republish Ira first" instruction is **GONE — it was already done.** Ira reports
-> `has_unpublished_changes: false`. Do not re-push v7 over v8.
+> `has_unpublished_changes: false`. Do not re-push an older SOP over v9.
 
 Run **`TEST-SCRIPT-v7.md`** for the core flow (still accurate — v8 changes wording and adds
 states, it does not change the v7 happy path), plus the v8 scenarios in §"Testing v8" below.
@@ -30,8 +88,8 @@ compiled prompt, `post_conversation_workflow` attachment, both agents' tool list
 | | |
 |---|---|
 | ✅ Verified live (through Mozart, not just the raw endpoint) | pincode → correct branch hero (400086/400097/400014 each tested); `go_to_form` → form; every gold field fills; scheme click lands; offers page leads with the chosen tier; callback gate returns correct decisions across 6 cases |
-| ✅ **NEW in v8, verified live** | **eager session teardown** — hanging up destroys the browser immediately (`/agent/sessions` → `count:0`), so the next demo cannot inherit the previous screen |
-| ⚠️ NOT yet proven on a real voice call | the v7/v8 conversation flow end-to-end with a human speaking. Everything above was driven via the API/Mozart, **not by gemma in a live call**. The v8 conversational changes (area name, benefits, hesitation) are prompt-level and have NOT been heard on a live call yet |
+| ✅ **v9, verified live** | **session teardown, now safe** — a genuine hang-up destroys the browser (`count:0`), while a stray mid-call beacon is REFUSED (`teardown refused to protect a live call`). The v8 version of this killed live calls — see the v9 section at the top |
+| ⚠️ PARTLY proven on a real voice call | call `f218771b` confirmed live: the **area name** is spoken ("आप दादर ईस्ट side में हैं"), the proactive IIFL line lands, `start_session`/`go_to_form`/`fill_field` all fire. It also exposed the two v9 defects. The rest of the flow past scheme selection has still NOT been heard end-to-end |
 | ❌ Never once observed working | **the Priya callback actually ringing.** All five links now verified individually (see §"The callback" below) — but no test call has ever produced the callback. Still a pre-existing unknown |
 | ⚠️ Known-fragile | `fill_field` turn-boundary defect (below). Mitigated by a prompt rule, never confirmed fixed on a live call. **v8 adds conversational turns, which could aggravate it — watch this on the next live call** |
 
@@ -348,7 +406,7 @@ is the single source of truth for both the UI and what the agent says.
 ## Open items carried into the next session
 
 **Do first**
-1. ~~Republish Ira~~ — **DONE.** Ira is published on SOP v8 (version 24832) and re-verified.
+1. ~~Republish Ira~~ — **DONE.** Ira is published on SOP v9 (version 24843) and re-verified.
 2. **Run a real voice call through the whole v8 flow.** Nothing in v7 or v8 has been exercised by
    gemma on a live call yet — only via the API and Mozart. `TEST-SCRIPT-v7.md` plus the five v8
    scenarios above. **This is now the single highest-value thing left.**

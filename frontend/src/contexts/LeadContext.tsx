@@ -133,8 +133,30 @@ export function leadToDynamicVars(lead: Lead, sessionId: string): Record<string,
     return vars;
 }
 
-/** Mint one form-session id per page mount, stable across re-renders. */
+// One form-session id per PAGE VISIT — not per mount.
+//
+// ⚠️ This deliberately lives outside React state. `useState` is per-mount, and
+// <React.StrictMode> mounts -> unmounts -> remounts every component, so a
+// useState-minted id changed identity mid-call: start_session ran under one id
+// and the later fill/click tools were sent a different one, which the backend
+// had no browser for ("Button 'scheme_max' not found" on call f218771b).
+//
+// Cleared explicitly when a call really ends, so the NEXT demo still gets a
+// fresh browser rather than inheriting this one.
+let ACTIVE_FORM_SESSION_ID: string | null = null;
+
+/** The id every Playwright tool keys off. Stable across mounts and re-renders. */
 export function useFormSessionId(): string {
-    const [sessionId] = useState(() => `web-${crypto.randomUUID()}`);
+    const [sessionId] = useState(() => {
+        if (!ACTIVE_FORM_SESSION_ID) {
+            ACTIVE_FORM_SESSION_ID = `web-${crypto.randomUUID()}`;
+        }
+        return ACTIVE_FORM_SESSION_ID;
+    });
     return sessionId;
+}
+
+/** Call when a call genuinely ends, so the next one mints a new session. */
+export function resetFormSessionId(): void {
+    ACTIVE_FORM_SESSION_ID = null;
 }

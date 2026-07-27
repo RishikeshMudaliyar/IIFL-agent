@@ -490,6 +490,18 @@ async def handover_gate(
     }
 
 
+# How recently a session must have been touched to count as "a call is happening
+# right now", and therefore be protected from an unsolicited teardown.
+#
+# 8s is chosen against the real timing: during a call the gap between tool calls
+# is a few seconds (observed 12:17:25 -> 12:17:57 -> 12:18:12 on call f218771b),
+# while a genuine hang-up is followed by permanent silence. Long enough to shield
+# a live call from a stray beacon, short enough that a real hang-up during a
+# think-gap still tears down promptly — and the next start_session sweeps
+# whatever this refuses, so nothing can leak.
+IN_FLIGHT_GRACE_SECONDS = 8
+
+
 @agent_router.post("/sessions/close-all")
 async def close_all_sessions():
     """Close all active Playwright sessions. Useful for cleaning up leaked browsers."""
@@ -541,8 +553,18 @@ async def end_session(request: Request):
     a `text/plain` body against a BaseModel parameter with a 422 BEFORE this
     function runs, so the browser's cleanup call never reached the teardown.
     Reading the raw bytes accepts the beacon and a normal JSON post alike.
+
+    ⚠️ IT REFUSES TO KILL AN IN-FLIGHT CALL. A stray teardown request destroyed a
+    LIVE call's browser once already (React StrictMode's unmount fired the beacon
+    mid-call — see AgentVoicePage.tsx). The frontend is fixed, but the frontend is
+    not a trustworthy source of "the call ended": a bug, a double-mount, or a
+    stray tab can all send this. So a session that has shown tool activity within
+    IN_FLIGHT_GRACE_SECONDS is NOT destroyed. A real hang-up is always followed by
+    silence, so the grace window costs nothing; the next `start_session` sweeps
+    anything this refuses.
     """
     import json as _json
+    from datetime import datetime as _dt
     from playwright_service import PLAYWRIGHT_SESSIONS
 
     raw: Dict[str, Any] = {}
@@ -571,6 +593,32 @@ async def end_session(request: Request):
         # or the beacon fired twice). Not an error.
         logger.info("session/end: session %s already gone", sid)
         return {"success": True, "closed": [], "reason": "session already closed"}
+
+    # ---- REFUSE TO KILL A CALL THAT IS STILL RUNNING ----
+    # A live call touches this session constantly (every fill_field / click_button
+    # bumps last_activity_at). Recent activity means a caller is mid-application,
+    # so whatever sent this request was wrong. A genuine hang-up is followed by
+    # silence, so this never blocks a real teardown.
+    sess = PLAYWRIGHT_SESSIONS.get(sid) or {}
+    last = sess.get("last_activity_at") or sess.get("created_at")
+    if last:
+        try:
+            idle_for = (_dt.now() - last).total_seconds()
+            if idle_for < IN_FLIGHT_GRACE_SECONDS:
+                logger.warning(
+                    "session/end: REFUSED to destroy %s — active %.1fs ago (<%ds). "
+                    "Something asked to end a call that is still in progress.",
+                    sid, idle_for, IN_FLIGHT_GRACE_SECONDS,
+                )
+                return {
+                    "success": True,
+                    "closed": [],
+                    "reason": (f"session still in flight (active {idle_for:.1f}s ago) "
+                               f"— teardown refused to protect a live call"),
+                }
+        except Exception as e:
+            # A clock/type problem must not stop a legitimate teardown.
+            logger.warning("session/end: could not compute idle time for %s: %s", sid, e)
 
     try:
         await playwright_service.destroy_session(sid)

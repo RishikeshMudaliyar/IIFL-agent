@@ -9,7 +9,7 @@ import {
 import { Mic, MicOff, PhoneOff, Send, ChevronLeft, Loader2 } from "lucide-react";
 import { CLIENT_NAME } from "../config/branding";
 import { useNurixVoice } from "../hooks/use-nurix-voice";
-import { useLead, leadToDynamicVars, useFormSessionId } from "../contexts/LeadContext";
+import { useLead, leadToDynamicVars, useFormSessionId, resetFormSessionId } from "../contexts/LeadContext";
 import { endFormSession } from "../lib/sessionCleanup";
 import LiveFormPanel from "../components/LiveFormPanel";
 
@@ -59,31 +59,46 @@ const AgentVoicePage = () => {
     { dynamicVars: leadToDynamicVars(lead, formSessionId) },
   );
 
-  // EVERY CALL CLEANS UP AFTER ITSELF.
+  // EVERY CALL CLEANS UP AFTER ITSELF — BUT ONLY ON A REAL END.
   //
-  // Ending a call used to only disconnect the LiveKit room — the backend was
-  // never told, so the previous demo's Chromium stayed alive and noVNC kept
-  // showing its last screen into the next demo. Tear the browser down on every
-  // way out of this page: hang up, agent disconnect, Back, tab close, reload.
+  // ⚠️ DO NOT CLEAN UP ON UNMOUNT. An earlier version did, and it destroyed the
+  // browser of the call that was still in progress:
   //
-  // Latched so the beacon fires at most once per call: several of these paths
-  // overlap (endCall -> onDisconnected -> unmount), and a duplicate would be a
-  // no-op on the backend but is pointless traffic during unload.
+  //   <React.StrictMode> (index.tsx) deliberately mounts -> unmounts -> remounts
+  //   every component. The unmount cleanup fired the teardown beacon MID-CALL,
+  //   the remount minted a fresh useFormSessionId(), and the call was left
+  //   talking to a session whose browser no longer existed. Observed live on call
+  //   f218771b: session web-6c978c49 started 12:17:25, a second session appeared
+  //   at 12:19:17 unasked, and click_button scheme_max then failed with
+  //   "Button 'scheme_max' not found". On screen: noVNC showed "Reconnecting…"
+  //   and the demo jumped back to the branch hero.
+  //
+  // Unmount is NOT a reliable "the call ended" signal. Only two things are:
+  // the user pressing hang up, and LiveKit reporting the room disconnected.
+  // Both are wired below via cleanUp(). Leaving the page without either of those
+  // is handled by the backend's own lazy teardown on the next start_session,
+  // which is exactly what that safety net is for.
+  //
+  // Latched so the beacon fires at most once per call (endCall and
+  // onDisconnected both fire on a normal hang-up).
   const cleanedUpRef = useRef(false);
   const cleanUp = useCallback(() => {
     if (cleanedUpRef.current) return;
     cleanedUpRef.current = true;
     endFormSession(formSessionId);
+    // The call is genuinely over, so the next demo must mint a NEW session id
+    // rather than reuse this one (which now has no browser behind it).
+    resetFormSessionId();
   }, [formSessionId]);
 
   useEffect(() => {
-    // pagehide covers tab close, reload and bfcache on mobile Safari, where
-    // unmount alone is not guaranteed to run.
+    // pagehide = tab close / reload / navigating away for real. This one is safe
+    // because StrictMode does not fire it — unlike unmount.
     window.addEventListener("pagehide", cleanUp);
     return () => {
       window.removeEventListener("pagehide", cleanUp);
-      // Unmount = leaving the call page by any route (Back, redirect home).
-      cleanUp();
+      // NOTHING HERE. See the comment above: cleaning up on unmount kills a live
+      // call under StrictMode.
     };
   }, [cleanUp]);
 
