@@ -3,7 +3,31 @@
 The **scope change landed**. This describes the NEW flow. Read this first, then
 `agent-build/loan-lead-qualification/PLATFORM-CONFIG.md` for every ID and the platform gotchas.
 
-Previous checkpoint tag (pre-scope-change): **`handover-callback-2026-07-27`**.
+Checkpoint tag for this state: **`v7-checkpoint-2026-07-27`**.
+Previous tag (pre-scope-change): `handover-callback-2026-07-27`.
+
+---
+
+## ⏭️ START HERE IN A NEW SESSION
+
+**The one thing you must do first: REPUBLISH IRA.** The v7 SOP — including the
+`handover_ready` callback gate — is on the **draft**, not published. Everything else is live.
+
+Then run **`TEST-SCRIPT-v7.md`** (in this repo). It has turn-by-turn scripts for 8 scenarios,
+ground-truth number tables, and a symptom→cause triage table.
+
+**After every publish, re-verify** (publishing has reverted out-of-band changes 3×):
+compiled prompt, `post_conversation_workflow` attachment, both agents' tool lists, and all
+5 action schemas. PLATFORM-CONFIG.md §"READ THIS FIRST" lists the exact calls.
+
+### What is verified working vs. what is not
+
+| | |
+|---|---|
+| ✅ Verified live (through Mozart, not just the raw endpoint) | pincode → correct branch hero (400086/400097/400014 each tested); `go_to_form` → form; every gold field fills; scheme click lands; offers page leads with the chosen tier; callback gate returns correct decisions across 6 cases; a second demo destroys the first's browser |
+| ⚠️ NOT yet proven on a real voice call | the whole v7 conversation flow end-to-end with a human speaking. Everything above was driven via the API/Mozart, **not by gemma in a live call** |
+| ❌ Never once observed working | **the Priya callback actually ringing.** Wired, gated, and verified piece by piece — but no test call has ever produced the callback. This is a pre-existing unknown, NOT something v7 broke |
+| ⚠️ Known-fragile | `fill_field` turn-boundary defect (below). Mitigated by a prompt rule, never confirmed fixed on a live call |
 
 ---
 
@@ -72,6 +96,41 @@ voice call. Then:
 
 Live URLs: frontend `https://iifl-frontend-production.up.railway.app`,
 backend `https://iifl-backend-production.up.railway.app`.
+
+## Three defects found and fixed after the first live test (same day)
+
+**1. Every caller got the Andheri branch, whatever pincode they typed.**
+The digit-spacing rule in the prompt used `560068` as its worked example, and gemma sent *that*
+to `start_session` instead of `<<pincode>>` — a few-shot leak. Examples now use `400059` (a real
+supported pincode, so a copy is harmless) plus an explicit "use the caller's own `<<pincode>>`"
+instruction at the tool call site. **Note: action-schema enums are NOT enforced at runtime** —
+`560068` was not in the enum and still reached the backend. Prompt wording is the real control;
+the backend's unsupported-pincode fallback is the safety net (it worked).
+
+**2. Priya called back even when the demo was abandoned halfway.**
+The post-call workflow was `start → dial → end`, unconditional. Now Ira sets `handover_ready`
+via `%%infer` in **`transfer_intro()` and nowhere else**, and the workflow is two chained HTTP
+tasks: `ask_gate` (backend `/agent/handover-gate`) → `trigger_callback`, with the dial reading
+`${ask_gate.output.response.body.number}`. An incomplete conversation returns an **empty number**,
+which cannot dial. The push script gates that `handover_ready` appears exactly twice and only
+inside `transfer_intro()`, so it can never be set early again.
+
+⚠️ **A Mozart `switch` node does NOT work** — it is stored in the graph and reads back intact,
+but the **compiler silently drops it**. Verified. Always check the compiled `tasks`
+(`GET /api/metadata/workflow/{uid}`), never the draft graph.
+
+**3. A second demo showed the previous demo's last screen.**
+Three independent causes, all fixed:
+- `MAX_CONCURRENT_SESSIONS = 2` left the old browser alive, and noVNC shows the whole X display —
+  so the previous run's offers page sat there until the new page painted (and leaked one caller's
+  data into the next demo). Now every `start_session` tears down all other sessions first.
+- `setLead` **merges**, so a field left blank inherited the last caller's value (a stale pincode
+  opened the wrong branch). Added `replaceLead()` — one atomic write — used on the landing page.
+- The noVNC iframe `src` was a constant and could reuse its cached document. Now cache-busted
+  once per mount.
+
+Also: **`scheme` was never registered as an agent variable**, so the offers page could not have
+received the caller's chosen LTV tier. Registered.
 
 ## Verified end-to-end 2026-07-27 (through Mozart, not just the raw endpoint)
 
@@ -200,11 +259,40 @@ is the single source of truth for both the UI and what the agent says.
 
 ## Open items carried into the next session
 
-- **Confirm the fill fix on a live call** (the one real unknown above).
-- **The handover callback has never been observed end-to-end on a real call** — the code,
-  workflow, agent, and trunk are all wired and verified, but no test call has actually
-  produced the callback yet. Needs a real phone number in the hero form.
+**Do first**
+1. **Republish Ira** — the v7 SOP with the `handover_ready` gate is on the draft. Then re-verify
+   (publishing has reverted things 3×).
+2. **Run a real voice call through the whole v7 flow.** Nothing in v7 has been exercised by gemma
+   on a live call yet — only via the API and Mozart. `TEST-SCRIPT-v7.md` is the script.
+
+**Known unknowns (not regressions)**
+- **The fill_field turn-boundary defect** — the one genuinely fragile thing. Mitigated by a
+  MECHANICAL prompt rule, never confirmed on a live call. If still flaky, the next lever is
+  **structural** (give every form question the PAN/Aadhaar-style confirm state that already
+  works), then a model A/B against `gpt-4.1-mini`. Note the scheme step is a `click_button`,
+  not a fill, and carries its own rule.
+- **The callback has never actually rung.** All pieces verified individually. If a *complete*
+  call produces no callback, check the backend log for `handover_gate: … should_call=True` —
+  that separates "my gate suppressed it" from the pre-existing unknown.
 - The 30s cold-start `start_session` timeout is mitigated by warming, not fixed.
-- `MAX_CONCURRENT_SESSIONS = 2` eviction has a benign race (3 concurrent starts all survived).
+
+**Nice to have**
+- Business and secured loans are untouched by v7 and still work, but have not been re-tested
+  since the change. Worth one smoke test each if the client might ask.
+- The fabricated hyperlocal lines (one `hyperlocal` field per branch in
+  `frontend/src/lib/branches.ts`, plus the matching "local colour" line in the prompt) are the
+  **only** invented content. Worth a read-through before the client sees it.
 - v3's changelog claims the "loan offers" step was removed; `offer_intro` was in fact still
   present throughout, and v5 deliberately reinstated a real offers step.
+
+## Where the platform-side scripts live
+
+`agent-build/loan-lead-qualification/push_sop_v7_branch_schemes.py` is the v7 SOP pusher
+(backed up here because `V-agent-Factory/clients/*` is gitignored — the factory copy is the
+one that runs, from `V-agent-Factory/clients/iifl/loan-lead-qualification/`). It fail-closes on
+19 gates including the `handover_ready` placement. Run it with the factory venv:
+
+```
+cd ~/IIFL/V-agent-Factory/clients/iifl/loan-lead-qualification
+../../../.venv/bin/python push_sop_v7_branch_schemes.py     # pushes to DRAFT only
+```
