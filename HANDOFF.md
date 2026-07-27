@@ -1,10 +1,60 @@
-# IIFL demo — state of the world as of 2026-07-27 (v9)
+# IIFL demo — state of the world as of 2026-07-27 (v10)
 
-**v9 IS BUILT, DEPLOYED AND PUBLISHED.** v8 added hyperlocal area names, proactive benefits and
-hesitation handling; v9 fixes the two defects the first live call exposed (below). Read this first, then `agent-build/loan-lead-qualification/PLATFORM-CONFIG.md` for every
-ID and the platform gotchas.
+**v10 IS BUILT AND DEPLOYED.** v10 is a **frontend-only** change: the call page now looks like a
+real inbound phone call (smartphone mockup, rings, auto-answers, then shows the transcript).
+**No agent, prompt, tool, PCA or backend change — Ira is untouched and still on published version
+24843 (SOP v9).** v9 fixed the two defects the first live call exposed (below). Read this first,
+then `agent-build/loan-lead-qualification/PLATFORM-CONFIG.md` for every ID and the platform
+gotchas.
 
-Tags: `v9-checkpoint-2026-07-27` (this state), `v8-checkpoint-2026-07-27`, `v7-checkpoint-2026-07-27`.
+Tags: `v10-checkpoint-2026-07-27` (this state), `v9-checkpoint-2026-07-27`,
+`v8-checkpoint-2026-07-27`, `v7-checkpoint-2026-07-27`.
+
+---
+
+## 📱 v10 — THE CALL PAGE IS NOW A PHONE CALL (frontend only)
+
+Confirmed working on a live call by the operator. Deployed to Railway; frontend bundle
+`index-C5tJ62rI.js` verified serving from `iifl-frontend-production.up.railway.app`.
+
+**What the demo now does:** hero form → "Talk to AI" → the left panel shows a **device-framed
+incoming call** from *IIFL Finance · 1860 267 3000* (pulsing "Ira" avatar, ring animation,
+Decline/Answer) → after **~3 s it auto-answers** → the panel becomes the in-call screen (Ira
+avatar, live MM:SS timer, green pulse) with the **existing transcript underneath, unchanged**.
+The right half (`LiveFormPanel` / noVNC) is untouched.
+
+| | |
+|---|---|
+| New | `frontend/src/components/PhoneCallFrame.tsx` — `mode="ringing"` \| `mode="in-call"`, device bezel + notch, live status-bar clock, call timer. Self-contained: CSS keyframes are inlined, so **no `tailwind.config` change** |
+| Changed | `frontend/src/pages/AgentVoicePage.tsx` — a one-way `phase` state (`"ringing"` → `"connected"`) that **gates the `<LiveKitRoom>` mount** |
+| Unchanged | `VoiceConversation` — transcript streaming, interim-bubble collapsing and `sanitizeTranscript` are all byte-identical. Deliberate: the fragile, already-debugged parts stayed out of the blast radius |
+| Caller ID | `IIFL_CALLER_NUMBER` at the top of `PhoneCallFrame.tsx` = `1860 267 3000` (IIFL's real published customer-care number). One-line change if the client wants a branch landline instead |
+| Ring length | `RING_DURATION_MS = 3000`, same file |
+
+### 🔴 Two invariants in this code — do not "simplify" either
+
+1. **Gating the `<LiveKitRoom>` mount is load-bearing, not cosmetic.**
+   `<LiveKitRoom connect audio>` starts the conversation the *instant it mounts*. If it mounted
+   during the ring, Ira would deliver her `नमस्ते!` greeting while the screen still said
+   "Incoming call". The room must mount only at `phase === "connected"`, which is what makes her
+   greeting land exactly on pickup.
+2. **The phase flip is ONE-WAY. Never flip back to `"ringing"`.**
+   Flipping back would unmount `<LiveKitRoom>` mid-call — precisely the v9 Defect 1 teardown
+   failure that killed live calls. **Decline** therefore takes the hang-up path (`cleanUp()` then
+   `/home`) rather than rewinding the phase. There is no room to disconnect during a ring because
+   it was never mounted.
+
+### One deploy surprise worth knowing
+
+`railway up --service iifl-frontend` printed `reqwest error … operation timed out` at the end.
+That is only the CLI's **log-streaming socket** dropping — the upload and build had already
+started. Check `railway status` rather than retrying; a blind retry queues a second redundant build.
+
+Also: **the git push appeared to trigger an `iifl-backend` redeploy** (it went Deploying → Online
+~40 s after the push) even though no backend file changed. This **contradicts** §"Where things
+live", which says the frontend does not auto-deploy from a git push. Backend came back healthy, so
+nothing is broken, but the trigger wiring is not what the note claims. Unconfirmed — verify before
+relying on either behaviour.
 
 ---
 
@@ -70,7 +120,8 @@ All five gates are enforced in `push_sop_v9_scheme_choice.py`.
 ## ⏭️ START HERE IN A NEW SESSION
 
 **Everything is deployed and published — nothing is pending.** Ira runs published version
-**24843** (SOP v9), and both Railway services are live with the v9 code.
+**24843** (SOP v9) — **v10 did not touch her**, so there is nothing to republish. Both Railway
+services are live with the v10 frontend / v9 agent.
 
 > ⚠️ The old "🔴 republish Ira first" instruction is **GONE — it was already done.** Ira reports
 > `has_unpublished_changes: false`. Do not re-push an older SOP over v9.
@@ -88,6 +139,7 @@ compiled prompt, `post_conversation_workflow` attachment, both agents' tool list
 | | |
 |---|---|
 | ✅ Verified live (through Mozart, not just the raw endpoint) | pincode → correct branch hero (400086/400097/400014 each tested); `go_to_form` → form; every gold field fills; scheme click lands; offers page leads with the chosen tier; callback gate returns correct decisions across 6 cases |
+| ✅ **v10, confirmed by the operator on a live call** | the **phone-call UI**: the ring shows, auto-answers after ~3 s, and the transcript renders inside the phone frame with Ira's greeting landing on pickup. Live bundle hash verified serving |
 | ✅ **v9, verified live** | **session teardown, now safe** — a genuine hang-up destroys the browser (`count:0`), while a stray mid-call beacon is REFUSED (`teardown refused to protect a live call`). The v8 version of this killed live calls — see the v9 section at the top |
 | ⚠️ PARTLY proven on a real voice call | call `f218771b` confirmed live: the **area name** is spoken ("आप दादर ईस्ट side में हैं"), the proactive IIFL line lands, `start_session`/`go_to_form`/`fill_field` all fire. It also exposed the two v9 defects. The rest of the flow past scheme selection has still NOT been heard end-to-end |
 | ❌ Never once observed working | **the Priya callback actually ringing.** All five links now verified individually (see §"The callback" below) — but no test call has ever produced the callback. Still a pre-existing unknown |
