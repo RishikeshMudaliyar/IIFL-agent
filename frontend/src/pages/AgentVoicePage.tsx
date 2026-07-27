@@ -111,7 +111,7 @@ const AgentVoicePage = () => {
           audio={true}
           video={false}
           onDisconnected={() => navigate("/home")}
-          className="flex-1 flex flex-col"
+          className="flex-1 min-h-0 flex flex-col"
         >
           <RoomAudioRenderer />
           <VoiceConversation />
