@@ -18,7 +18,7 @@ from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, model_validator
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from playwright_service import playwright_service
 
@@ -512,6 +512,75 @@ async def close_all_sessions():
         "closed": closed,
         "failed": failed,
     }
+
+
+@agent_router.post("/session/end")
+async def end_session(request: Request):
+    """Tear down the browser for a call that has just ended.
+
+    THE PROBLEM THIS SOLVES: `start_session` already destroys leftover sessions,
+    but only LAZILY — on the *next* call. Nothing told the backend a call was
+    over, so between two demos the previous run's Chromium stayed alive. noVNC
+    streams the whole X display, not one window, so the next audience saw the
+    PREVIOUS caller's last screen sitting there until the new page painted.
+
+    Clearing it here means the screen goes clean the moment the call ends,
+    rather than when the next one starts.
+
+    The lazy teardown in `start_session` deliberately STAYS as the safety net:
+    a crashed tab or a hard browser close never sends this request, and that
+    path must still recover.
+
+    Always returns 200 — this is fire-and-forget cleanup called from a
+    `sendBeacon` during page unload. A failure here must never surface to the
+    caller, and there is nothing the frontend could do about it anyway.
+
+    ⚠️ THE BODY IS PARSED BY HAND, NOT VIA A PYDANTIC MODEL. `sendBeacon` must
+    send `text/plain` — any other content type triggers a CORS preflight, and a
+    beacon that needs one is silently dropped during page unload. FastAPI rejects
+    a `text/plain` body against a BaseModel parameter with a 422 BEFORE this
+    function runs, so the browser's cleanup call never reached the teardown.
+    Reading the raw bytes accepts the beacon and a normal JSON post alike.
+    """
+    import json as _json
+    from playwright_service import PLAYWRIGHT_SESSIONS
+
+    raw: Dict[str, Any] = {}
+    try:
+        body_bytes = await request.body()
+        if body_bytes:
+            parsed = _json.loads(body_bytes)
+            raw = _unwrap_payload(parsed) or {}
+    except Exception as e:
+        logger.warning("session/end: could not parse body: %s", e)
+        raw = {}
+
+    sid = raw.get("session_id") if isinstance(raw, dict) else None
+
+    sid = (sid or "").strip()
+    # An unresolved template token is not a session id.
+    if sid and ("<<" in sid or "{{" in sid):
+        sid = ""
+
+    if not sid:
+        logger.info("session/end called without a usable session_id — nothing to do")
+        return {"success": True, "closed": [], "reason": "no session_id supplied"}
+
+    if sid not in PLAYWRIGHT_SESSIONS:
+        # Normal: the session may already be gone (lazy teardown got there first,
+        # or the beacon fired twice). Not an error.
+        logger.info("session/end: session %s already gone", sid)
+        return {"success": True, "closed": [], "reason": "session already closed"}
+
+    try:
+        await playwright_service.destroy_session(sid)
+        logger.info("session/end: destroyed session %s on call hangup", sid)
+        return {"success": True, "closed": [sid]}
+    except Exception as e:
+        # Never propagate — but do not leave a wedged entry behind either.
+        logger.error("session/end: failed to destroy %s: %s", sid, e)
+        PLAYWRIGHT_SESSIONS.pop(sid, None)
+        return {"success": True, "closed": [sid], "reason": f"forced removal after error: {e}"}
 
 
 @agent_router.get("/sessions")

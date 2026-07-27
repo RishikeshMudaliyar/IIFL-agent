@@ -1,33 +1,121 @@
-# IIFL demo — state of the world as of 2026-07-27 (v7, gold-first rebuild)
+# IIFL demo — state of the world as of 2026-07-27 (v8, persuasion + cleanup)
 
-The **scope change landed**. This describes the NEW flow. Read this first, then
-`agent-build/loan-lead-qualification/PLATFORM-CONFIG.md` for every ID and the platform gotchas.
+**v8 IS BUILT, DEPLOYED AND PUBLISHED.** It adds hyperlocal area names, proactive benefits and
+hesitation handling on top of v7's gold-first branch-hero flow, and fixes the session-teardown
+defect. Read this first, then `agent-build/loan-lead-qualification/PLATFORM-CONFIG.md` for every
+ID and the platform gotchas.
 
-Checkpoint tag for this state: **`v7-checkpoint-2026-07-27`**.
-Previous tag (pre-scope-change): `handover-callback-2026-07-27`.
+Previous tags: `v7-checkpoint-2026-07-27`, `handover-callback-2026-07-27`.
 
 ---
 
 ## ⏭️ START HERE IN A NEW SESSION
 
-**The one thing you must do first: REPUBLISH IRA.** The v7 SOP — including the
-`handover_ready` callback gate — is on the **draft**, not published. Everything else is live.
+**Everything is deployed and published — nothing is pending.** Ira runs published version
+**24832** (SOP v8), and both Railway services are live with the v8 code.
 
-Then run **`TEST-SCRIPT-v7.md`** (in this repo). It has turn-by-turn scripts for 8 scenarios,
-ground-truth number tables, and a symptom→cause triage table.
+> ⚠️ The old "🔴 republish Ira first" instruction is **GONE — it was already done.** Ira reports
+> `has_unpublished_changes: false`. Do not re-push v7 over v8.
+
+Run **`TEST-SCRIPT-v7.md`** for the core flow (still accurate — v8 changes wording and adds
+states, it does not change the v7 happy path), plus the v8 scenarios in §"Testing v8" below.
 
 **After every publish, re-verify** (publishing has reverted out-of-band changes 3×):
 compiled prompt, `post_conversation_workflow` attachment, both agents' tool lists, and all
 5 action schemas. PLATFORM-CONFIG.md §"READ THIS FIRST" lists the exact calls.
+*(Checked after the v8 publish — everything survived this time.)*
 
 ### What is verified working vs. what is not
 
 | | |
 |---|---|
-| ✅ Verified live (through Mozart, not just the raw endpoint) | pincode → correct branch hero (400086/400097/400014 each tested); `go_to_form` → form; every gold field fills; scheme click lands; offers page leads with the chosen tier; callback gate returns correct decisions across 6 cases; a second demo destroys the first's browser |
-| ⚠️ NOT yet proven on a real voice call | the whole v7 conversation flow end-to-end with a human speaking. Everything above was driven via the API/Mozart, **not by gemma in a live call** |
-| ❌ Never once observed working | **the Priya callback actually ringing.** Wired, gated, and verified piece by piece — but no test call has ever produced the callback. This is a pre-existing unknown, NOT something v7 broke |
-| ⚠️ Known-fragile | `fill_field` turn-boundary defect (below). Mitigated by a prompt rule, never confirmed fixed on a live call |
+| ✅ Verified live (through Mozart, not just the raw endpoint) | pincode → correct branch hero (400086/400097/400014 each tested); `go_to_form` → form; every gold field fills; scheme click lands; offers page leads with the chosen tier; callback gate returns correct decisions across 6 cases |
+| ✅ **NEW in v8, verified live** | **eager session teardown** — hanging up destroys the browser immediately (`/agent/sessions` → `count:0`), so the next demo cannot inherit the previous screen |
+| ⚠️ NOT yet proven on a real voice call | the v7/v8 conversation flow end-to-end with a human speaking. Everything above was driven via the API/Mozart, **not by gemma in a live call**. The v8 conversational changes (area name, benefits, hesitation) are prompt-level and have NOT been heard on a live call yet |
+| ❌ Never once observed working | **the Priya callback actually ringing.** All five links now verified individually (see §"The callback" below) — but no test call has ever produced the callback. Still a pre-existing unknown |
+| ⚠️ Known-fragile | `fill_field` turn-boundary defect (below). Mitigated by a prompt rule, never confirmed fixed on a live call. **v8 adds conversational turns, which could aggravate it — watch this on the next live call** |
+
+---
+
+## What changed in v8
+
+### 1. Two defects fixed
+
+**Session teardown was not the bug it looked like.** The backend logic was always correct
+(verified: start A → start B destroys A). The real gap was that **nothing told the backend a
+call had ended** — `endCall()` only did `room.disconnect()`. Teardown was therefore *lazy*,
+happening only on the NEXT `start_session`, so the old Chromium stayed alive between demos and
+noVNC (which streams the whole X display) kept showing the previous caller's last screen.
+
+Fix: new **`POST /agent/session/end`** + the frontend calling it on every exit path (hang up,
+agent disconnect, Back, tab close, reload) via `navigator.sendBeacon`. The lazy teardown
+deliberately REMAINS as the safety net for a crashed tab that never sends the beacon.
+
+> ⚠️ **`sendBeacon` must send `text/plain`** — any other content type triggers a CORS preflight,
+> and a beacon needing one is silently dropped during unload. FastAPI rejects `text/plain`
+> against a Pydantic body parameter with a 422 *before* the handler runs, so `/agent/session/end`
+> parses the raw body by hand. Caught by testing the real content type; the JSON path had
+> worked fine and hid it.
+
+**The callback gate was widened.** `handover_ready` is now set at **`offer_read()`** as well as
+`transfer_intro()`. Reaching the priced offers means the demo delivered its value, so hanging up
+there still earns a callback. It is still never set before the offers — an abandoned demo (drop
+during PAN capture) still produces no callback, which is the whole point of the gate.
+
+### 2. Three conversational changes
+
+| | |
+|---|---|
+| **Area name, not digits** | `confirm_context()` now says "आप अंधेरी ईस्ट side में हैं, right?" instead of reading "4 0 0 0 5 9". Each branch block gained an `area_spoken` name. **An unknown pincode must name NO area** — the model is explicitly forbidden from inventing a neighbourhood. `pincode_spoken` stays available for when the caller disputes the area |
+| **Proactive benefits** | `iifl_welcome()` adds ONE matched IIFL strength; `branch_spiel()` adds ONE line from the new `branch_benefits` block (valuation in front of you, 30-min disbursal, insured vault at *that* branch, no income proof). One line each, never stacked |
+| **Hesitation → facts** | New `hesitant` intent + one `reassure_and_continue()` state reached from the **global** block, so doubt anywhere in the call lands in one handler and returns the caller to where they were. Backed by `rules.objection_handling` |
+
+**Hesitation signals** (operator-chosen): explicit doubt ("सोचता हूँ", "बाद में", "interest ज़्यादा है"),
+competitor comparison (Muthoot/Manappuram/bank), and stalling/repeated questions.
+**Silence was deliberately EXCLUDED** — on a voice call an STT gap and think-time are
+indistinguishable from hesitation, so it would misfire constantly.
+
+> 🔒 **Two safety rules, both gated in the push script.**
+> **(a) Never disparage a competitor.** Say what IIFL is; never claim another lender is worse,
+> slower or dearer, and never quote a rate we have not verified. This is a regulated lending
+> conversation.
+> **(b) Hesitation HARD-SUPPRESSES the urgency CTA.** Detecting reluctance and then pushing a
+> deadline is the worst possible outcome. Reassurance and urgency are mutually exclusive.
+>
+> **No new figures entered the prompt** — every claim in `objection_handling` traces to
+> `iifl_intro` / `faq_answers` / `goldSchemes.ts`.
+
+### Testing v8
+
+Beyond `TEST-SCRIPT-v7.md`:
+
+1. **Area name** — call with pincode `400086`; Ira must say "घाटकोपर वेस्ट", never the digits.
+2. **Unknown pincode** — use one not in the four; she must name **no** area and invent nothing.
+3. **Objection** — say "Muthoot में कम rate मिल रहा है". Expect: acknowledgement + an
+   IIFL-positive fact, **no** attack on Muthoot, **no** invented comparison, **no** urgency line.
+4. **Hesitation then offers** — say "सोचकर बताता हूँ" late in the call; the urgency CTA must be skipped.
+5. **Two demos back to back** — the second must open clean, with no flash of the first.
+
+### The callback — where it actually stands
+
+All five links are now individually verified: gate endpoint ✅, compiled Mozart workflow ✅,
+workflow attached to Ira ✅, `handover_ready`+`phone_e164` registered ✅, published SOP sets the
+variable ✅. It has still **never been observed ringing**.
+
+Two candidate causes remain, and they are **not separable without one deliberate test call**:
+- **(a)** the variable was never set because the operator hung up before the offers — **v8's
+  widened gate should fix this**;
+- **(b)** the post-call workflow does not fire at all for a **web/WebRTC** call
+  (`/voice/web/call`), whereas the callback was built and verified for **phone** calls.
+
+**The one diagnostic:** run a call to the offers, hang up, then
+`railway logs --service iifl-backend | grep handover_gate`.
+
+| observed | cause | next move |
+|---|---|---|
+| `should_call=True` and no ring | dial path / Priya's trunk | investigate `/voice/outbound-call` + trunk `ST_aGf9DfQ4w48v` |
+| `should_call=False` | variable still unset | check `%%infer handover_ready` fired at `offer_read()` |
+| **no `handover_gate` line at all** | **(b)** — workflow never fires on web calls | the fix must run in the **browser**: Railway egress to agentx-prod is BLOCKED (re-verified: 30s timeout → 500, while api-in answers in ~1s), so a backend-triggered callback cannot work |
 
 ---
 
@@ -260,10 +348,12 @@ is the single source of truth for both the UI and what the agent says.
 ## Open items carried into the next session
 
 **Do first**
-1. **Republish Ira** — the v7 SOP with the `handover_ready` gate is on the draft. Then re-verify
-   (publishing has reverted things 3×).
-2. **Run a real voice call through the whole v7 flow.** Nothing in v7 has been exercised by gemma
-   on a live call yet — only via the API and Mozart. `TEST-SCRIPT-v7.md` is the script.
+1. ~~Republish Ira~~ — **DONE.** Ira is published on SOP v8 (version 24832) and re-verified.
+2. **Run a real voice call through the whole v8 flow.** Nothing in v7 or v8 has been exercised by
+   gemma on a live call yet — only via the API and Mozart. `TEST-SCRIPT-v7.md` plus the five v8
+   scenarios above. **This is now the single highest-value thing left.**
+3. **While on that call, run the callback diagnostic** (§"The callback" above) — it is the one
+   experiment that separates the two remaining candidate causes.
 
 **Known unknowns (not regressions)**
 - **The fill_field turn-boundary defect** — the one genuinely fragile thing. Mitigated by a

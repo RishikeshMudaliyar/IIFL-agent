@@ -10,6 +10,7 @@ import { Mic, MicOff, PhoneOff, Send, ChevronLeft, Loader2 } from "lucide-react"
 import { CLIENT_NAME } from "../config/branding";
 import { useNurixVoice } from "../hooks/use-nurix-voice";
 import { useLead, leadToDynamicVars, useFormSessionId } from "../contexts/LeadContext";
+import { endFormSession } from "../lib/sessionCleanup";
 import LiveFormPanel from "../components/LiveFormPanel";
 
 const BRAND_COLOR = "#F56E28";      // IIFL orange
@@ -57,6 +58,34 @@ const AgentVoicePage = () => {
     {},
     { dynamicVars: leadToDynamicVars(lead, formSessionId) },
   );
+
+  // EVERY CALL CLEANS UP AFTER ITSELF.
+  //
+  // Ending a call used to only disconnect the LiveKit room — the backend was
+  // never told, so the previous demo's Chromium stayed alive and noVNC kept
+  // showing its last screen into the next demo. Tear the browser down on every
+  // way out of this page: hang up, agent disconnect, Back, tab close, reload.
+  //
+  // Latched so the beacon fires at most once per call: several of these paths
+  // overlap (endCall -> onDisconnected -> unmount), and a duplicate would be a
+  // no-op on the backend but is pointless traffic during unload.
+  const cleanedUpRef = useRef(false);
+  const cleanUp = useCallback(() => {
+    if (cleanedUpRef.current) return;
+    cleanedUpRef.current = true;
+    endFormSession(formSessionId);
+  }, [formSessionId]);
+
+  useEffect(() => {
+    // pagehide covers tab close, reload and bfcache on mobile Safari, where
+    // unmount alone is not guaranteed to run.
+    window.addEventListener("pagehide", cleanUp);
+    return () => {
+      window.removeEventListener("pagehide", cleanUp);
+      // Unmount = leaving the call page by any route (Back, redirect home).
+      cleanUp();
+    };
+  }, [cleanUp]);
 
   return (
     <div className="h-[100dvh] flex flex-col font-sans bg-gray-50">
@@ -112,7 +141,12 @@ const AgentVoicePage = () => {
           connect={true}
           audio={true}
           video={false}
-          onDisconnected={() => navigate("/home")}
+          onDisconnected={() => {
+            // Clear the browser the moment the call actually ends, rather than
+            // waiting for unmount — the screen must be blank before the next demo.
+            cleanUp();
+            navigate("/home");
+          }}
           className="flex-1 min-h-0 flex flex-col"
         >
           <RoomAudioRenderer />
