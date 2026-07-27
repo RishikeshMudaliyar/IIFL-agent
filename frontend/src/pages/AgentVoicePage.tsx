@@ -12,6 +12,7 @@ import { useNurixVoice } from "../hooks/use-nurix-voice";
 import { useLead, leadToDynamicVars, useFormSessionId, resetFormSessionId } from "../contexts/LeadContext";
 import { endFormSession } from "../lib/sessionCleanup";
 import LiveFormPanel from "../components/LiveFormPanel";
+import PhoneCallFrame from "../components/PhoneCallFrame";
 
 const BRAND_COLOR = "#F56E28";      // IIFL orange
 const BRAND_TEXT_COLOR = "#ffffff";
@@ -81,6 +82,19 @@ const AgentVoicePage = () => {
   //
   // Latched so the beacon fires at most once per call (endCall and
   // onDisconnected both fire on a normal hang-up).
+  // THE PHONE-CALL PHASE. "ringing" shows the smartphone mockup with an incoming
+  // call; "connected" mounts LiveKitRoom and shows the live transcript.
+  //
+  // ⚠️ ONE-WAY ONLY. Never flip back to "ringing" — that would unmount
+  // <LiveKitRoom> mid-call, which is exactly the teardown failure described
+  // below. Declining a call navigates away instead of rewinding the phase.
+  //
+  // Gating the mount is load-bearing, not cosmetic: <LiveKitRoom connect audio>
+  // starts the conversation the instant it mounts, so if it mounted during the
+  // ring, Ira would be greeting a phone that is still ringing on screen.
+  const [phase, setPhase] = useState<"ringing" | "connected">("ringing");
+  const answerCall = useCallback(() => setPhase("connected"), []);
+
   const cleanedUpRef = useRef(false);
   const cleanUp = useCallback(() => {
     if (cleanedUpRef.current) return;
@@ -90,6 +104,14 @@ const AgentVoicePage = () => {
     // rather than reuse this one (which now has no browser behind it).
     resetFormSessionId();
   }, [formSessionId]);
+
+  // Declining takes the same route as a hang-up: release the browser session and
+  // leave. LiveKit was never mounted during the ring, so there is no room to
+  // disconnect here.
+  const declineCall = useCallback(() => {
+    cleanUp();
+    navigate("/home");
+  }, [cleanUp, navigate]);
 
   useEffect(() => {
     // pagehide = tab close / reload / navigating away for real. This one is safe
@@ -149,7 +171,14 @@ const AgentVoicePage = () => {
         </main>
       )}
 
-      {status === "ready" && details && (
+      {/* The room is up, but hold the call at "ringing" so the demo reads as a
+          real inbound phone call. Auto-answers after ~3s (PhoneCallFrame owns
+          the timer); the green button is a manual shortcut to the same path. */}
+      {status === "ready" && details && phase === "ringing" && (
+        <PhoneCallFrame mode="ringing" onAnswer={answerCall} onDecline={declineCall} />
+      )}
+
+      {status === "ready" && details && phase === "connected" && (
         <LiveKitRoom
           token={details.participantToken}
           serverUrl={details.serverUrl}
@@ -165,7 +194,9 @@ const AgentVoicePage = () => {
           className="flex-1 min-h-0 flex flex-col"
         >
           <RoomAudioRenderer />
-          <VoiceConversation />
+          <PhoneCallFrame mode="in-call">
+            <VoiceConversation />
+          </PhoneCallFrame>
         </LiveKitRoom>
       )}
       </div>
