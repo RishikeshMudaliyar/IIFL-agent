@@ -33,6 +33,10 @@ function loadLead(): Lead {
 interface LeadContextType {
     lead: Lead;
     setLead: (lead: Partial<Lead>) => void;
+    /** Replace the whole lead — used to start a NEW demo with no trace of the
+     *  previous one. setLead merges, so a blank field would otherwise inherit
+     *  the last caller's value (a stale pincode opens the wrong branch). */
+    replaceLead: (lead: Partial<Lead>) => void;
     clearLead: () => void;
     /** True once we have enough to start a meaningful, context-aware call. */
     hasContext: boolean;
@@ -55,6 +59,20 @@ export const LeadProvider: FC<{ children: ReactNode }> = ({ children }) => {
         });
     };
 
+    // Start a fresh demo: the new lead REPLACES the old one wholesale, so nothing
+    // from the previous run can leak through a field the new form left blank.
+    // Done as one state write (not clearLead + setLead) so React cannot batch the
+    // two and re-merge the stale values.
+    const replaceLead = (partial: Partial<Lead>) => {
+        const next = { ...EMPTY_LEAD, ...partial };
+        setLeadState(next);
+        try {
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        } catch {
+            /* ignore */
+        }
+    };
+
     const clearLead = () => {
         setLeadState(EMPTY_LEAD);
         try {
@@ -67,7 +85,7 @@ export const LeadProvider: FC<{ children: ReactNode }> = ({ children }) => {
     const hasContext = Boolean(lead.name || lead.phone || lead.loanType);
 
     return (
-        <LeadContext.Provider value={{ lead, setLead, clearLead, hasContext }}>
+        <LeadContext.Provider value={{ lead, setLead, replaceLead, clearLead, hasContext }}>
             {children}
         </LeadContext.Provider>
     );

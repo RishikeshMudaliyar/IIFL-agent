@@ -411,6 +411,85 @@ async def show_offers(
     return await playwright_service.show_offers(sid, url)
 
 
+class HandoverGateRequest(BaseModel):
+    """What the post-call workflow knows about the finished conversation."""
+    handover_ready: Optional[str] = None
+    phone_e164: Optional[str] = None
+    name: Optional[str] = None
+    consent_given: Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def unwrap(cls, v): return _unwrap_payload(v)
+
+
+# Values that count as "yes, Ira actually finished and promised the callback".
+_TRUTHY = {"yes", "true", "y", "1", "complete", "completed", "done", "हाँ", "ha", "haan"}
+
+
+def _is_yes(raw: Optional[str]) -> bool:
+    if raw is None:
+        return False
+    s = str(raw).strip().lower()
+    # An unresolved template token means the variable was never set -> not ready.
+    if not s or ("<<" in s and ">>" in s) or ("{{" in s and "}}" in s) or s in ("none", "null"):
+        return False
+    return s in _TRUTHY
+
+
+@agent_router.post("/handover-gate")
+async def handover_gate(
+    request: Request,
+    body: Optional[HandoverGateRequest] = None,
+):
+    """Decide whether the post-call callback should actually dial.
+
+    THE PROBLEM THIS SOLVES: the post-call workflow used to dial the customer
+    back on EVERY hangup — including a demo abandoned halfway through, so the
+    caller got a callback for a conversation that never reached handover.
+
+    Mozart cannot express a conditional (a `switch` node is stored in the graph
+    but silently dropped by the compiler — verified), so the gate lives here.
+    The workflow calls this FIRST, then dials using the number THIS endpoint
+    returns: a real E.164 number when the conversation completed, an empty
+    string when it did not. An empty number cannot dial, so the callback is
+    skipped without the workflow needing a branch.
+
+    `handover_ready` is set by Ira only in transfer_intro() — the single state
+    where she actually promises the callback.
+    """
+    if body:
+        ready, phone = body.handover_ready, body.phone_e164
+        name = body.name
+    else:
+        try:
+            raw = _unwrap_payload(await request.json()) or {}
+        except Exception:
+            raw = {}
+        ready, phone = raw.get("handover_ready"), raw.get("phone_e164")
+        name = raw.get("name")
+
+    should_call = _is_yes(ready)
+    # A number we cannot dial is the same as "don't call".
+    number = (phone or "").strip()
+    if number and ("<<" in number or "{{" in number):
+        number = ""
+    if not number:
+        should_call = False
+
+    logger.info(
+        "handover_gate: handover_ready=%r name=%r phone=%r -> should_call=%s",
+        ready, name, number[:6] + "..." if number else "", should_call,
+    )
+    return {
+        "should_call": should_call,
+        # The workflow interpolates this straight into the dial. Empty = no call.
+        "number": number if should_call else "",
+        "reason": "conversation completed" if should_call
+                  else "conversation did not reach handover — callback suppressed",
+    }
+
+
 @agent_router.post("/sessions/close-all")
 async def close_all_sessions():
     """Close all active Playwright sessions. Useful for cleaning up leaked browsers."""

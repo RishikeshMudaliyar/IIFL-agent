@@ -147,7 +147,7 @@ and does the actual warm transfer to the human.
 |---|---|
 | Warm-up agent **Priya** | `52bbc61b-8ba5-4801-9286-0f9c8eccebd0` (cloned from Ira, PUBLISHED, `call_direction: outbound`) |
 | Priya's SOP | `dsl-prompt/iifl-warmup-v1-sop-content.txt` (compiled 35374) |
-| Post-call workflow | `iifl_handover_callback`, `workflow_def_id` **`bdf1bba0-fb79-42c4-b034-fff3dc96a34b`** |
+| Post-call workflow | `iifl_handover_callback`, `workflow_def_id` **`bdf1bba0-fb79-42c4-b034-fff3dc96a34b`** — **GATED, see below** |
 | Attached to Ira via | `PUT /agent/{ira}/post-conversation-workflow?check_draft=false` `{"post_conversation_workflow": "<def_id>"}` |
 | Trunk (shared with Ira) | `ST_aGf9DfQ4w48v`, number `+918035462787` |
 
@@ -164,6 +164,38 @@ and does the actual warm transfer to the human.
   `POST /voice/sip-trunk/{trunk_id}/assign-agent` with `{"agent_id", "phone_number_id"}`.
   MCP `nurix_assign_phone_to_agent` **422s** — it omits the required phone field.
   `/telephony/trunk/...` paths all 404.
+
+## 6c. The callback GATE (added 2026-07-27) — and why it isn't a switch node
+
+**Bug it fixes:** the callback workflow was `start -> http -> end`, unconditional. It dialled
+the customer back on **every hangup**, including a demo abandoned halfway through.
+
+**The gate:** Ira sets `handover_ready` via `%%infer` in **`transfer_intro()` and nowhere else** —
+the one state where she actually promises a callback. The workflow is now two chained HTTP tasks:
+
+```
+ask_gate          POST  <backend>/agent/handover-gate   {handover_ready, phone_e164, name}
+                        -> {"should_call": bool, "number": "<E.164 or empty>"}
+trigger_callback  POST  http://agentx.agentx/voice/outbound-call
+                        number: ${ask_gate.output.response.body.number}
+```
+An incomplete conversation returns an **empty number**, which cannot dial — so the callback is
+suppressed with no branch needed. Both nodes keep `continue_with_error: true`.
+
+⚠️ **A `switch` node does NOT work on Mozart.** It is accepted into the stored graph and
+returned by `GET /draft`, but the **compiler silently drops it** — the compiled workflow kept
+only the bare HTTP task. Verified directly. **Always verify against `GET /api/metadata/workflow/{uid}`
+(the compiled `tasks`), never the draft graph**, or you will believe a gate is live when it isn't.
+Two chained HTTP nodes DO compile, and node 2 can read `${node1.output.response.body.*}`.
+
+Gate behaviour (verified live):
+
+| input | dials? |
+|---|---|
+| `handover_ready=yes` + valid phone | ✅ yes |
+| variable absent / empty / `<<unresolved>>` | ❌ no |
+| ready but no phone | ❌ no |
+| `haan` / `true` / `1` / `completed` | ✅ yes |
 
 ## 7. Warm transfer
 Tool id (literal name) `Transfer to loan expert`, `tool_type: warm_transfer`, static → **+919356598610**.

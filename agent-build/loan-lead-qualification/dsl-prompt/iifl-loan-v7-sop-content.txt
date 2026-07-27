@@ -622,7 +622,13 @@ flow {
   // HANDOVER IS NOW A CALLBACK, not a transfer. Ira does NOT connect anyone.
   // When this call ends, a post-call workflow dials the caller back with Priya,
   // who does the actual warm transfer to the human specialist.
+  // THE CALLBACK GATE. `handover_ready` is what the post-call workflow checks
+  // before dialling the customer back with Priya. It is set to "yes" HERE and
+  // ONLY here — this state is the single point where Ira actually promises a
+  // callback. If a demo is abandoned mid-way the variable stays unset, and no
+  // callback fires. Never set it anywhere else, and never set it early.
   transfer_intro() {
+    | %%infer handover_ready
     say("बढ़िया! आपकी application complete हो गई है. हमारी team आपको इसी number पर थोड़ी ही देर में call करेगी, और वो आपको हमारे loan specialist से connect कर देंगे.")
     -> urgency_close()
   }

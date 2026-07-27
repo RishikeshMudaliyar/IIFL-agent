@@ -338,19 +338,41 @@ class PlaywrightService:
 
         logger.info(f"Starting session for URL: {url}", extra=extra)
 
-        # Evict the oldest session if we're at the cap
-        MAX_CONCURRENT_SESSIONS = 2
-        if len(PLAYWRIGHT_SESSIONS) >= MAX_CONCURRENT_SESSIONS:
-            # Sort by created_at, evict the oldest
-            oldest_sid = min(
-                PLAYWRIGHT_SESSIONS.keys(),
-                key=lambda sid: PLAYWRIGHT_SESSIONS[sid].get("created_at", datetime.min),
+        # EVERY DEMO STARTS FRESH.
+        #
+        # noVNC shows the whole X display, not one browser window. So any browser
+        # left over from a previous demo stays visible until the new page paints —
+        # the audience saw the PREVIOUS run's last screen (an offers page) sitting
+        # there, then watched it flip. That looked broken, and it leaked one
+        # caller's data into the next demo.
+        #
+        # A cap of 2 was the cause: the old session was only evicted once a THIRD
+        # started. There is exactly one screen and one demo at a time, so tear down
+        # every existing session before opening a new one. This also reclaims the
+        # Chromium processes, which is why the cap existed in the first place.
+        stale = [sid for sid in PLAYWRIGHT_SESSIONS if sid != session_id]
+        if stale:
+            logger.info(
+                "Fresh start: destroying %d leftover session(s) before opening the new one: %s",
+                len(stale), stale, extra=extra,
             )
-            logger.warning(
-                f"Session cap reached ({MAX_CONCURRENT_SESSIONS}); evicting oldest session {oldest_sid}",
-                extra=extra,
-            )
-            await self.destroy_session(oldest_sid)
+            for sid in stale:
+                try:
+                    await self.destroy_session(sid)
+                except Exception as e:
+                    # Never let a stuck old browser block a new demo from starting.
+                    logger.error("Could not destroy stale session %s: %s", sid, e, extra=extra)
+                    PLAYWRIGHT_SESSIONS.pop(sid, None)
+
+        # Re-starting an id that already exists (a retried start_session) must also
+        # be a clean slate rather than a second browser for the same id.
+        if session_id in PLAYWRIGHT_SESSIONS:
+            logger.info("Re-starting existing session id; destroying the old browser first", extra=extra)
+            try:
+                await self.destroy_session(session_id)
+            except Exception as e:
+                logger.error("Could not destroy previous session: %s", e, extra=extra)
+                PLAYWRIGHT_SESSIONS.pop(session_id, None)
 
         await self._ensure_playwright()
 

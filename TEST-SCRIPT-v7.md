@@ -158,6 +158,56 @@ and send me the call ID. Repeating masks the bug.
 
 ---
 
+## TEST 7 — Fresh start between demos (fixed 2026-07-27)
+
+**The bug:** demo #2 showed demo #1's last screen until the new page loaded.
+Three causes, all fixed: the old browser stayed alive, the lead persisted in
+sessionStorage, and the noVNC iframe reused its cached connection.
+
+| # | Do this | Expect |
+|---|---|---|
+| 1 | Run a full demo with pincode `400086`, get to the offers page | Offers on screen |
+| 2 | **Without closing the tab**, go back to the landing page | Hero form, **blank** — not pre-filled with the last caller's details |
+| 3 | Enter a *different* name and pincode `400014`, start the call | **The Dadar East branch page appears directly.** No flash of the previous offers page |
+
+❌ **Defect if:** you see the old offers page first, or the form pre-fills with the previous name.
+
+Backend proof:
+```bash
+cd ~/IIFL/iifl-agent/backend
+railway logs --service iifl-backend | grep "Fresh start" | tail -3
+```
+Expect `Fresh start: destroying 1 leftover session(s)` on every second-and-later demo.
+
+---
+
+## TEST 8 — Callback must NOT fire on an abandoned demo (fixed 2026-07-27)
+
+**The bug:** Priya called back even when the conversation never reached the end.
+
+| # | Do this | Expect |
+|---|---|---|
+| 1 | Start a call, answer 2–3 questions, then **just hang up** | **No callback.** Wait 3 minutes to be sure |
+| 2 | Run a **complete** demo through to "team will call you" | **Callback arrives** as before |
+
+You can test the decision logic without making a call:
+```bash
+B=https://iifl-backend-production.up.railway.app
+# completed -> dials
+curl -s -X POST $B/agent/handover-gate -H 'Content-Type: application/json' \
+  -d '{"handover_ready":"yes","phone_e164":"+919876543210"}'
+# abandoned -> suppressed
+curl -s -X POST $B/agent/handover-gate -H 'Content-Type: application/json' \
+  -d '{"phone_e164":"+919876543210"}'
+```
+Expect `should_call:true` with your number, then `should_call:false` with an empty number.
+
+⚠️ **Caveat:** the callback has still never been observed working end-to-end on a real call.
+If step 2 produces no callback, that is the **pre-existing** unknown, not this gate — check
+the log line `handover_gate: ... -> should_call=True` to tell the two apart.
+
+---
+
 ## Capturing a failure so it can actually be diagnosed
 
 For any defect, note these four things:
@@ -196,7 +246,9 @@ NuPlay UI.)*
 | She invents a rate | Prompt grounding slipped | The offers page (numbers computed, not invented) |
 | Screen frozen / blank VNC | Container asleep or VNC dropped | Refresh the page; re-warm |
 | Call dies at the start | Cold-start timeout | Re-warm and retry |
-| No callback after hangup | Never yet observed working end-to-end — **expected unknown** | — |
+| No callback after a COMPLETE call | Check `handover_gate ... should_call=True` in the log. If true, the gate is fine and it's the pre-existing callback unknown | The gate (verified) |
+| Callback after an ABANDONED call | `handover_ready` set too early — should only be in `transfer_intro()` | — |
+| Previous demo's screen shows first | Stale session/lead/iframe — all three fixed; re-check the deploy landed | — |
 
 ---
 
