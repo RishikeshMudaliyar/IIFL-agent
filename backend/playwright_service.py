@@ -1083,10 +1083,90 @@ class PlaywrightService:
             "form_state": form_state
         }
 
+    async def show_offers(self, session_id: str, offers_url: str) -> Dict[str, Any]:
+        """
+        Navigate the live browser to the offer-results page and read the cards back.
+
+        This is the IIFL equivalent of the muthoot/DMI "Step 4 -> Step 5" hop: the
+        caller sees the offers appear on screen, and the scraped cards come back in
+        the tool response so the agent can read one or two of them aloud.
+
+        The page computes the offers itself (frontend src/lib/offerTable.ts) from
+        query params, so this method never invents numbers -- it only reports what
+        is actually rendered on screen.
+        """
+        extra = {'session_id': session_id}
+
+        if session_id not in PLAYWRIGHT_SESSIONS:
+            logger.error("Invalid session_id", extra=extra)
+            return {"success": False, "error": f"Session {session_id} not found.", "offers": []}
+
+        session = PLAYWRIGHT_SESSIONS[session_id]
+        session["last_activity_at"] = datetime.now()
+        page = session["page"]
+
+        logger.info(f"Navigating to offers: {offers_url}", extra=extra)
+        try:
+            await page.goto(offers_url, timeout=60000, wait_until="domcontentloaded")
+            await page.wait_for_selector("#offer-card-0", timeout=15000)
+        except Exception as e:
+            logger.error(f"Could not load offers page: {e}", extra=extra)
+            return {"success": False, "error": f"Could not load offers page: {e}", "offers": []}
+
+        offers = []
+        index = 0
+        while True:
+            card = await self._get_visible_locator(page, f"#offer-card-{index}")
+            if not card:
+                break
+            try:
+                if not await card.is_visible(timeout=500):
+                    break
+            except Exception:
+                break
+
+            offer = {"index": index}
+            # Scheme name + the amount in the card header.
+            for key, sel in (("scheme", "span.font-semibold"), ("amount", "p.font-bold.text-xl")):
+                try:
+                    el = card.locator(sel).first
+                    if await el.is_visible(timeout=300):
+                        offer[key] = (await el.text_content() or "").strip()
+                except Exception:
+                    offer[key] = ""
+            # The 3-column grid: Monthly EMI / Tenure / Interest rate.
+            try:
+                items = card.locator(".grid > div")
+                for i in range(await items.count()):
+                    it = items.nth(i)
+                    label = ((await it.locator("p.text-xs").first.text_content()) or "").strip().lower()
+                    value = ((await it.locator("p.font-semibold").first.text_content()) or "").strip()
+                    if "emi" in label:
+                        offer["monthly_emi"] = value
+                    elif "tenure" in label:
+                        offer["tenure"] = value
+                    elif "rate" in label:
+                        offer["interest_rate"] = value
+            except Exception as e:
+                logger.debug(f"Could not parse grid for offer {index}: {e}", extra=extra)
+
+            offers.append(offer)
+            index += 1
+            if index > 10:  # safety stop
+                break
+
+        logger.info(f"Read {len(offers)} offer(s) from the page", extra=extra)
+        return {
+            "success": True,
+            "count": len(offers),
+            "offers": offers,
+            "message": f"Offers page is now on screen with {len(offers)} offer(s).",
+        }
+
     async def destroy_session(self, session_id: str) -> Dict[str, Any]:
         """
         Close page, context, browser and remove from registry.
-        
+
         Returns:
             Dict with success status
         """

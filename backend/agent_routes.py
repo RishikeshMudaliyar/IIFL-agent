@@ -14,6 +14,7 @@ import logging
 import os
 import uuid
 from datetime import datetime
+from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, model_validator
@@ -233,6 +234,76 @@ async def click_button(
     sid = _resolve_sid(sid)
     result = await playwright_service.click_button(sid, btn)
     return result
+
+
+class ShowOffersRequest(BaseModel):
+    session_id: Optional[str] = None
+    loan_type: Optional[str] = None
+    # What the caller answered — used to size the offers on the page.
+    loan_amount: Optional[str] = None
+    gold_weight: Optional[str] = None
+    gold_purity: Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def unwrap(cls, v): return _unwrap_payload(v)
+
+
+def _offers_url(loan_type: Optional[str], amount: Optional[str],
+                grams: Optional[str], purity: Optional[str]) -> str:
+    """Build the /offers/{type} URL, carrying the caller's answers as params."""
+    base = os.getenv("FORM_URL")
+    if not base:
+        raise HTTPException(status_code=500, detail="FORM_URL environment variable is not set")
+    base = base.rstrip("/")
+    # FORM_URL may legacy-point at a specific page; offers always hang off the origin.
+    for suffix in ("/gold-application", "/business-application", "/secured-application",
+                   "/loan-application"):
+        if base.endswith(suffix):
+            base = base[: -len(suffix)]
+            break
+
+    lt = (loan_type or "").strip().lower().replace("-", "_").replace(" ", "_")
+    slug = {"business": "business", "secured_business": "secured", "secured": "secured"}.get(lt, "gold")
+
+    params = []
+    for key, val in (("amount", amount), ("grams", grams), ("purity", purity)):
+        if val is None:
+            continue
+        s = str(val).strip()
+        # Ignore unresolved template tokens (e.g. an unset <<loan_amount>>).
+        if not s or ("<<" in s and ">>" in s) or ("{{" in s and "}}" in s):
+            continue
+        params.append(f"{key}={quote(s)}")
+    qs = ("?" + "&".join(params)) if params else ""
+    return f"{base}/offers/{slug}{qs}"
+
+
+@agent_router.post("/show-offers")
+async def show_offers(
+    request: Request,
+    body: Optional[ShowOffersRequest] = None,
+    session_id: Optional[str] = Query(default=None),
+    loan_type: Optional[str] = Query(default=None),
+):
+    """Navigate the live browser to the offers page and return the rendered cards."""
+    if body:
+        sid, lt = body.session_id, body.loan_type
+        amount, grams, purity = body.loan_amount, body.gold_weight, body.gold_purity
+    else:
+        try:
+            raw = await request.json()
+        except Exception:
+            raw = {}
+        raw = _unwrap_payload(raw) or {}
+        sid = session_id or raw.get("session_id")
+        lt = loan_type or raw.get("loan_type")
+        amount, grams, purity = raw.get("loan_amount"), raw.get("gold_weight"), raw.get("gold_purity")
+
+    sid = _resolve_sid(sid)
+    url = _offers_url(lt, amount, grams, purity)
+    logger.info(f"show_offers loan_type={lt!r} -> {url}")
+    return await playwright_service.show_offers(sid, url)
 
 
 @agent_router.post("/sessions/close-all")

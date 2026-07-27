@@ -9,6 +9,7 @@ import AgentVoicePage from './pages/AgentVoicePage';
 import GoldApplication from './pages/GoldApplication';
 import BusinessApplication from './pages/BusinessApplication';
 import SecuredApplication from './pages/SecuredApplication';
+import OffersPage from './pages/OffersPage';
 import LoanApplicationList from './pages/LoanApplicationList';
 import LoanDetailsPage from './pages/LoanDetailsPage';
 
@@ -32,6 +33,8 @@ function App() {
             <Route path="/gold-application" element={<GoldApplication />} />
             <Route path="/business-application" element={<BusinessApplication />} />
             <Route path="/secured-application" element={<SecuredApplication />} />
+            {/* Page 3 — indicative offers the agent reads out before handover. */}
+            <Route path="/offers/:loanType" element={<OffersPage />} />
             <Route path="/agent/voice" element={<AgentVoicePage />} />
             {/* Chat front-door + chat/voice picker retired — flow is voice-only now.
                 Redirect any stale links back to the landing page. */}

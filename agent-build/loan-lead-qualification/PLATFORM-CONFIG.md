@@ -50,6 +50,20 @@ properties: session_id (string), loan_type (string, enum: gold|business|secured_
 required:   [session_id, loan_type]        <- loan_type made REQUIRED so it can't be omitted
 ```
 
+## 2b. Action: `show_offers_flow_iifl`  (added 2026-07-27, v5)
+`action_id` **`5fd22d25-770b-41e0-9533-cc1e6d318ce3`** · tool_id `a82fb71c-1087-411a-9810-71ca9534c524`
+workflow uid `ee177d5d-fbcd-472b-a048-86a972496c8c` → `POST /agent/show-offers`
+
+```
+properties: session_id, loan_type (enum), loan_amount, gold_weight, gold_purity
+required:   [session_id, loan_type]
+```
+⚠️ **Created by cloning `fill_field_flow_iifl`'s draft, and the clone inherited that
+workflow's input schema (the stale muthoot `field_name` enum).** The schema above had to be
+re-applied after creation. If this workflow is ever recreated the same way, fix the schema again.
+Cloning gotcha: the display name lives in BOTH `displayName` AND `nodes[0].data.label` — set both
+or the create 409s as a duplicate.
+
 ## 3. Action: `click_button_flow_iifl`
 `action_id` `1a89739c-09d6-4901-96fd-fec3e03c25d3` · tool_id `6b83e178-8d33-4950-a718-527c3ff8bab8`
 Untouched (button enum still the legacy ABCD set). The v3+ flow no longer clicks a loan-offer button.
