@@ -25,6 +25,28 @@ type Bubble = {
 
 const newId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
+/**
+ * Strip agent-internal machinery that a weak model (gemma) occasionally emits as
+ * spoken text — so it never reaches the client-facing live transcript:
+ *   - <derived-variable key="..." value="..."/>   (sigil capture rendered as a tag)
+ *   - tool.fill_field(...) / functions.foo(...)   (tool-call syntax spoken literally)
+ *   - // ... internal-step narration                (comment lines)
+ * These are the platform's job to consume silently; they are not conversation.
+ * Belt-and-braces alongside the prompt guardrail — the prompt reduces it, this guarantees it.
+ */
+function sanitizeTranscript(text: string): string {
+  return text
+    // <derived-variable .../> or any lone self-closing machine tag
+    .replace(/<\s*derived-variable[^>]*\/?>/gi, "")
+    .replace(/<\/?\s*(derived-variable|tool[-_]?call|function[-_]?call)[^>]*>/gi, "")
+    // tool.name(...) or functions.name(...) call syntax
+    .replace(/\b(?:tool|functions)\.\w+\s*\([^)]*\)/gi, "")
+    // whole-line // comments the model narrated as speech
+    .replace(/(^|\n)\s*\/\/[^\n]*/g, "$1")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
+
 const AgentVoicePage = () => {
   const navigate = useNavigate();
   const { lead } = useLead();
@@ -146,19 +168,25 @@ function VoiceConversation() {
       }
 
       // Agent: new bubble per stream, accumulate chunks live as TTS plays.
+      // Sanitize before display so any machine tokens (<derived-variable/>, tool.*,
+      // // comments) the model may emit never reach the client-facing transcript.
       const streamId = reader.info.id;
       setBubbles((prev) => [...prev, { id: streamId, role, text: "", interim: !isFinal }]);
       let acc = "";
       try {
         for await (const chunk of reader) {
           acc += chunk;
+          const clean = sanitizeTranscript(acc);
           setBubbles((prev) =>
-            prev.map((b) => (b.id === streamId ? { ...b, text: acc } : b))
+            prev.map((b) => (b.id === streamId ? { ...b, text: clean } : b))
           );
         }
       } catch { /* ignore */ }
       setBubbles((prev) =>
-        prev.map((b) => (b.id === streamId ? { ...b, interim: false } : b))
+        prev
+          .map((b) => (b.id === streamId ? { ...b, text: sanitizeTranscript(acc), interim: false } : b))
+          // drop a bubble that sanitized down to nothing (a turn that was ONLY machine tokens)
+          .filter((b) => !(b.id === streamId && b.text.trim() === ""))
       );
     };
     try {
