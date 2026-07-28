@@ -195,35 +195,51 @@ def _yes_no(v: str) -> str:
 IIFL_ORANGE = "#F56E28"
 IIFL_NAVY = "#1B1B5C"
 
-# --- the IIFL logo, embedded as a data URI ---------------------------------
-# Why embedded and not linked: every major client (Gmail, Outlook, Apple Mail)
-# blocks remote images by default, so a hot-linked logo shows as a broken box on
-# first open — and IIFL's own asset URL 403s on hot-link anyway. A data URI always
-# renders. Cost is ~16 KB of base64 on a ~24 KB email, which is fine.
+# --- the IIFL logo, embedded as an INLINE CID ATTACHMENT --------------------
+# ⚠️ IT MUST BE CID, NOT A data: URI. Gmail STRIPS `data:` URIs out of <img src>
+# entirely — the first attempt used one and the manager received a broken-image
+# icon with the alt text. Remote <img src="https://..."> is no better: every major
+# client blocks remote images by default (and IIFL's own asset URL 403s on
+# hot-link), so that shows a broken box until the reader clicks "display images".
 #
-# It is a PNG, NOT the source SVG: Gmail and Outlook strip <img> SVG entirely.
-# Converted from IIFL's official iifl-finance.svg at 300x57 (2x for retina,
-# displayed at 150px) and flattened onto white, since the wordmark is navy and
+# A CID attachment is genuinely PART of the message: the image travels inside the
+# MIME body and the HTML references it as <img src="cid:...">. Gmail, Outlook and
+# Apple Mail all render that without asking the reader for anything.
+#
+# It is a PNG, NOT the source SVG: Gmail and Outlook strip <img> SVG outright.
+# Converted from IIFL's official iifl-finance.svg at 300x57 (displayed at 150px,
+# 2x for retina) and flattened onto white, since the wordmark is navy and
 # transparency renders inconsistently in Outlook.
 _LOGO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                           "assets", "iifl-logo-email.png")
 
+# The Content-ID the HTML refers to. Bare (no angle brackets) in `cid:` and in
+# Resend's content_id; smtplib adds the <> itself.
+LOGO_CID = "iifl-logo"
 
-def _logo_data_uri() -> str:
-    """Read the logo once and cache it. Returns "" if the file is missing, and
-    the header then falls back to the wordmark as text — a missing asset must
-    never break the lead email, which is the thing the manager actually needs."""
-    cached = getattr(_logo_data_uri, "_cache", None)
+
+def _logo_bytes() -> bytes:
+    """Read the logo once and cache it. Returns b"" if the file is missing — the
+    header then falls back to the wordmark as text, because a decorative asset
+    must never break the lead email, which is what the manager actually needs.
+
+    ⚠️ backend/Dockerfile enumerates files individually and needs `COPY assets/`;
+    without it this returns b"" in production and the logo vanishes SILENTLY."""
+    cached = getattr(_logo_bytes, "_cache", None)
     if cached is not None:
         return cached
     try:
         with open(_LOGO_PATH, "rb") as fh:
-            uri = "data:image/png;base64," + base64.b64encode(fh.read()).decode("ascii")
+            data = fh.read()
     except Exception:
         logger.warning("email logo not found at %s — falling back to text", _LOGO_PATH)
-        uri = ""
-    _logo_data_uri._cache = uri
-    return uri
+        data = b""
+    _logo_bytes._cache = data
+    return data
+
+
+def _has_logo() -> bool:
+    return bool(_logo_bytes())
 _INK = "#1f2937"
 _MUTED = "#6b7280"
 _LINE = "#e5e7eb"
@@ -320,10 +336,9 @@ def _build_html(
     # The masthead. `alt` carries the brand for anyone whose client still refuses
     # to render it, and the whole row degrades to the wordmark as text if the asset
     # is missing on disk.
-    _logo = _logo_data_uri()
-    if _logo:
+    if _has_logo():
         logo_cell = (
-            f'<img src="{_logo}" width="150" height="28" alt="IIFL Finance" '
+            f'<img src="cid:{LOGO_CID}" width="150" height="28" alt="IIFL Finance" '
             f'style="display:block;border:0;outline:none;text-decoration:none;'
             f'width:150px;height:28px;" />'
         )
@@ -578,6 +593,18 @@ def _send_blocking(subject: str, body: str, html: str = "") -> None:
     msg.set_content(body)
     if html:
         msg.add_alternative(html, subtype="html")
+        # The logo must live in a multipart/related WITH the HTML part, not as a
+        # top-level attachment — that is what makes cid: resolve rather than the
+        # image showing up as a separate downloadable file. add_related() on the
+        # HTML payload builds exactly that structure.
+        logo = _logo_bytes()
+        if logo:
+            msg.get_payload()[-1].add_related(
+                logo, maintype="image", subtype="png",
+                cid=f"<{LOGO_CID}>",        # the header form needs the angle brackets
+                filename="iifl-logo.png",
+                disposition="inline",
+            )
 
     # Port 465 speaks TLS from the first byte; 587 upgrades via STARTTLS. Some
     # hosts throttle or block one of the two, so the port is configurable and we
@@ -607,6 +634,18 @@ async def _send_via_resend(subject: str, body: str, html: str = "") -> Dict[str,
     payload = {"from": _resend_from(), "to": [to], "subject": subject, "text": body}
     if html:
         payload["html"] = html
+        # The logo as an INLINE attachment. `content_id` is what makes Resend emit
+        # it with a Content-ID header so <img src="cid:iifl-logo"> resolves; without
+        # content_id it would arrive as a downloadable attachment instead. Content
+        # must be base64 for the JSON API.
+        logo = _logo_bytes()
+        if logo:
+            payload["attachments"] = [{
+                "filename": "iifl-logo.png",
+                "content": base64.b64encode(logo).decode("ascii"),
+                "content_type": "image/png",
+                "content_id": LOGO_CID,
+            }]
     try:
         async with httpx.AsyncClient(timeout=SEND_TIMEOUT_SECONDS) as client:
             resp = await client.post(
