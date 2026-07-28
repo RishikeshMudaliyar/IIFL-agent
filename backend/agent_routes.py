@@ -23,7 +23,7 @@ from pydantic import BaseModel, model_validator
 from typing import Any, Dict, Optional
 
 from playwright_service import playwright_service
-from email_service import config_status, send_summary_email
+from email_service import config_status, probe_connectivity, send_summary_email
 
 logger = logging.getLogger(__name__)
 
@@ -462,6 +462,13 @@ async def email_config():
     """Which SMTP env vars are set — presence only, never values. Lets us verify
     the Railway wiring without exposing the App Password."""
     return config_status()
+
+
+@agent_router.get("/email-probe")
+async def email_probe():
+    """Which SMTP ports this container can actually reach. Diagnostic only —
+    separates a blocked-egress failure from a bad-credentials failure."""
+    return await probe_connectivity()
 
 
 class HandoverGateRequest(BaseModel):

@@ -62,6 +62,31 @@ def config_status() -> Dict[str, Any]:
     }
 
 
+async def probe_connectivity() -> Dict[str, Any]:
+    """Can this container open a TCP socket to the SMTP ports at all?
+
+    Distinguishes 'egress blocked' (every port times out) from 'bad credentials'
+    (connects, then auth fails) — the two look identical from a failed send.
+    """
+    import socket
+
+    def _try(port: int) -> str:
+        s = socket.socket()
+        s.settimeout(6)
+        try:
+            s.connect((SMTP_HOST, port))
+            return "open"
+        except Exception as exc:
+            return f"{type(exc).__name__}: {exc}"
+        finally:
+            s.close()
+
+    results = {}
+    for port in (587, 465, 25, 2525):
+        results[str(port)] = await asyncio.to_thread(_try, port)
+    return {"host": SMTP_HOST, "active_port": SMTP_PORT, "ports": results}
+
+
 # ---------------------------------------------------------------- content
 
 # Spoken scheme id -> the published product name and its headline terms.
@@ -236,10 +261,18 @@ def _send_blocking(subject: str, body: str) -> None:
     msg["To"] = to
     msg.set_content(body)
 
-    with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=SEND_TIMEOUT_SECONDS) as smtp:
-        smtp.starttls()
-        smtp.login(user, password)
-        smtp.send_message(msg)
+    # Port 465 speaks TLS from the first byte; 587 upgrades via STARTTLS. Some
+    # hosts throttle or block one of the two, so the port is configurable and we
+    # pick the matching protocol automatically.
+    if SMTP_PORT == 465:
+        with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=SEND_TIMEOUT_SECONDS) as smtp:
+            smtp.login(user, password)
+            smtp.send_message(msg)
+    else:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=SEND_TIMEOUT_SECONDS) as smtp:
+            smtp.starttls()
+            smtp.login(user, password)
+            smtp.send_message(msg)
 
 
 async def send_summary_email(
