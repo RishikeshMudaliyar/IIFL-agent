@@ -7,7 +7,7 @@ const Home = () => {
     const navigate = useNavigate();
     const { replaceLead } = useLead();
 
-    // Single path — form "Talk to AI Agent": capture the four fields into the
+    // Single path — the hero form's "Talk" button: capture the four fields into the
     // shared lead context, then go to the call page which triggers an OUTBOUND
     // phone call from the AI agent to the number entered here. The agent greets
     // the caller already knowing them (context passed as dynamic variables).

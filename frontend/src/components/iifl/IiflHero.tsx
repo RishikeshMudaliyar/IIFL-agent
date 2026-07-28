@@ -172,7 +172,7 @@ const IiflHero = ({ onApply }: IiflHeroProps) => {
                         className="w-full inline-flex items-center justify-center gap-2 bg-iifl-orange hover:bg-iifl-orange-dark disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-full shadow-md transition-colors text-sm"
                     >
                         <Sparkles size={16} />
-                        Talk to AI Agent
+                        Talk
                     </button>
                     <p className="mt-2 text-[11px] text-gray-400 text-center">
                         Our AI agent will call {phone.length === 10 ? `+91 ${phone}` : 'your mobile number'} in a few seconds.

@@ -1,7 +1,7 @@
 import { CLIENT_LOGO } from '../../config/branding';
 
 // Deliberately minimal header for the demo: just the client logo and the Nurix
-// trust-mark. The single "Talk to AI Agent" CTA lives only on the hero lead form
+// trust-mark. The single "Talk" CTA lives only on the hero lead form
 // now (one button, per the demo flow); the real IIFL site's utility strip +
 // mega-menus are intentionally stripped so the focus stays on the AI capability.
 const IiflHeader = () => {
