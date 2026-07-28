@@ -64,6 +64,7 @@ COPY agent_routes.py .
 COPY proxy_routes.py .
 COPY models.py .
 COPY sms_service.py .
+COPY email_service.py .
 COPY system_prompt.txt .
 COPY run-env.yaml .
 
