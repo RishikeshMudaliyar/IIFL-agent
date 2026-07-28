@@ -10,7 +10,7 @@ export const IIFL_CALLER_NUMBER = "1860 267 3000";
 
 /** How long the phone rings before it auto-answers (Option A).
  *  Long enough to register on a projector, short enough not to stall the demo. */
-export const RING_DURATION_MS = 3000;
+export const RING_DURATION_MS = 5000;
 
 type Mode = "ringing" | "in-call";
 

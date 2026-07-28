@@ -172,7 +172,7 @@ const AgentVoicePage = () => {
       )}
 
       {/* The room is up, but hold the call at "ringing" so the demo reads as a
-          real inbound phone call. Auto-answers after ~3s (PhoneCallFrame owns
+          real inbound phone call. Auto-answers after ~5s (PhoneCallFrame owns
           the timer); the green button is a manual shortcut to the same path. */}
       {status === "ready" && details && phase === "ringing" && (
         <PhoneCallFrame mode="ringing" onAnswer={answerCall} onDecline={declineCall} />

@@ -29,7 +29,7 @@ The right half (`LiveFormPanel` / noVNC) is untouched.
 | Changed | `frontend/src/pages/AgentVoicePage.tsx` — a one-way `phase` state (`"ringing"` → `"connected"`) that **gates the `<LiveKitRoom>` mount** |
 | Unchanged | `VoiceConversation` — transcript streaming, interim-bubble collapsing and `sanitizeTranscript` are all byte-identical. Deliberate: the fragile, already-debugged parts stayed out of the blast radius |
 | Caller ID | `IIFL_CALLER_NUMBER` at the top of `PhoneCallFrame.tsx` = `1860 267 3000` (IIFL's real published customer-care number). One-line change if the client wants a branch landline instead |
-| Ring length | `RING_DURATION_MS = 3000`, same file |
+| Ring length | `RING_DURATION_MS = 5000`, same file |
 
 ### 🔴 Two invariants in this code — do not "simplify" either
 
