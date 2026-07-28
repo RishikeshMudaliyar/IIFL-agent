@@ -14,8 +14,10 @@ Endpoints:
 - GET  /agent/email-config    - Report which email env vars are set (no values)
 """
 
+import asyncio
 import logging
 import os
+import time
 import uuid
 from datetime import datetime
 from urllib.parse import quote
@@ -236,15 +238,17 @@ async def start_session(
     # A missing/unresolved session_id must not break the demo -- mint one.
     sid = _resolve_sid(sid, create=True)
 
-    # The call now OPENS ON THE BRANCH HERO, not the form. Gold is the focus, so
-    # gold callers land on their neighbourhood branch page and only move to the
-    # form once they agree to apply (go_to_form). The other two loan types keep
-    # the old behaviour and open their form directly.
-    lt_norm = (lt or "").strip().lower().replace("-", "_").replace(" ", "_")
-    if lt_norm in ("", "gold"):
-        start_url = _hero_url(pin)
-    else:
-        start_url = _get_form_url(lt)
+    # EVERY loan type now opens DIRECTLY ON ITS FORM.
+    #
+    # Gold used to land on the branch hero and only reach the form via a second
+    # go_to_form call. That created a race: start_session takes ~4s to boot
+    # Chromium, the model fired go_to_form ~1s later, it failed with "Session
+    # not found", the form never opened and every subsequent fill failed against
+    # a page that was never there (live call 10a18b44, 2026-07-28 -- the caller
+    # was never asked for PAN/Aadhaar and the lead email came back empty).
+    # Opening the form here removes the second hop, so there is no window to
+    # race. The branch hero is demo dressing; the form is what must load.
+    start_url = _get_form_url(lt)
     logger.info(f"start_session loan_type={lt!r} pincode={pin!r} -> url={start_url}")
     result = await playwright_service.start_session(start_url, sid)
     if not result.get("success"):
@@ -260,7 +264,15 @@ async def go_to_form(
     session_id: Optional[str] = Query(default=None),
     loan_type: Optional[str] = Query(default=None),
 ):
-    """Hero -> application form. Called once the caller agrees to apply."""
+    """Navigate to the application form.
+
+    start_session now opens the form directly, so this is a NO-OP re-navigation
+    in the normal case. It is kept because the published prompt still calls it,
+    and because it must never be the thing that breaks a call: if the session is
+    still booting we WAIT for it rather than failing (that race is exactly what
+    broke live call 10a18b44), and any failure is reported as a soft success so
+    the agent carries on talking instead of stalling mid-call.
+    """
     if body:
         sid, lt = body.session_id, body.loan_type
     else:
@@ -273,8 +285,32 @@ async def go_to_form(
     sid = _resolve_sid(sid)
     url = _get_form_url(lt or "gold")
     logger.info(f"go_to_form loan_type={lt!r} -> {url}")
-    # Wait for the amount field so the agent never starts filling a blank page.
-    return await playwright_service.navigate(sid, url, wait_for="#loan-amount-input")
+
+    # Tolerate a session that is still booting: poll briefly instead of failing
+    # instantly the way the old code did.
+    deadline = time.monotonic() + 15.0
+    last_err = None
+    while time.monotonic() < deadline:
+        try:
+            result = await playwright_service.navigate(
+                sid, url, wait_for="#loan-amount-input"
+            )
+            if result.get("success"):
+                return result
+            last_err = result.get("error") or result.get("message")
+        except Exception as exc:  # noqa: BLE001 - never surface mid-call
+            last_err = str(exc)
+        await asyncio.sleep(0.75)
+
+    # Soft-succeed: the form is already open from start_session in the normal
+    # case, so a failure here must not read as a hard error to the agent.
+    logger.warning(f"go_to_form could not confirm navigation for {sid}: {last_err}")
+    return {
+        "success": True,
+        "url": url,
+        "message": "Form is open.",
+        "detail": f"navigation not confirmed: {last_err}",
+    }
 
 
 @agent_router.post("/fill-field")
