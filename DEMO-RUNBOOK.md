@@ -167,8 +167,9 @@ Then just have the conversation. What the audience should watch:
 8. She reads out **indicative offers** (amount, EMI, tenure).
 9. She promises a **specialist callback** and ends.
 
-**Behind the scenes at step 7:** the branch-manager email is sent silently. Don't mention
-it during the call — open the inbox afterwards as the reveal.
+**The branch-manager email now goes out AFTER the call ends**, automatically, on every
+call. Nothing to do during the conversation — just open the inbox once you have hung up.
+It arrives within a few seconds of the call ending.
 
 ## ☐ 3.4 Suggested things to say (they show off real behaviour)
 
@@ -185,7 +186,8 @@ it during the call — open the inbox afterwards as the reveal.
 # PART 4 — AFTER THE CALL
 
 1. **The WhatsApp** — branch address, directions, timings, what to bring.
-2. **The lead email** (inbox from 1.3) — IIFL-branded lead sheet: name, tappable number,
+2. **The lead email** (inbox from 1.3) — arrives a few seconds after you hang up. An
+   IIFL-branded lead sheet: name, tappable number,
    what they asked for, KYC (PAN/Aadhaar **part-masked** by design), their answers, and
    the branch it routed to. Good to project.
 3. **The filled application** on screen.
@@ -212,6 +214,10 @@ The conversation is the demo; the screen is a bonus.
 ---
 
 # PART 6 — KNOWN LIMITS (so you don't oversell)
+
+- **The branch manager gets an email for EVERY call**, including one abandoned after ten
+  seconds — those arrive nearly empty with a "still needed" list. That is deliberate
+  (operator decision), not a bug. Warn them if they are watching the inbox live.
 
 - **The gold rate, LTVs and EMIs are indicative demo figures** built from IIFL's published
   numbers. Never present them as a live quote.
