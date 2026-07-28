@@ -390,7 +390,10 @@ def _build_html(
         # --- the substance
         f'{_section("What the customer asked for", _rows_html(loan_rows))}'
         f'{_section("KYC given on the call", _rows_html(kyc_rows))}'
-        f'{_section("Their answers", _rows_html(answer_rows + [("Contactable?", consent_line)]))}'
+        # "Their answers" / "Contactable?" removed by operator request
+        # (2026-07-29): on a short or abandoned call it rendered as
+        # "Not given — do not market to this customer", which reads to a branch
+        # manager as a deliberate opt-out rather than a question never reached.
 
         # --- routing + context the manager needs to act
         f'{_section("Routed to your branch", _rows_html([("Branch", _esc(branch["area"])), ("Address", _esc(branch["address"])), ("Branch phone", _esc(branch["phone"])), ("Open", _esc(BRANCH_HOURS)), ("Customer pincode", _esc(pin_note))]))}'
@@ -559,9 +562,6 @@ WHAT THE CUSTOMER ASKED FOR
 
 KYC PROVIDED ON THE CALL
 {_block(kyc_rows)}
-
-THEIR ANSWERS
-{_block(answer_rows)}
 
 WHAT WAS PROMISED
   • A callback from a loan specialist, on the mobile number above.
