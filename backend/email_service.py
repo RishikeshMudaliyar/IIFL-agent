@@ -1,21 +1,24 @@
 """
-Transactional email for the IIFL demo — the summary Ira sends DURING the call.
+The lead email Ira sends the BRANCH MANAGER, silently, during the call.
 
-Sends over Gmail SMTP with an App Password. Everything sensitive comes from the
-environment; nothing is hardcoded:
+v13 changed who this is for. It used to be a summary sent to the caller; the
+caller now gets that as a WhatsApp (whatsapp_service.py), sent earlier in the call.
+This email is now an internal lead handoff: everything the customer said, so the
+branch manager can pick the lead up already knowing the whole conversation.
 
-    SMTP_USER        the Gmail address that sends (e.g. someone@nurix.ai)
-    SMTP_PASS        a Google App Password (16 chars, spaces stripped)
-    EMAIL_TO         the recipient
-    EMAIL_FROM_NAME  display name on the From header (default "IIFL Finance")
+It is sent SILENTLY, after the KYC questions — Ira never mentions it. Nothing here
+is caller-facing, so it is a plain internal lead sheet rather than warm copy.
 
-DEMO NOTE: the recipient is a fixed EMAIL_TO, not the caller's own address — we
-never collect an email on the call. Ira's script is worded accordingly.
+    EMAIL_TO               the recipient (the branch-manager inbox)
+    BRANCH_MANAGER_EMAIL   optional override; wins over EMAIL_TO when set
+    EMAIL_FROM_NAME        display name on the From header (default "IIFL Finance")
+    LEAD_EMAIL_MASK_IDS    "false" to print PAN/Aadhaar in full (default: masked)
+    SMTP_USER / SMTP_PASS  only for the legacy SMTP transport (unusable on Railway)
 
 The send runs in a worker thread (smtplib is blocking) with a hard timeout, so a
 slow or unreachable SMTP server can never stall the voice call. Every failure is
-swallowed into a structured result — the caller-facing prompt turns a False into
-"our team will send it shortly", so an outage degrades the wording, not the call.
+swallowed into a structured result — because the send is silent, a failure is now
+invisible to the caller entirely; it only shows up in the logs.
 """
 
 import asyncio
@@ -26,6 +29,9 @@ import smtplib
 from email.message import EmailMessage
 from email.utils import formataddr
 from typing import Any, Dict, Optional
+
+from branch_data import (BRANCH_HOURS, SCHEMES, branch_for, clean,
+                         format_amount, to_e164_india)
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +65,16 @@ def _app_password() -> str:
     return re.sub(r"\s+", "", _env("SMTP_PASS"))
 
 
+def _recipient() -> str:
+    """Where the lead email goes: the branch-manager inbox.
+
+    BRANCH_MANAGER_EMAIL wins when set, so a real branch address can be swapped in
+    with one Railway variable and no code change. Falls back to EMAIL_TO, which is
+    what the demo currently uses.
+    """
+    return _env("BRANCH_MANAGER_EMAIL") or _env("EMAIL_TO")
+
+
 def _resend_from() -> str:
     """The From header for Resend. An unverified account may only send from the
     shared onboarding address, so that is the fallback."""
@@ -74,11 +90,15 @@ def config_status() -> Dict[str, Any]:
     Railway wiring without ever echoing a key or password."""
     pw = _app_password()
     key = _env("RESEND_API_KEY")
-    smtp_ready = bool(_env("SMTP_USER") and pw and _env("EMAIL_TO"))
-    resend_ready = bool(key and _env("EMAIL_TO"))
+    to = _recipient()
+    smtp_ready = bool(_env("SMTP_USER") and pw and to)
+    resend_ready = bool(key and to)
     return {
         "provider": EMAIL_PROVIDER,
-        "email_to_set": bool(_env("EMAIL_TO")),
+        "email_to_set": bool(to),
+        "recipient": to,
+        "recipient_is_override": bool(_env("BRANCH_MANAGER_EMAIL")),
+        "mask_ids": _mask_ids(),
         # Resend (default transport)
         "resend_api_key_set": bool(key),
         "resend_from": _resend_from(),
@@ -119,90 +139,42 @@ async def probe_connectivity() -> Dict[str, Any]:
 
 # ---------------------------------------------------------------- content
 
-# Spoken scheme id -> the published product name and its headline terms.
-# Mirrors frontend/src/lib/goldSchemes.ts, which is the source of truth. Never
-# invent a rate here; if the schemes change, change them there and copy across.
-_SCHEMES = {
-    "saver":   ("IIFL Swarna Saver",   "55% LTV", "₹7,300/gram", "11.88% p.a."),
-    "balance": ("IIFL Swarna Balance", "65% LTV", "₹8,635/gram", "14.4% p.a."),
-    "max":     ("IIFL Swarna Max",     "75% LTV", "₹9,960/gram", "17.4% p.a."),
-}
-
-# Branch + local event per pincode. Mirrors frontend/src/lib/branches.ts and the
-# branch_knowledge block of the DSL prompt — the addresses are real, the events
-# are demo colour. All three must agree or the email will contradict the call.
-_BRANCHES = {
-    "400059": {
-        "area": "Andheri East",
-        "address": ("1st Floor, Tarani Business Centre, Marol Maroshi Road, "
-                    "Opposite Lok Bharti Complex, Marol, Andheri East, Mumbai — 400059"),
-        "directions": "On Marol Maroshi Road, right opposite Lok Bharti Complex.",
-        "phone": "+91 22 7107 4667",
-        "event": ("Free gold purity checking camp this Saturday in Marol, "
-                  "10:00 AM – 4:00 PM. Bring your gold, get it checked free of charge."),
-    },
-    "400086": {
-        "area": "Ghatkopar West",
-        "address": ("Shop No. 5 & 6, Ground Floor, Anupam B Building, LBS Marg, "
-                    "Ghatkopar West, Mumbai — 400086"),
-        "directions": "On LBS Marg, ground floor of Anupam Building — five minutes from Ghatkopar station.",
-        "phone": "+91 22 7107 4600",
-        "event": ("'Seedhi Baat' gold loan awareness session this Sunday, 11:00 AM, "
-                  "near LBS Marg market. How gold loans work, explained plainly."),
-    },
-    "400097": {
-        "area": "Malad East",
-        "address": ("Shop No. 2, Kurar Sangita Building, Shantaram Talao Road, "
-                    "Near St George High School, Kurar, Malad East, Mumbai — 400097"),
-        "directions": "On Shantaram Talao Road, near St George High School in Kurar village.",
-        "phone": "+91 22 7107 4610",
-        "event": ("Financial literacy camp next week near St George School, Kurar — "
-                  "gold loans, savings and interest explained simply. Free entry."),
-    },
-    "400014": {
-        "area": "Dadar East",
-        "address": ("201, 2nd Floor, Parasmani Shopping Centre, 95 Naigaum Cross Road, "
-                    "MMGS Marg, Near Dadar Railway Station, Dadar East, Mumbai — 400014"),
-        "directions": "Right next to Dadar station, Parasmani Shopping Centre, second floor.",
-        "phone": "+91 22 7107 4620",
-        "event": ("Branch open house later this month, 5:00 – 7:00 PM — come talk "
-                  "through a gold loan with no pressure. Refreshments provided."),
-    },
-}
-
-_FALLBACK_PINCODE = "400059"
-_BRANCH_HOURS = "9:30 AM – 6:00 PM (Sunday closed)"
+def _mask_pan(pan: str) -> str:
+    """ABCDE1234F -> ABCDE****F. Keeps the shape recognisable while withholding
+    the digits, so the manager can match the lead without the email carrying a
+    reusable identity document."""
+    p = clean(pan).upper()
+    return f"{p[:5]}****{p[9]}" if len(p) == 10 else ("*" * len(p) if p else "")
 
 
-def _clean(v: Any) -> str:
-    """Drop unresolved template tokens — an unset DSL variable arrives literally
-    as '<<scheme>>' and must never reach the customer-facing email."""
-    if v is None:
+def _mask_aadhaar(aadhaar: str) -> str:
+    """12 digits -> 'XXXX XXXX 1234'. Last four only: enough to confirm the
+    customer read it out, not enough to reuse."""
+    d = re.sub(r"\D", "", clean(aadhaar))
+    return f"XXXX XXXX {d[-4:]}" if len(d) == 12 else ("*" * len(d) if d else "")
+
+
+def _mask_ids() -> bool:
+    """Masked by default. PAN and Aadhaar are identity documents and this email
+    lands in a shared inbox, so the safe default is to withhold them; set
+    LEAD_EMAIL_MASK_IDS=false when the demo needs to show the full values."""
+    return _env("LEAD_EMAIL_MASK_IDS", "true").lower() not in ("false", "0", "no")
+
+
+def _yes_no(v: str) -> str:
+    """Normalise a spoken yes/no — Hinglish calls yield हाँ / haan / nahi as often
+    as yes / no, and the manager should read one consistent word."""
+    s = clean(v).lower()
+    if not s:
         return ""
-    s = str(v).strip()
-    if not s or s.lower() in ("none", "null", "undefined"):
-        return ""
-    if ("<<" in s and ">>" in s) or ("{{" in s and "}}" in s):
-        return ""
-    return s
+    if s in ("yes", "y", "true", "1", "haan", "ha", "हाँ", "हां", "ji", "जी"):
+        return "Yes"
+    if s in ("no", "n", "false", "0", "nahi", "nahin", "नहीं", "ना"):
+        return "No"
+    return clean(v)
 
 
-def _branch_for(pincode: str) -> Dict[str, str]:
-    key = re.sub(r"\D", "", _clean(pincode))
-    return _BRANCHES.get(key) or _BRANCHES[_FALLBACK_PINCODE]
-
-
-def _format_amount(raw: str) -> str:
-    """Render a rupee amount with Indian digit grouping (₹5,00,000)."""
-    digits = re.sub(r"[^\d]", "", raw)
-    if not digits:
-        return raw
-    n = digits[::-1]
-    groups = [n[:3]] + [n[i:i + 2] for i in range(3, len(n), 2)]
-    return "₹" + ",".join(groups)[::-1]
-
-
-def build_summary(
+def build_manager_lead_email(
     name: str = "",
     pincode: str = "",
     loan_type: str = "",
@@ -210,69 +182,104 @@ def build_summary(
     scheme: str = "",
     gold_weight: str = "",
     gold_purity: str = "",
+    phone: str = "",
+    pan: str = "",
+    aadhaar: str = "",
+    existing_loan: str = "",
+    consent_given: str = "",
 ) -> Dict[str, str]:
-    """Render the subject and body from what was actually captured on the call.
+    """The internal lead sheet for the branch manager.
 
-    Every field is optional: a caller who drops off after the amount still gets a
-    coherent email. Nothing is invented — a field we do not have is simply omitted.
+    Everything the customer said on the call, grouped so it can be skim-read: who
+    they are, what they asked for, the KYC they gave, and what was promised. Every
+    field is optional — a caller who drops off midway still produces a coherent
+    lead. Nothing is invented; a field we do not have is marked "not provided"
+    rather than guessed, so the manager can see what is still missing.
     """
-    name = _clean(name) or "there"
-    branch = _branch_for(pincode)
+    who = clean(name) or "(name not captured)"
+    branch = branch_for(pincode)
+    lt = clean(loan_type).replace("_", " ") or "gold"
 
-    rows = []
-    amount = _clean(loan_amount)
+    # --- what they asked for
+    loan_rows = []
+    amount = clean(loan_amount)
     if amount:
-        rows.append(("Loan amount discussed", _format_amount(amount)))
+        loan_rows.append(("Loan amount requested", format_amount(amount)))
 
-    scheme_key = _clean(scheme).lower()
-    if scheme_key in _SCHEMES:
-        label, ltv, per_gram, rate = _SCHEMES[scheme_key]
-        rows.append(("Scheme selected", f"{label} ({ltv}, {per_gram}, {rate})"))
+    scheme_key = clean(scheme).lower()
+    if scheme_key in SCHEMES:
+        label, ltv, per_gram, rate = SCHEMES[scheme_key]
+        loan_rows.append(("Scheme chosen", f"{label} — {ltv}, {per_gram}, {rate}"))
 
-    weight = _clean(gold_weight)
+    weight = clean(gold_weight)
     if weight:
-        purity = _clean(gold_purity)
-        rows.append(("Gold to pledge", f"{weight} grams" + (f", {purity} carat" if purity else "")))
+        purity = clean(gold_purity)
+        loan_rows.append(("Gold to pledge",
+                          f"{weight} grams" + (f", {purity} carat" if purity else "")))
 
-    lt = _clean(loan_type).replace("_", " ") or "gold"
-    subject = f"Your IIFL {lt.title()} Loan — summary, branch details & local event"
+    # --- KYC exactly as read out on the call
+    masked = _mask_ids()
+    kyc_rows = []
+    if clean(pan):
+        kyc_rows.append(("PAN", _mask_pan(pan) if masked else clean(pan).upper()))
+    if clean(aadhaar):
+        kyc_rows.append(("Aadhaar",
+                         _mask_aadhaar(aadhaar) if masked
+                         else re.sub(r"\D", "", clean(aadhaar))))
 
-    detail_block = (
-        "\n".join(f"  • {k}: {v}" for k, v in rows)
-        if rows else "  • We'll confirm the details when our specialist calls you."
-    )
+    # --- their answers to the qualifying questions
+    answer_rows = []
+    existing = _yes_no(existing_loan)
+    if existing:
+        answer_rows.append(("Existing loan running?", existing))
+    consent = _yes_no(consent_given)
+    if consent:
+        answer_rows.append(("Consent to be contacted", consent))
 
-    body = f"""Hello {name},
+    def _block(rows, empty="  (not captured on this call)"):
+        return "\n".join(f"  {k+':':<26}{v}" for k, v in rows) if rows else empty
 
-Thank you for speaking with us about your {lt} loan today. Here is a summary of
-what we discussed, along with your nearest branch details.
+    contact = to_e164_india(phone) or clean(phone) or "(not captured)"
+    pin = re.sub(r"\D", "", clean(pincode))
+    pin_note = pin if pin else "(not captured)"
+    if pin and pin not in ("400059", "400086", "400097", "400014"):
+        pin_note = f"{pin} (unsupported — routed to {branch['area']})"
 
-YOUR LOAN DETAILS
-{detail_block}
+    subject = (f"New {lt} loan lead — {branch['area']} — {who}"
+               + (f" ({format_amount(amount)})" if amount else ""))
 
-These figures are indicative. Final valuation happens at the branch and our loan
-specialist will confirm your exact offer.
+    body = f"""New lead from a call with Ira, IIFL's voice assistant.
+The customer has been told a specialist will call them back shortly.
 
-YOUR NEAREST BRANCH — IIFL FINANCE, {branch['area'].upper()}
+CUSTOMER
+  {'Name:':<26}{who}
+  {'Mobile:':<26}{contact}
+  {'Pincode:':<26}{pin_note}
+  {'Loan type:':<26}{lt.title()}
+
+ROUTED TO — IIFL FINANCE, {branch['area'].upper()}
   {branch['address']}
-  How to find it: {branch['directions']}
-  Phone: {branch['phone']}
-  Open: {_BRANCH_HOURS}
+  {'Branch phone:':<26}{branch['phone']}
+  {'Open:':<26}{BRANCH_HOURS}
 
-WHAT TO BRING
-  • Your gold
-  • One KYC document (Aadhaar or PAN)
-  No income proof and no guarantor required.
+WHAT THE CUSTOMER ASKED FOR
+{_block(loan_rows)}
 
-HAPPENING NEAR YOU
-  {branch['event']}
+KYC PROVIDED ON THE CALL
+{_block(kyc_rows)}
 
-One of our loan specialists will call you shortly to take this forward.
+THEIR ANSWERS
+{_block(answer_rows)}
 
-Warm regards,
-Ira
-IIFL Finance
-1860 267 3000
+WHAT WAS PROMISED
+  • A callback from a loan specialist, on the mobile number above.
+  • A WhatsApp with this branch's address and directions (already sent).
+  • Figures quoted were indicative — final valuation happens at the branch.
+
+{'PAN/Aadhaar are masked. Set LEAD_EMAIL_MASK_IDS=false to show them in full.' if masked and kyc_rows else ''}
+—
+Generated automatically during the call by Ira.
+IIFL Finance · 1860 267 3000
 """
     return {"subject": subject, "body": body}
 
@@ -281,9 +288,9 @@ IIFL Finance
 
 def _send_blocking(subject: str, body: str) -> None:
     """Synchronous SMTP send. Raises on any failure; the async wrapper catches."""
-    user, password, to = _env("SMTP_USER"), _app_password(), _env("EMAIL_TO")
+    user, password, to = _env("SMTP_USER"), _app_password(), _recipient()
     if not (user and password and to):
-        raise RuntimeError("SMTP_USER, SMTP_PASS and EMAIL_TO must all be set")
+        raise RuntimeError("SMTP_USER, SMTP_PASS and a recipient must all be set")
 
     msg = EmailMessage()
     msg["Subject"] = subject
@@ -310,7 +317,7 @@ async def _send_via_resend(subject: str, body: str) -> Dict[str, Any]:
     Railway. Returns a structured result; never raises."""
     import httpx
 
-    key, to = _env("RESEND_API_KEY"), _env("EMAIL_TO")
+    key, to = _env("RESEND_API_KEY"), _recipient()
     if not (key and to):
         return {"email_sent": "false", "error": "resend_not_configured"}
 
@@ -347,11 +354,25 @@ async def send_summary_email(
     scheme: str = "",
     gold_weight: str = "",
     gold_purity: str = "",
+    phone: str = "",
+    pan: str = "",
+    aadhaar: str = "",
+    existing_loan: str = "",
+    consent_given: str = "",
 ) -> Dict[str, Any]:
-    """Build and send the summary. Never raises — a failure returns
-    {"email_sent": "false", ...} and Ira softens her line to a promise."""
-    content = build_summary(name, pincode, loan_type, loan_amount,
-                            scheme, gold_weight, gold_purity)
+    """Build and send the branch-manager lead email. Never raises.
+
+    The name is kept for compatibility with the existing Mozart tool and route —
+    only the content and recipient changed in v13, so the tool did not need
+    rebuilding. A failure returns {"email_sent": "false", ...}; because the send is
+    now silent, that is invisible to the caller and shows up only in the logs.
+    """
+    content = build_manager_lead_email(
+        name=name, pincode=pincode, loan_type=loan_type, loan_amount=loan_amount,
+        scheme=scheme, gold_weight=gold_weight, gold_purity=gold_purity,
+        phone=phone, pan=pan, aadhaar=aadhaar, existing_loan=existing_loan,
+        consent_given=consent_given,
+    )
 
     if not config_status()["configured"]:
         logger.error("send_summary_email: %s not configured — not sending", EMAIL_PROVIDER)
@@ -380,5 +401,5 @@ async def send_summary_email(
         logger.exception("send_summary_email: send failed")
         return {"email_sent": "false", "error": str(exc)[:200], "subject": content["subject"]}
 
-    logger.info("send_summary_email: sent to %s", _env("EMAIL_TO"))
-    return {"email_sent": "true", "to": _env("EMAIL_TO"), "subject": content["subject"]}
+    logger.info("send_summary_email: sent to %s", _recipient())
+    return {"email_sent": "true", "to": _recipient(), "subject": content["subject"]}

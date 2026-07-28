@@ -64,7 +64,13 @@ COPY agent_routes.py .
 COPY proxy_routes.py .
 COPY models.py .
 COPY sms_service.py .
+# ⚠️ Every new .py needs its own COPY line. A module missing here is absent from
+# the image and crashes uvicorn on boot — and because the PREVIOUS container keeps
+# serving, /health stays 200 and the failure is invisible. Check
+# `railway deployment list`, not /health, after adding a module.
+COPY branch_data.py .
 COPY email_service.py .
+COPY whatsapp_service.py .
 COPY system_prompt.txt .
 COPY run-env.yaml .
 

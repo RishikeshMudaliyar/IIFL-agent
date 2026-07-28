@@ -8,8 +8,10 @@ Endpoints:
 - POST /agent/session/start   - Launch browser, return session_id
 - POST /agent/fill-field      - Fill a form field
 - POST /agent/click-button    - Click a form button
-- POST /agent/send-email      - Email the call summary live, during the call
-- GET  /agent/email-config    - Report which SMTP env vars are set (no values)
+- POST /agent/send-whatsapp   - WhatsApp the caller their branch details (before KYC)
+- GET  /agent/whatsapp-config - Report which Twilio env vars are set (no values)
+- POST /agent/send-email      - Email the branch manager the lead (silent, after KYC)
+- GET  /agent/email-config    - Report which email env vars are set (no values)
 """
 
 import logging
@@ -24,6 +26,8 @@ from typing import Any, Dict, Optional
 
 from playwright_service import playwright_service
 from email_service import config_status, probe_connectivity, send_summary_email
+from whatsapp_service import config_status as whatsapp_config_status
+from whatsapp_service import send_branch_whatsapp
 
 logger = logging.getLogger(__name__)
 
@@ -414,8 +418,65 @@ async def show_offers(
     return await playwright_service.show_offers(sid, url)
 
 
+class SendWhatsAppRequest(BaseModel):
+    """What the branch-details WhatsApp needs: who they are and where they live.
+
+    `phone` is the caller's own number — the agent passes the pre-normalised
+    <<phone_e164>> it was handed as a dynamic variable, so nothing is asked on the
+    call. When it is absent (a web/mic demo has no PSTN number) the service falls
+    back to WHATSAPP_FALLBACK_TO.
+    """
+    session_id: Optional[str] = None
+    name: Optional[str] = None
+    pincode: Optional[str] = None
+    phone: Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def unwrap(cls, v): return _unwrap_payload(v)
+
+
+@agent_router.post("/send-whatsapp")
+async def send_whatsapp(request: Request, body: Optional[SendWhatsAppRequest] = None):
+    """WhatsApp the caller their branch address and details, DURING the call.
+
+    Sent before the KYC questions, so the caller has something concrete in hand
+    before being asked for PAN and Aadhaar.
+
+    Always returns HTTP 200 with a `whatsapp_sent` of "true"/"false" — never an
+    error status. A 5xx would surface to the agent as a hard tool failure mid-call;
+    instead Ira reads the flag and softens her line.
+    """
+    if not body:
+        try:
+            raw = await request.json()
+        except Exception:
+            raw = {}
+        raw = _unwrap_payload(raw) or {}
+        body = SendWhatsAppRequest(
+            **{k: raw.get(k) for k in SendWhatsAppRequest.model_fields})
+
+    logger.info("send_whatsapp: name=%r pincode=%r phone=%r",
+                body.name, body.pincode, body.phone)
+
+    return await send_branch_whatsapp(
+        name=body.name or "", pincode=body.pincode or "", phone=body.phone or "",
+    )
+
+
+@agent_router.get("/whatsapp-config")
+async def whatsapp_config():
+    """Which Twilio env vars are set — presence only, never the auth token."""
+    return whatsapp_config_status()
+
+
 class SendEmailRequest(BaseModel):
-    """Everything Ira captured on the call, for the live summary email."""
+    """Everything Ira captured on the call, for the branch-manager lead email.
+
+    v13 added the KYC and answer fields (pan / aadhaar / existing_loan /
+    consent_given / phone) — the manager needs the whole conversation, not just
+    the loan figures the old customer-facing summary carried.
+    """
     session_id: Optional[str] = None
     name: Optional[str] = None
     pincode: Optional[str] = None
@@ -424,6 +485,11 @@ class SendEmailRequest(BaseModel):
     scheme: Optional[str] = None
     gold_weight: Optional[str] = None
     gold_purity: Optional[str] = None
+    phone: Optional[str] = None
+    pan: Optional[str] = None
+    aadhaar: Optional[str] = None
+    existing_loan: Optional[str] = None
+    consent_given: Optional[str] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -432,11 +498,11 @@ class SendEmailRequest(BaseModel):
 
 @agent_router.post("/send-email")
 async def send_email(request: Request, body: Optional[SendEmailRequest] = None):
-    """Email the call summary + branch details + local event, DURING the call.
+    """Email the BRANCH MANAGER the full lead, silently, DURING the call.
 
-    Always returns HTTP 200 with an `email_sent` of "true"/"false" — never an
-    error status. A 5xx here would surface to the agent as a tool failure mid-
-    call; instead Ira reads the flag and softens her line to a promise.
+    Ira never announces this one — see the email states in the DSL. Always returns
+    HTTP 200 with an `email_sent` of "true"/"false" so a failure can never surface
+    to the agent as a tool error mid-call.
     """
     if not body:
         try:
@@ -446,21 +512,27 @@ async def send_email(request: Request, body: Optional[SendEmailRequest] = None):
         raw = _unwrap_payload(raw) or {}
         body = SendEmailRequest(**{k: raw.get(k) for k in SendEmailRequest.model_fields})
 
-    logger.info("send_email: name=%r pincode=%r scheme=%r",
-                body.name, body.pincode, body.scheme)
+    # PAN and Aadhaar are deliberately NOT logged — they are identity documents and
+    # these logs are retained. Presence is enough to debug a missing-field problem.
+    logger.info("send_email: name=%r pincode=%r scheme=%r pan=%s aadhaar=%s",
+                body.name, body.pincode, body.scheme,
+                "set" if body.pan else "empty",
+                "set" if body.aadhaar else "empty")
 
     return await send_summary_email(
         name=body.name or "", pincode=body.pincode or "",
         loan_type=body.loan_type or "", loan_amount=body.loan_amount or "",
         scheme=body.scheme or "", gold_weight=body.gold_weight or "",
-        gold_purity=body.gold_purity or "",
+        gold_purity=body.gold_purity or "", phone=body.phone or "",
+        pan=body.pan or "", aadhaar=body.aadhaar or "",
+        existing_loan=body.existing_loan or "",
+        consent_given=body.consent_given or "",
     )
 
 
 @agent_router.get("/email-config")
 async def email_config():
-    """Which SMTP env vars are set — presence only, never values. Lets us verify
-    the Railway wiring without exposing the App Password."""
+    """Which email env vars are set — presence only, never the key or password."""
     return config_status()
 
 
