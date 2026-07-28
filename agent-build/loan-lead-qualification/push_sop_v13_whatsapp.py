@@ -135,7 +135,77 @@ assert "tool.start_session(session_id: <<session_id>>, loan_type: <<loan_type>>,
 assert 'tool.click_button(session_id: <<session_id>>, button: "scheme_<<scheme>>"' in sop, \
     "the scheme click must be templated off <<scheme>>"
 
-print("all v13 gates passed")
+# ===== v13.2 gates: the schemes are INFORMATION, not a decision point =====
+# Operator change: mention the three, invite questions, never solicit a pick. A
+# caller who volunteers one still gets it recorded; a caller who does not is fine
+# and the flow continues to the gold weight regardless.
+assert "DO NOT ASK THEM TO PICK ONE" in sop, \
+    "gold_scheme_explain must not ask the caller to choose a scheme"
+assert "कोई सवाल है?" in sop, "the schemes turn must invite questions instead"
+assert "scheme_chosen {" in sop, "the scheme_chosen intent must be defined"
+assert 'on intent("scheme_chosen") -> fill_gold_scheme()' in sop, \
+    "a volunteered scheme must still be recorded"
+# No scheme is a valid outcome: every scheme state must fall through to the next
+# question rather than looping until the caller picks.
+for st in ("gold_scheme_explain", "gold_scheme_question", "gold_scheme_help"):
+    _s = sop.index(f"  {st}() {{")
+    body = sop[_s:sop.index("\n  }", _s)]
+    assert 'on intent("default")       -> gold_q3()' in body or 'on intent("default")      -> gold_q3()' in body, \
+        f"{st} must fall through to gold_q3 when no scheme is chosen — never block"
+assert "may NOT have chosen a scheme" in sop, \
+    "the offers state must tolerate an empty scheme"
+
+# ===== v13.3 gates: opening tightened after live call 05ab9af5 =====
+# (1) No duplicate self-introduction — opening_dialogue already said who she is.
+assert "DO NOT INTRODUCE YOURSELF AGAIN" in sop, \
+    "confirm_context must not re-introduce Ira; the opening line already did"
+_cc_s = sop.index("  confirm_context() {")
+_cc = sop[_cc_s:sop.index("\n  }", _cc_s)]
+assert "मैं Ira बोल रही हूँ IIFL Finance से. अभी" not in _cc, \
+    "the example shape still re-introduces her — strip it from the example too"
+
+# (2) The trust turn must END with the amount question, and go_to_form must be
+# invoked in that SAME state so there is no dead gap (31s on call 05ab9af5).
+_iw_s = sop.index("  iifl_welcome() {")
+_iw = sop[_iw_s:sop.index("\n  }", _iw_s)]
+assert "tool.go_to_form(" in _iw, \
+    "go_to_form must be invoked inside iifl_welcome, before the question is asked"
+assert "END THIS SAME TURN WITH THE AMOUNT QUESTION" in _iw, \
+    "the trust turn must close with the loan-amount question"
+assert "FIRST, silently invoke the go_to_form tool" in _iw, \
+    "the tool must be ordered before the spoken lines"
+
+# ===== v13.1 gates: the five conversation-quality fixes from call 372c5ce1 =====
+# Each of these is a rule the LEAD heard break on a live call. The assertion names
+# the symptom so a future edit that deletes the rule fails loudly.
+
+# (2) Never ask permission to record a choice — "select कर लूँ?" derailed 3 turns.
+assert "NEVER ASK PERMISSION TO RECORD A CHOICE" in sop, \
+    "the select/fix/note ban is missing — this derailed live call 372c5ce1"
+for phrase in ("select कर लूँ", "fix करें"):
+    assert phrase in sop, f"the ban must name the exact phrase {phrase!r} to be effective"
+
+# (3) No repetition, no standalone filler turns.
+assert "NEVER SPEAK A STANDALONE FILLER TURN" in sop, "filler-turn ban missing"
+assert "NEVER REPEAT YOURSELF" in sop, "repetition ban missing"
+assert "ASK FOR ANY GIVEN CONFIRMATION ONCE" in sop, "re-confirmation ban missing"
+
+# (4) Rapid consecutive caller turns -> answer the latest, never go silent.
+assert "ANSWER ONLY THE LATEST" in sop, "burst-turn rule missing"
+assert 'IF THE CALLER SAYS "Hello?"' in sop, \
+    "the dropped-line recovery rule is missing — the caller said Hello? on 372c5ce1"
+
+# (5) branch_hook must be crisp, and the event must NOT be spoken there.
+_bh = sop.index("branch_hook() {")
+_bh_body = sop[_bh:sop.index("on intent", _bh)]
+assert "MAXIMUM TWO SHORT SENTENCES" in _bh_body, \
+    "branch_hook must be capped — it produced an 85-word monologue on 372c5ce1"
+assert "Do NOT mention the local event here" in _bh_body, \
+    "the local event belongs in the WhatsApp, not the spoken branch hook"
+assert "local_event" not in _bh_body, \
+    "branch_hook must not pull the local_event line any more"
+
+print("all v13 + v13.1 gates passed")
 
 # ===================== push =====================
 # ⚠️ The body MUST be wrapped as {"sop": {"goal":…, "sop_content":…}}. A bare
@@ -195,6 +265,21 @@ checks = {
     "email is silent":           "say NOTHING at all" in compiled,
     "email anti-skip line":      "Invoke the send_email tool now" in compiled,
     "old email intro gone":      "email_intro()" not in compiled,
+    # v13.1 — the five conversation fixes
+    "no-permission rule":        "NEVER ASK PERMISSION TO RECORD A CHOICE" in compiled,
+    "no-filler rule":            "NEVER SPEAK A STANDALONE FILLER TURN" in compiled,
+    "no-repeat rule":            "NEVER REPEAT YOURSELF" in compiled,
+    "burst-turn rule":           "ANSWER ONLY THE LATEST" in compiled,
+    "branch hook capped":        "MAXIMUM TWO SHORT SENTENCES" in compiled,
+    # v13.2 — schemes are information, not a decision
+    "schemes dont ask pick":     "DO NOT ASK THEM TO PICK ONE" in compiled,
+    "scheme_chosen intent":      "scheme_chosen {" in compiled,
+    "volunteered pick recorded": 'on intent("scheme_chosen") -> fill_gold_scheme()' in compiled,
+    "no-scheme tolerated":       "may NOT have chosen a scheme" in compiled,
+    # v13.3 — opening
+    "no double intro":           "DO NOT INTRODUCE YOURSELF AGAIN" in compiled,
+    "trust turn asks amount":    "END THIS SAME TURN WITH THE AMOUNT QUESTION" in compiled,
+    "go_to_form in welcome":     "FIRST, silently invoke the go_to_form tool" in compiled,
     # carried over
     "phone-call premise":        "THIS IS A PHONE CALL" in compiled,
     "go_to_form invoked":        "tool.go_to_form(" in compiled,
