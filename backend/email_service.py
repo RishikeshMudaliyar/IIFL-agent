@@ -22,6 +22,7 @@ invisible to the caller entirely; it only shows up in the logs.
 """
 
 import asyncio
+import base64
 import logging
 import os
 import re
@@ -193,6 +194,36 @@ def _yes_no(v: str) -> str:
 
 IIFL_ORANGE = "#F56E28"
 IIFL_NAVY = "#1B1B5C"
+
+# --- the IIFL logo, embedded as a data URI ---------------------------------
+# Why embedded and not linked: every major client (Gmail, Outlook, Apple Mail)
+# blocks remote images by default, so a hot-linked logo shows as a broken box on
+# first open — and IIFL's own asset URL 403s on hot-link anyway. A data URI always
+# renders. Cost is ~16 KB of base64 on a ~24 KB email, which is fine.
+#
+# It is a PNG, NOT the source SVG: Gmail and Outlook strip <img> SVG entirely.
+# Converted from IIFL's official iifl-finance.svg at 300x57 (2x for retina,
+# displayed at 150px) and flattened onto white, since the wordmark is navy and
+# transparency renders inconsistently in Outlook.
+_LOGO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                          "assets", "iifl-logo-email.png")
+
+
+def _logo_data_uri() -> str:
+    """Read the logo once and cache it. Returns "" if the file is missing, and
+    the header then falls back to the wordmark as text — a missing asset must
+    never break the lead email, which is the thing the manager actually needs."""
+    cached = getattr(_logo_data_uri, "_cache", None)
+    if cached is not None:
+        return cached
+    try:
+        with open(_LOGO_PATH, "rb") as fh:
+            uri = "data:image/png;base64," + base64.b64encode(fh.read()).decode("ascii")
+    except Exception:
+        logger.warning("email logo not found at %s — falling back to text", _LOGO_PATH)
+        uri = ""
+    _logo_data_uri._cache = uri
+    return uri
 _INK = "#1f2937"
 _MUTED = "#6b7280"
 _LINE = "#e5e7eb"
@@ -286,18 +317,44 @@ def _build_html(
         if masked and kyc_rows else ""
     )
 
+    # The masthead. `alt` carries the brand for anyone whose client still refuses
+    # to render it, and the whole row degrades to the wordmark as text if the asset
+    # is missing on disk.
+    _logo = _logo_data_uri()
+    if _logo:
+        logo_cell = (
+            f'<img src="{_logo}" width="150" height="28" alt="IIFL Finance" '
+            f'style="display:block;border:0;outline:none;text-decoration:none;'
+            f'width:150px;height:28px;" />'
+        )
+    else:
+        logo_cell = (
+            f'<p style="margin:0;font:800 20px {_FONT};color:{IIFL_NAVY};">'
+            f'IIFL Finance</p>'
+        )
+    logo_row = (f'<tr><td style="background-color:#ffffff;padding:18px 28px 14px 28px;">'
+                f'{logo_cell}</td></tr>')
+
     return (
         f'<div style="background-color:#eef1f5;padding:20px 12px;font:14px {_FONT};">'
         f'<table border="0" cellpadding="0" cellspacing="0" width="600" '
         f'style="max-width:600px;width:100%;margin:0 auto;background-color:#ffffff;'
         f'border-radius:8px;overflow:hidden;">'
 
+        # --- masthead: the real IIFL logo on white.
+        # It sits on WHITE, not on the navy bar below, because the official
+        # wordmark is navy — on navy it would be invisible. `display:block` kills
+        # the baseline gap Outlook adds under an image, and width/height are set as
+        # HTML attributes as well as CSS because Outlook ignores CSS sizing.
+        f'{logo_row}'
+
         # --- header: navy bar, orange rule. Says what this is in one line.
-        f'<tr><td style="background-color:{IIFL_NAVY};padding:20px 28px;">'
-        f'<p style="margin:0;font:800 19px {_FONT};color:#ffffff;letter-spacing:0.2px;">'
-        f'IIFL Finance</p>'
+        f'<tr><td style="background-color:{IIFL_NAVY};padding:18px 28px;">'
+        f'<p style="margin:0;font:800 17px {_FONT};color:#ffffff;letter-spacing:0.2px;">'
+        f'New Gold Loan Lead</p>'
         f'<p style="margin:4px 0 0 0;font:12px {_FONT};color:#b9c0e8;'
-        f'text-transform:uppercase;letter-spacing:1.4px;">New Gold Loan Lead</p>'
+        f'text-transform:uppercase;letter-spacing:1.4px;">'
+        f'Captured on a call &middot; {_esc(branch["area"])} branch</p>'
         f'</td></tr>'
         f'<tr><td style="height:3px;background-color:{IIFL_ORANGE};font-size:0;'
         f'line-height:0;">&nbsp;</td></tr>'

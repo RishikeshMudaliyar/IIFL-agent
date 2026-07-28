@@ -77,6 +77,11 @@ COPY run-env.yaml .
 # Copy dummy site for testing (optional)
 COPY dummy_site/ ./dummy_site/
 
+# The IIFL logo embedded in the branch-manager lead email. email_service.py reads
+# it from assets/ at runtime and falls back to a text wordmark if it is absent —
+# so omitting this COPY loses the logo SILENTLY, with no error anywhere.
+COPY assets/ ./assets/
+
 # Copy nginx config
 COPY nginx.conf /etc/nginx/nginx.conf
 
