@@ -1,7 +1,7 @@
 // Pincode -> branch data for the hyperlocal hero page (page 1 of the demo).
 //
 // The caller types a pincode into the hero form; the voice call opens the hero
-// variant for that pincode so the page already feels local before Ira says a
+// variant for that pincode so the page already feels local before Meera says a
 // word. Four pincodes are supported — the ones the demo team will type.
 //
 // PROVENANCE — read before editing:

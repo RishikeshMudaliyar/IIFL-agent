@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-// Outbound PHONE call flow: the AI agent (Ira) places a real call to the number
+// Outbound PHONE call flow: the AI agent (Meera) places a real call to the number
 // the caller entered in the form. Unlike the old web/mic call there is NO LiveKit
 // room for the browser to join — the audio is on the person's phone. The page
 // instead shows a near-live transcript (polled) + the live form-fill (noVNC).

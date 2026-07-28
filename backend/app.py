@@ -223,7 +223,7 @@ if config.DEBUG_MODE:
 
 # Initialize client based on authentication configuration.
 # NOTE: this Gemini/Vertex client only powers the legacy local /ws agent path.
-# The hosted-Nurix demo (Ira) uses /agent/* (Playwright) + /nurix-proxy instead and
+# The hosted-Nurix demo (Meera) uses /agent/* (Playwright) + /nurix-proxy instead and
 # never touches this client. So a missing-credentials failure here must NOT crash the
 # whole app — guard it so /health, /agent/*, /vnc, /nurix-proxy stay up on Railway
 # even without GCP/Vertex creds. (Matches the documented "the /ws Gemini agent needs

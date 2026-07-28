@@ -8,7 +8,7 @@ import { GOLD_SCHEMES, formatINR } from "../lib/goldSchemes";
 //
 // This is what the agent's browser opens the moment the call connects, INSTEAD
 // of the form. The caller sees their own neighbourhood branch — address,
-// landmark, timings, local proof — while Ira greets them. Only when they say
+// landmark, timings, local proof — while Meera greets them. Only when they say
 // "let's apply" does the browser move on to /gold-application.
 //
 // Pincode comes from the route (/branch/:pincode) so the backend can open a

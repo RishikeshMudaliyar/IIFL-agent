@@ -4,6 +4,12 @@ import { CLIENT_NAME } from "../config/branding";
 
 const BRAND_COLOR = "#F56E28";
 
+/** The voice agent's name. Must match the SOP persona and the opening_dialogue
+ *  the caller hears — if these disagree, the caller is greeted by one name and
+ *  sees another on screen. Rendered as an initial in the avatar circles below,
+ *  so the layout holds regardless of how long the name is. */
+export const AGENT_NAME = "Meera";
+
 /** IIFL's published customer-care number — shown as the incoming caller ID.
  *  Public information; safe to display in the demo. */
 export const IIFL_CALLER_NUMBER = "1860 267 3000";
@@ -132,13 +138,13 @@ function RingingScreen({ onAnswer, onDecline }: { onAnswer?: () => void; onDecli
             className="relative flex h-28 w-28 items-center justify-center rounded-full text-4xl font-bold shadow-lg"
             style={{ backgroundColor: BRAND_COLOR }}
           >
-            Ira
+            {AGENT_NAME.charAt(0)}
           </div>
         </div>
 
         <h2 className="mt-8 text-2xl font-semibold">{CLIENT_NAME}</h2>
         <p className="mt-1.5 text-base tabular-nums text-white/70">{IIFL_CALLER_NUMBER}</p>
-        <p className="mt-6 text-xs text-white/40">Gold Loan · Mumbai</p>
+        <p className="mt-6 text-xs text-white/40">{AGENT_NAME} · Gold Loan · Mumbai</p>
       </div>
 
       <div className="flex w-full max-w-[240px] items-center justify-between">
@@ -193,10 +199,10 @@ function InCallScreen({ children }: { children?: ReactNode }) {
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
           style={{ backgroundColor: BRAND_COLOR }}
         >
-          Ira
+          {AGENT_NAME.charAt(0)}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-gray-900">{CLIENT_NAME}</p>
+          <p className="truncate text-sm font-semibold text-gray-900">{AGENT_NAME} · {CLIENT_NAME}</p>
           <p className="truncate text-[11px] tabular-nums text-gray-400">{IIFL_CALLER_NUMBER}</p>
         </div>
         <div className="flex items-center gap-1.5">

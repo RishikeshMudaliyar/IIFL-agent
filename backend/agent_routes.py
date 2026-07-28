@@ -445,7 +445,7 @@ async def send_whatsapp(request: Request, body: Optional[SendWhatsAppRequest] = 
 
     Always returns HTTP 200 with a `whatsapp_sent` of "true"/"false" — never an
     error status. A 5xx would surface to the agent as a hard tool failure mid-call;
-    instead Ira reads the flag and softens her line.
+    instead Meera reads the flag and softens her line.
     """
     if not body:
         try:
@@ -471,7 +471,7 @@ async def whatsapp_config():
 
 
 class SendEmailRequest(BaseModel):
-    """Everything Ira captured on the call, for the branch-manager lead email.
+    """Everything Meera captured on the call, for the branch-manager lead email.
 
     v13 added the KYC and answer fields (pan / aadhaar / existing_loan /
     consent_given / phone) — the manager needs the whole conversation, not just
@@ -500,7 +500,7 @@ class SendEmailRequest(BaseModel):
 async def send_email(request: Request, body: Optional[SendEmailRequest] = None):
     """Email the BRANCH MANAGER the full lead, silently, DURING the call.
 
-    Ira never announces this one — see the email states in the DSL. Always returns
+    Meera never announces this one — see the email states in the DSL. Always returns
     HTTP 200 with an `email_sent` of "true"/"false" so a failure can never surface
     to the agent as a tool error mid-call.
     """
@@ -555,7 +555,7 @@ class HandoverGateRequest(BaseModel):
     def unwrap(cls, v): return _unwrap_payload(v)
 
 
-# Values that count as "yes, Ira actually finished and promised the callback".
+# Values that count as "yes, Meera actually finished and promised the callback".
 _TRUTHY = {"yes", "true", "y", "1", "complete", "completed", "done", "हाँ", "ha", "haan"}
 
 
@@ -587,7 +587,7 @@ async def handover_gate(
     string when it did not. An empty number cannot dial, so the callback is
     skipped without the workflow needing a branch.
 
-    `handover_ready` is set by Ira only in transfer_intro() — the single state
+    `handover_ready` is set by Meera only in transfer_intro() — the single state
     where she actually promises the callback.
     """
     if body:

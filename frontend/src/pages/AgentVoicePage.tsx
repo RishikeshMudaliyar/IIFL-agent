@@ -91,7 +91,7 @@ const AgentVoicePage = () => {
   //
   // Gating the mount is load-bearing, not cosmetic: <LiveKitRoom connect audio>
   // starts the conversation the instant it mounts, so if it mounted during the
-  // ring, Ira would be greeting a phone that is still ringing on screen.
+  // ring, Meera would be greeting a phone that is still ringing on screen.
   const [phase, setPhase] = useState<"ringing" | "connected">("ringing");
   const answerCall = useCallback(() => setPhase("connected"), []);
 

@@ -1,5 +1,5 @@
 """
-The WhatsApp Ira sends the CALLER during the call — thank-you + branch details.
+The WhatsApp Meera sends the CALLER during the call — thank-you + branch details.
 
 Sent proactively, before the KYC questions: the caller has just heard about their
 neighbourhood branch, so the message lands while that is still fresh, and it gives
@@ -25,7 +25,7 @@ non-joined number fails with Twilio error 63015/63016. That is an account-level
 rule, not something this code can work around — see HANDOFF for the demo-day step.
 
 Like the email path, this never raises: every failure becomes
-{"whatsapp_sent": "false", ...} and Ira's prompt softens her line accordingly. A
+{"whatsapp_sent": "false", ...} and Meera's prompt softens her line accordingly. A
 tool exception mid-call would surface to the model as a hard failure.
 """
 
@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 TWILIO_API_ROOT = "https://api.twilio.com/2010-04-01"
 DEFAULT_SANDBOX_FROM = "whatsapp:+14155238886"
 
-# Hard ceiling on the send. The call is live; we would rather Ira move on than
+# Hard ceiling on the send. The call is live; we would rather Meera move on than
 # leave the caller listening to silence while Twilio is slow.
 SEND_TIMEOUT_SECONDS = float(os.getenv("WHATSAPP_TIMEOUT_SECONDS", "12"))
 
@@ -100,7 +100,7 @@ Your nearest branch:
 • Your gold
 • One KYC document (Aadhaar or PAN)
 
-— Ira, IIFL Finance
+— Meera, IIFL Finance
 1860 267 3000"""
 
 
@@ -129,7 +129,7 @@ async def send_branch_whatsapp(
     """Send the branch-details WhatsApp. Never raises.
 
     Returns {"whatsapp_sent": "true"|"false", ...}; the DSL branches on the flag so
-    a failure changes only Ira's wording, never the call flow.
+    a failure changes only Meera's wording, never the call flow.
     """
     import httpx
 

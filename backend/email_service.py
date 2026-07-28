@@ -1,12 +1,12 @@
 """
-The lead email Ira sends the BRANCH MANAGER, silently, during the call.
+The lead email Meera sends the BRANCH MANAGER, silently, during the call.
 
 v13 changed who this is for. It used to be a summary sent to the caller; the
 caller now gets that as a WhatsApp (whatsapp_service.py), sent earlier in the call.
 This email is now an internal lead handoff: everything the customer said, so the
 branch manager can pick the lead up already knowing the whole conversation.
 
-It is sent SILENTLY, after the KYC questions — Ira never mentions it. Nothing here
+It is sent SILENTLY, after the KYC questions — Meera never mentions it. Nothing here
 is caller-facing, so it is a plain internal lead sheet rather than warm copy.
 
     EMAIL_TO               the recipient (the branch-manager inbox)
@@ -174,6 +174,189 @@ def _yes_no(v: str) -> str:
     return clean(v)
 
 
+# ------------------------------------------------------- HTML (branded lead sheet)
+#
+# Why HTML at all: the plain-text version below is correct but unreadable at a
+# glance, and this lands in a branch manager's inbox alongside dozens of others.
+# The design brief is NOT a marketing email — it is a worksheet. Priorities, in
+# order: (1) who to call and on what number, above the fold and tappable;
+# (2) what they asked for; (3) what is still missing, called out rather than
+# hidden. IIFL orange (#F56E28) and navy (#1B1B5C) match the website and the
+# demo frontend (frontend/tailwind.config.js).
+#
+# Email-client constraints — every one of these is deliberate, do not "modernise":
+#   * tables for layout, not flex/grid  — Outlook renders neither
+#   * inline styles only, no <style> rules that matter — Gmail strips <head>
+#   * no external images or fonts       — blocked by default in most clients
+#   * Arial/Helvetica only             — webfonts do not load
+#   * tel:/mailto: links so a phone-reading manager can act in one tap
+
+IIFL_ORANGE = "#F56E28"
+IIFL_NAVY = "#1B1B5C"
+_INK = "#1f2937"
+_MUTED = "#6b7280"
+_LINE = "#e5e7eb"
+_WASH = "#f9fafb"
+_FONT = "Arial,Helvetica,sans-serif"
+
+_MISSING = '<span style="color:#9ca3af;font-style:italic;">not captured on the call</span>'
+
+
+def _esc(v: Any) -> str:
+    """Escape caller-supplied text before it goes into HTML. Names and spoken
+    answers reach us from speech-to-text and are never trusted markup."""
+    s = clean(v)
+    return (s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+             .replace('"', "&quot;"))
+
+
+def _rows_html(rows) -> str:
+    """A label/value table. Values already HTML-safe; labels are ours."""
+    if not rows:
+        return f'<tr><td style="padding:6px 0;font:14px {_FONT};color:{_MUTED};">{_MISSING}</td></tr>'
+    out = []
+    for label, value in rows:
+        out.append(
+            f'<tr>'
+            f'<td width="46%" style="padding:7px 12px 7px 0;font:13px {_FONT};'
+            f'color:{_MUTED};vertical-align:top;">{label}</td>'
+            f'<td style="padding:7px 0;font:600 14px {_FONT};color:{_INK};'
+            f'vertical-align:top;">{value}</td>'
+            f'</tr>'
+        )
+    return "".join(out)
+
+
+def _section(title: str, inner: str) -> str:
+    """A titled block with a hairline above it."""
+    return (
+        f'<tr><td style="padding:20px 28px 0 28px;border-top:1px solid {_LINE};">'
+        f'<p style="margin:16px 0 8px 0;font:700 11px {_FONT};letter-spacing:1.1px;'
+        f'text-transform:uppercase;color:{IIFL_ORANGE};">{title}</p>'
+        f'<table border="0" cellpadding="0" cellspacing="0" width="100%">{inner}</table>'
+        f'</td></tr>'
+    )
+
+
+def _build_html(
+    *, who: str, branch: Dict[str, str], lt: str, contact_e164: str, contact_display: str,
+    pin_note: str, loan_rows, kyc_rows, answer_rows, missing: list, masked: bool,
+    consent_yes: bool,
+) -> str:
+    name_h = _esc(who)
+    # The action bar: a manager's first move is always to ring the customer.
+    call_cta = (
+        f'<a href="tel:{_esc(contact_e164)}" style="background-color:{IIFL_ORANGE};'
+        f'border-radius:5px;color:#ffffff;display:inline-block;font:700 15px {_FONT};'
+        f'line-height:44px;padding:0 26px;text-decoration:none;">'
+        f'Call {name_h} &rarr;</a>'
+        if contact_e164 else
+        f'<span style="font:14px {_FONT};color:#b91c1c;">No usable phone number captured.</span>'
+    )
+
+    # What is still outstanding. Shown ONLY when something is genuinely missing —
+    # an empty warning box trains the reader to ignore the real ones.
+    missing_block = ""
+    if missing:
+        items = "".join(
+            f'<li style="margin:0 0 4px 0;">{m}</li>' for m in missing
+        )
+        missing_block = (
+            f'<tr><td style="padding:18px 28px 0 28px;">'
+            f'<table border="0" cellpadding="0" cellspacing="0" width="100%" '
+            f'style="background-color:#fff8ed;border:1px solid #fcd9a8;border-radius:8px;">'
+            f'<tr><td style="padding:14px 18px;">'
+            f'<p style="margin:0 0 6px 0;font:700 13px {_FONT};color:#92400e;">'
+            f'Still needed from this customer</p>'
+            f'<ul style="margin:0;padding-left:18px;font:13px {_FONT};color:#92400e;'
+            f'line-height:1.6;">{items}</ul>'
+            f'</td></tr></table></td></tr>'
+        )
+
+    consent_line = (
+        f'<span style="color:#047857;font-weight:700;">Yes &mdash; consent given on the call</span>'
+        if consent_yes else
+        f'<span style="color:#b91c1c;font-weight:700;">Not given &mdash; do not market to this customer</span>'
+    )
+
+    mask_note = (
+        f'<p style="margin:10px 0 0 0;font:12px {_FONT};color:{_MUTED};">'
+        f'PAN and Aadhaar are part-masked in this email. The customer read both out '
+        f'in full on the call and they are stored against the application.</p>'
+        if masked and kyc_rows else ""
+    )
+
+    return (
+        f'<div style="background-color:#eef1f5;padding:20px 12px;font:14px {_FONT};">'
+        f'<table border="0" cellpadding="0" cellspacing="0" width="600" '
+        f'style="max-width:600px;width:100%;margin:0 auto;background-color:#ffffff;'
+        f'border-radius:8px;overflow:hidden;">'
+
+        # --- header: navy bar, orange rule. Says what this is in one line.
+        f'<tr><td style="background-color:{IIFL_NAVY};padding:20px 28px;">'
+        f'<p style="margin:0;font:800 19px {_FONT};color:#ffffff;letter-spacing:0.2px;">'
+        f'IIFL Finance</p>'
+        f'<p style="margin:4px 0 0 0;font:12px {_FONT};color:#b9c0e8;'
+        f'text-transform:uppercase;letter-spacing:1.4px;">New Gold Loan Lead</p>'
+        f'</td></tr>'
+        f'<tr><td style="height:3px;background-color:{IIFL_ORANGE};font-size:0;'
+        f'line-height:0;">&nbsp;</td></tr>'
+
+        # --- the lead, above the fold: name, number, branch, one action
+        f'<tr><td style="padding:24px 28px 0 28px;">'
+        f'<p style="margin:0;font:800 24px {_FONT};color:{_INK};">{name_h}</p>'
+        f'<p style="margin:6px 0 0 0;font:15px {_FONT};color:{_MUTED};">'
+        f'{lt.title()} loan enquiry &middot; {_esc(branch["area"])}</p>'
+        f'<p style="margin:14px 0 0 0;font:600 17px {_FONT};color:{_INK};">'
+        f'<a href="tel:{_esc(contact_e164)}" style="color:{_INK};text-decoration:none;">'
+        f'{_esc(contact_display)}</a></p>'
+        f'<p style="margin:18px 0 4px 0;">{call_cta}</p>'
+        f'</td></tr>'
+
+        f'{missing_block}'
+
+        # --- the substance
+        f'{_section("What the customer asked for", _rows_html(loan_rows))}'
+        f'{_section("KYC given on the call", _rows_html(kyc_rows))}'
+        f'{_section("Their answers", _rows_html(answer_rows + [("Contactable?", consent_line)]))}'
+
+        # --- routing + context the manager needs to act
+        f'{_section("Routed to your branch", _rows_html([("Branch", _esc(branch["area"])), ("Address", _esc(branch["address"])), ("Branch phone", _esc(branch["phone"])), ("Open", _esc(BRANCH_HOURS)), ("Customer pincode", _esc(pin_note))]))}'
+
+        # --- what the customer was already promised, so nobody contradicts it
+        f'<tr><td style="padding:20px 28px 0 28px;border-top:1px solid {_LINE};">'
+        f'<p style="margin:16px 0 8px 0;font:700 11px {_FONT};letter-spacing:1.1px;'
+        f'text-transform:uppercase;color:{IIFL_ORANGE};">Already promised to the customer</p>'
+        f'<table border="0" cellpadding="0" cellspacing="0" width="100%" '
+        f'style="background-color:{_WASH};border-radius:8px;">'
+        f'<tr><td style="padding:14px 18px;font:13px {_FONT};color:{_INK};line-height:1.75;">'
+        f'&bull; A callback from a loan specialist on the number above.<br>'
+        f'&bull; A WhatsApp with this branch&rsquo;s address, directions and timings '
+        f'(sent during the call).<br>'
+        f'&bull; That every figure quoted was <strong>indicative</strong> &mdash; final '
+        f'valuation happens at the branch.'
+        f'</td></tr></table>'
+        f'{mask_note}'
+        f'</td></tr>'
+
+        # --- footer
+        f'<tr><td style="padding:22px 28px 26px 28px;">'
+        f'<p style="margin:0;font:12px {_FONT};color:{_MUTED};line-height:1.6;">'
+        f'Captured automatically by Meera, IIFL&rsquo;s voice assistant, during the call. '
+        f'Nothing in this email was typed by the customer.</p>'
+        f'</td></tr>'
+        f'<tr><td style="background-color:{_WASH};padding:14px 28px;'
+        f'border-top:1px solid {_LINE};">'
+        f'<p style="margin:0;font:11px {_FONT};color:#9ca3af;">'
+        f'IIFL Finance &nbsp;&middot;&nbsp; 1860 267 3000 &nbsp;&middot;&nbsp; '
+        f'Internal lead notification &mdash; contains customer personal data, '
+        f'do not forward outside IIFL.</p>'
+        f'</td></tr>'
+
+        f'</table></div>'
+    )
+
+
 def build_manager_lead_email(
     name: str = "",
     pincode: str = "",
@@ -248,7 +431,44 @@ def build_manager_lead_email(
     subject = (f"New {lt} loan lead — {branch['area']} — {who}"
                + (f" ({format_amount(amount)})" if amount else ""))
 
-    body = f"""New lead from a call with Ira, IIFL's voice assistant.
+    # --- the HTML lead sheet. Built from the SAME captured values as the text
+    # body below, escaped for markup. Anything the caller did not give becomes a
+    # line in "still needed" rather than a silent blank, because a manager acting
+    # on a partial lead needs to know what to ask for.
+    missing = []
+    if not amount:
+        missing.append("Loan amount &mdash; not stated on the call")
+    if not weight:
+        missing.append("Gold weight &mdash; needed to size the offer")
+    if not clean(pan):
+        missing.append("PAN &mdash; required for KYC")
+    if not clean(aadhaar):
+        missing.append("Aadhaar &mdash; required for KYC")
+    if not to_e164_india(phone):
+        missing.append("A valid mobile number &mdash; the callback cannot be placed without one")
+
+    html_loan_rows = [(k, _esc(v)) for k, v in loan_rows]
+    # Identity numbers in monospace — a manager reads these character by character
+    # against a document, and proportional digits are easy to misread.
+    html_kyc_rows = [(k, f'<span style="font-family:monospace;letter-spacing:0.5px;">'
+                         f'{_esc(v)}</span>') for k, v in kyc_rows]
+    html_answer_rows = [(k, _esc(v)) for k, v in answer_rows
+                        if k != "Consent to be contacted"]
+
+    html = _build_html(
+        who=who, branch=branch, lt=lt,
+        contact_e164=to_e164_india(phone),
+        contact_display=contact,
+        pin_note=pin_note,
+        loan_rows=html_loan_rows,
+        kyc_rows=html_kyc_rows,
+        answer_rows=html_answer_rows,
+        missing=missing,
+        masked=masked,
+        consent_yes=(consent == "Yes"),
+    )
+
+    body = f"""New lead from a call with Meera, IIFL's voice assistant.
 The customer has been told a specialist will call them back shortly.
 
 CUSTOMER
@@ -278,15 +498,15 @@ WHAT WAS PROMISED
 
 {'PAN/Aadhaar are masked. Set LEAD_EMAIL_MASK_IDS=false to show them in full.' if masked and kyc_rows else ''}
 —
-Generated automatically during the call by Ira.
+Generated automatically during the call by Meera.
 IIFL Finance · 1860 267 3000
 """
-    return {"subject": subject, "body": body}
+    return {"subject": subject, "body": body, "html": html}
 
 
 # ---------------------------------------------------------------- sending
 
-def _send_blocking(subject: str, body: str) -> None:
+def _send_blocking(subject: str, body: str, html: str = "") -> None:
     """Synchronous SMTP send. Raises on any failure; the async wrapper catches."""
     user, password, to = _env("SMTP_USER"), _app_password(), _recipient()
     if not (user and password and to):
@@ -296,7 +516,11 @@ def _send_blocking(subject: str, body: str) -> None:
     msg["Subject"] = subject
     msg["From"] = formataddr((_env("EMAIL_FROM_NAME", "IIFL Finance"), user))
     msg["To"] = to
+    # Text first, then HTML as the alternative: multipart/alternative means a
+    # client that cannot render HTML still shows the readable plain version.
     msg.set_content(body)
+    if html:
+        msg.add_alternative(html, subtype="html")
 
     # Port 465 speaks TLS from the first byte; 587 upgrades via STARTTLS. Some
     # hosts throttle or block one of the two, so the port is configurable and we
@@ -312,7 +536,7 @@ def _send_blocking(subject: str, body: str) -> None:
             smtp.send_message(msg)
 
 
-async def _send_via_resend(subject: str, body: str) -> Dict[str, Any]:
+async def _send_via_resend(subject: str, body: str, html: str = "") -> Dict[str, Any]:
     """POST the message to Resend over HTTPS — the transport that works on
     Railway. Returns a structured result; never raises."""
     import httpx
@@ -321,7 +545,11 @@ async def _send_via_resend(subject: str, body: str) -> Dict[str, Any]:
     if not (key and to):
         return {"email_sent": "false", "error": "resend_not_configured"}
 
+    # Sending both parts lets Resend build multipart/alternative: HTML for normal
+    # clients, the plain body as the fallback.
     payload = {"from": _resend_from(), "to": [to], "subject": subject, "text": body}
+    if html:
+        payload["html"] = html
     try:
         async with httpx.AsyncClient(timeout=SEND_TIMEOUT_SECONDS) as client:
             resp = await client.post(
@@ -380,13 +608,15 @@ async def send_summary_email(
                 "subject": content["subject"]}
 
     if EMAIL_PROVIDER == "resend":
-        result = await _send_via_resend(content["subject"], content["body"])
+        result = await _send_via_resend(content["subject"], content["body"],
+                                        content.get("html", ""))
         result["subject"] = content["subject"]
         return result
 
     try:
         await asyncio.wait_for(
-            asyncio.to_thread(_send_blocking, content["subject"], content["body"]),
+            asyncio.to_thread(_send_blocking, content["subject"], content["body"],
+                              content.get("html", "")),
             timeout=SEND_TIMEOUT_SECONDS,
         )
     except asyncio.TimeoutError:
