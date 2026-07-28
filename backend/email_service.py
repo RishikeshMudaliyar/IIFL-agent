@@ -32,6 +32,18 @@ logger = logging.getLogger(__name__)
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 
+# Transport. Railway blocks ALL outbound SMTP ports (587/465/25/2525 every one
+# times out — verified in production via /agent/email-probe), so SMTP cannot be
+# used from there no matter the credentials. HTTPS egress does work, so the
+# default is Resend's HTTPS API. "smtp" stays available for hosts that allow it.
+#   EMAIL_PROVIDER   "resend" (default) | "smtp"
+#   RESEND_API_KEY   the re_... key
+#   EMAIL_FROM       verified sender; defaults to Resend's shared onboarding
+#                    address, which only delivers to the account's own email
+EMAIL_PROVIDER = (os.getenv("EMAIL_PROVIDER") or "resend").strip().lower()
+RESEND_ENDPOINT = "https://api.resend.com/emails"
+DEFAULT_RESEND_FROM = "onboarding@resend.dev"
+
 # Hard ceiling on the whole send. The call is live; we would rather say "the team
 # will email you" than leave the caller listening to silence.
 SEND_TIMEOUT_SECONDS = float(os.getenv("EMAIL_TIMEOUT_SECONDS", "12"))
@@ -47,18 +59,36 @@ def _app_password() -> str:
     return re.sub(r"\s+", "", _env("SMTP_PASS"))
 
 
+def _resend_from() -> str:
+    """The From header for Resend. An unverified account may only send from the
+    shared onboarding address, so that is the fallback."""
+    explicit = _env("EMAIL_FROM")
+    if explicit:
+        return explicit
+    name = _env("EMAIL_FROM_NAME", "IIFL Finance")
+    return formataddr((name, DEFAULT_RESEND_FROM))
+
+
 def config_status() -> Dict[str, Any]:
-    """Which env vars are present — never their values. Used by the health probe
-    so we can confirm Railway wiring without ever echoing the password."""
+    """Which env vars are present — never their values. Lets us confirm the
+    Railway wiring without ever echoing a key or password."""
     pw = _app_password()
+    key = _env("RESEND_API_KEY")
+    smtp_ready = bool(_env("SMTP_USER") and pw and _env("EMAIL_TO"))
+    resend_ready = bool(key and _env("EMAIL_TO"))
     return {
+        "provider": EMAIL_PROVIDER,
+        "email_to_set": bool(_env("EMAIL_TO")),
+        # Resend (default transport)
+        "resend_api_key_set": bool(key),
+        "resend_from": _resend_from(),
+        # SMTP (unusable on Railway — kept for hosts that permit it)
         "smtp_user_set": bool(_env("SMTP_USER")),
         "smtp_pass_set": bool(pw),
         "smtp_pass_length": len(pw),  # expect 16 for a Google App Password
-        "email_to_set": bool(_env("EMAIL_TO")),
         "smtp_host": SMTP_HOST,
         "smtp_port": SMTP_PORT,
-        "configured": bool(_env("SMTP_USER") and pw and _env("EMAIL_TO")),
+        "configured": resend_ready if EMAIL_PROVIDER == "resend" else smtp_ready,
     }
 
 
@@ -275,6 +305,40 @@ def _send_blocking(subject: str, body: str) -> None:
             smtp.send_message(msg)
 
 
+async def _send_via_resend(subject: str, body: str) -> Dict[str, Any]:
+    """POST the message to Resend over HTTPS — the transport that works on
+    Railway. Returns a structured result; never raises."""
+    import httpx
+
+    key, to = _env("RESEND_API_KEY"), _env("EMAIL_TO")
+    if not (key and to):
+        return {"email_sent": "false", "error": "resend_not_configured"}
+
+    payload = {"from": _resend_from(), "to": [to], "subject": subject, "text": body}
+    try:
+        async with httpx.AsyncClient(timeout=SEND_TIMEOUT_SECONDS) as client:
+            resp = await client.post(
+                RESEND_ENDPOINT,
+                headers={"Authorization": f"Bearer {key}",
+                         "Content-Type": "application/json"},
+                json=payload,
+            )
+    except Exception as exc:
+        logger.exception("resend: request failed")
+        return {"email_sent": "false", "error": f"request_failed: {str(exc)[:160]}"}
+
+    if resp.status_code >= 400:
+        # Resend explains rejections in the body — surface it, it is the fastest
+        # route to diagnosing an unverified domain or a bad key.
+        detail = resp.text[:300]
+        logger.error("resend: HTTP %s — %s", resp.status_code, detail)
+        return {"email_sent": "false",
+                "error": f"http_{resp.status_code}", "detail": detail}
+
+    logger.info("resend: sent to %s", to)
+    return {"email_sent": "true", "to": to, "id": (resp.json() or {}).get("id")}
+
+
 async def send_summary_email(
     name: str = "",
     pincode: str = "",
@@ -290,9 +354,14 @@ async def send_summary_email(
                             scheme, gold_weight, gold_purity)
 
     if not config_status()["configured"]:
-        logger.error("send_summary_email: SMTP env vars missing — not sending")
-        return {"email_sent": "false", "error": "smtp_not_configured",
+        logger.error("send_summary_email: %s not configured — not sending", EMAIL_PROVIDER)
+        return {"email_sent": "false", "error": f"{EMAIL_PROVIDER}_not_configured",
                 "subject": content["subject"]}
+
+    if EMAIL_PROVIDER == "resend":
+        result = await _send_via_resend(content["subject"], content["body"])
+        result["subject"] = content["subject"]
+        return result
 
     try:
         await asyncio.wait_for(
