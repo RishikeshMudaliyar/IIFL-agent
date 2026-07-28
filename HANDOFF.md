@@ -7,19 +7,23 @@ real inbound phone call (smartphone mockup, rings, auto-answers, then shows the 
 then `agent-build/loan-lead-qualification/PLATFORM-CONFIG.md` for every ID and the platform
 gotchas.
 
-Tags: `v10-checkpoint-2026-07-27` (this state), `v9-checkpoint-2026-07-27`,
-`v8-checkpoint-2026-07-27`, `v7-checkpoint-2026-07-27`.
+Tags: `v11-checkpoint-2026-07-28` (this state), `v10-checkpoint-2026-07-27`,
+`v9-checkpoint-2026-07-27`, `v8-checkpoint-2026-07-27`, `v7-checkpoint-2026-07-27`.
+
+**v11 (2026-07-28, frontend only):** the ring is now **5 s, not 3 s**
+(`RING_DURATION_MS` in `PhoneCallFrame.tsx`). Deployed via `railway up` and verified live —
+served bundle `index-BiIBb4In.js` contains `5e3`. Ira untouched (published 24843 / SOP v9).
 
 ---
 
 ## 📱 v10 — THE CALL PAGE IS NOW A PHONE CALL (frontend only)
 
 Confirmed working on a live call by the operator. Deployed to Railway; frontend bundle
-`index-C5tJ62rI.js` verified serving from `iifl-frontend-production.up.railway.app`.
+`index-BiIBb4In.js` (v11) verified serving from `iifl-frontend-production.up.railway.app`.
 
 **What the demo now does:** hero form → "Talk to AI" → the left panel shows a **device-framed
 incoming call** from *IIFL Finance · 1860 267 3000* (pulsing "Ira" avatar, ring animation,
-Decline/Answer) → after **~3 s it auto-answers** → the panel becomes the in-call screen (Ira
+Decline/Answer) → after **~5 s it auto-answers** (3 s until v11) → the panel becomes the in-call screen (Ira
 avatar, live MM:SS timer, green pulse) with the **existing transcript underneath, unchanged**.
 The right half (`LiveFormPanel` / noVNC) is untouched.
 
