@@ -1,0 +1,1811 @@
+[
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 1,
+  "turn": 2,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_type_confirmed\" value=\"neutral\"/>नमस्ते Rishikesh! मैं Ira बोल रही हूँ IIFL Finance से. अभी आपकी gold loan की enquiry आई हमारे पास, घाटकोपर वेस्ट side से — मैं आपकी पूरी help कर दूँगी. आप gold"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 1,
+  "turn": 6,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"5 lakh\"/>tool.fill_field(session_id: \"sim-v12\", field_name: \"loan_amount\", value: \"5 lakh\")\n\nअच्छा, 5 लाख. देखिए, इस amount के लिए हमारे पास तीन options हैं. पहला है Swarna Save"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 1,
+  "turn": 8,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"scheme\" value=\"balance\"/>tool.click_button(session_id: \"sim-v12\", button: \"scheme_balance\")\n\nबढ़िया, Swarna Balance select कर लिया है. अब आप मुझे ये बता दीजिए कि आप लगभग कितने grams gold ला सकते है"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 1,
+  "turn": 10,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_weight\" value=\"60 grams\"/>tool.fill_field(session_id: \"sim-v12\", field_name: \"gold_weight\", value: \"60 grams\")\n\nसमझ गई, 60 grams. और gold की purity क्या है — 18, 22 या 24 कैरेट?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 1,
+  "turn": 12,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_purity\" value=\"22\"/>tool.fill_field(session_id: \"sim-v12\", field_name: \"gold_purity\", value: \"22\")\n\nperfect. वैसे Rishikesh, आपके सबसे पास वाली branch घाटकोपर वेस्ट में है — एल बी एस मार्ग पे,"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 1,
+  "turn": 14,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"CXIPM4742A\"/>मैं एक बार confirm कर लेती हूँ. आपका PAN number है C X I P M 4 7 4 2 A. क्या यह सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 1,
+  "turn": 16,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'tool.fill_field('",
+  "quote": "tool.fill_field(session_id: \"sim-v12\", field_name: \"pan\", value: \"CXIPM4742A\")\n\nठीक है, thank you. अब क्या आप अपना Aadhaar number बता सकते हैं?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 1,
+  "turn": 18,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"aadhaar\" value=\"1234 5678 9012\"/>मैं confirm कर लेती हूँ. आपका Aadhaar number है 1 2 3 4 5 6 7 8 9 0 1 2. क्या यह सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 1,
+  "turn": 20,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'tool.fill_field('",
+  "quote": "tool.fill_field(session_id: \"sim-v12\", field_name: \"aadhaar\", value: \"1234 5678 9012\")\n\nबढ़िया. बस एक आखिरी चीज़ — क्या आपका पहले से कोई gold loan चल रहा है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 1,
+  "turn": 22,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_existing\" value=\"no\"/>tool.fill_field(session_id: \"sim-v12\", field_name: \"existing_loan\", value: \"no\")\n\nठीक है. अब मुझे आपकी एक permission चाहिए कि IIFL आपको इस application के बारे में call, S"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 1,
+  "turn": 24,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"consent_given\" value=\"true\"/>tool.fill_field(session_id: \"sim-v12\", field_name: \"consent\", value: \"true\")\n\nबढ़िया, मैंने आपकी सारी details भर दी हैं. एक second, मैं आपके offers निकाल रही हूँ."
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 1,
+  "turn": 26,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'tool.show_offers('",
+  "quote": "tool.show_offers(session_id: \"sim-v12\", loan_type: \"gold\", loan_amount: \"5 lakh\", gold_weight: \"60 grams\", gold_purity: \"22\", scheme: \"balance\", pincode: \"400086\")\n\n<derived-variable key=\"handover_ready\" value=\"true\"/>आप"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 1,
+  "turn": 28,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"handover_ready\" value=\"true\"/>बढ़िया! आपकी सारी details मैंने note कर ली हैं. हमारी team आपको इसी number पर थोड़ी ही देर में call करेगी, और वो आपको हमारे loan specialist से connect कर देंगे.\n\nमैं अ"
+ },
+ {
+  "sev": "HIGH",
+  "scenario": "happy-path",
+  "n": 1,
+  "turn": 6,
+  "kind": "unprompted-figures",
+  "detail": "volunteered ['per gram'] without being asked",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"5 lakh\"/>tool.fill_field(session_id: \"sim-v12\", field_name: \"loan_amount\", value: \"5 lakh\")\n\nअच्छा, 5 लाख. देखिए, इस amount के लिए हमारे पास तीन options हैं. पहला है Swarna Save"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 2,
+  "turn": 2,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_type_confirmed\" value=\"unknown\"/>नमस्ते Rishikesh! मैं Ira बोल रही हूँ IIFL Finance से. अभी आपकी gold loan की enquiry आई हमारे पास, घाटकोपर वेस्ट side से — मैं आपकी पूरी help कर दूँगी. आप gold"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 2,
+  "turn": 4,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_type_confirmed\" value=\"true\"/>अच्छा, बढ़िया! IIFL में gold loan बहुत simple है — आपको आपके gold की अच्छी value मिल जाएगी, interest rates भी काफी competitive हैं और पैसा उसी दिन मिल जाता है. सा"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 2,
+  "turn": 6,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"5 lakh\"/><tool-call name=\"fill_field\" arguments=\"{session_id: 'sim-v12', field_name: 'loan_amount', value: '5 lakh'}\"/>समझ गई, 5 lakh. देखिए, इस amount के लिए हमारे पास तीन opti"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 2,
+  "turn": 8,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"scheme\" value=\"balance\"/> <tool-call name=\"click_button\" arguments=\"{session_id: 'sim-v12', button: 'scheme_balance'}\"/>Perfect, Swarna Balance select कर लेते हैं. अब आप मुझे ये बताइए कि आप लगभग कि"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 2,
+  "turn": 10,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_weight\" value=\"60 grams\"/> <tool-call name=\"fill_field\" arguments=\"{session_id: 'sim-v12', field_name: 'gold_weight', value: '60 grams'}\"/>ठीक है, 60 grams. और gold की purity क्या है — 18, 22 "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 2,
+  "turn": 12,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_purity\" value=\"22\"/> <tool-call name=\"fill_field\" arguments=\"{session_id: 'sim-v12', field_name: 'gold_purity', value: '22'}\"/>बढ़िया. वैसे Rishikesh, आपके सबसे पास वाली branch घाटकोपर वेस्ट म"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 2,
+  "turn": 14,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"CXIPM4742A\"/>मैं confirm कर लेती हूँ, आपका PAN number है C X I P M 4 7 4 2 A. क्या ये सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 2,
+  "turn": 16,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'fill_field'",
+  "quote": "<tool-call name=\"fill_field\" arguments=\"{session_id: 'sim-v12', field_name: 'pan', value: 'CXIPM4742A'}\"/>ठीक है. अब KYC के लिए मुझे आपका Aadhaar number बता दीजिए."
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 2,
+  "turn": 18,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"aadhaar\" value=\"1234 5678 9012\"/>मैं confirm कर लेती हूँ, आपका Aadhaar number है 1 2 3 4 5 6 7 8 9 0 1 2. क्या ये सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 2,
+  "turn": 20,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'fill_field'",
+  "quote": "<tool-call name=\"fill_field\" arguments=\"{session_id: 'sim-v12', field_name: 'aadhaar', value: '1234 5678 9012'}\"/>धन्यवाद. बस एक आखिरी सवाल — क्या आपका पहले से कोई gold loan चल रहा है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 2,
+  "turn": 22,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_existing\" value=\"no\"/> <tool-call name=\"fill_field\" arguments=\"{session_id: 'sim-v12', field_name: 'existing_loan', value: 'no'}\"/>ठीक है. अब आगे बढ़ने के लिए मुझे आपकी permission चाहिए कि IIFL"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 2,
+  "turn": 24,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"consent_given\" value=\"true\"/> <tool-call name=\"fill_field\" arguments=\"{session_id: 'sim-v12', field_name: 'consent', value: 'true'}\"/>बढ़िया, मैंने आपकी सारी details भर दी हैं. एक second, मैं आपके "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 2,
+  "turn": 26,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'show_offers'",
+  "quote": "<tool-call name=\"show_offers\" arguments=\"{session_id: 'sim-v12', loan_type: 'gold', loan_amount: '5 lakh', gold_weight: '60 grams', gold_purity: '22', scheme: 'balance', pincode: '400086'}\"/>"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 2,
+  "turn": 28,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"handover_ready\" value=\"true\"/>देखिए, आपके लिए सबसे best offer IIFL Swarna Balance का है, जिसमें आपको 5 lakh का loan मिल रहा है, जिसकी monthly EMI 12,500 rupees होगी और tenure 18 months का है. एक और"
+ },
+ {
+  "sev": "HIGH",
+  "scenario": "happy-path",
+  "n": 2,
+  "turn": 6,
+  "kind": "unprompted-figures",
+  "detail": "volunteered ['per gram'] without being asked",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"5 lakh\"/><tool-call name=\"fill_field\" arguments=\"{session_id: 'sim-v12', field_name: 'loan_amount', value: '5 lakh'}\"/>समझ गई, 5 lakh. देखिए, इस amount के लिए हमारे पास तीन opti"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 3,
+  "turn": 6,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"5 lakh\"/>बढ़िया, 5 लाख का loan amount. देखिए, इस amount के लिए हमारे पास तीन options हैं. पहला है Swarna Saver — जिसमें सबसे कम ब्याज लगता है; दूसरा है Swarna Balance — जो हमारा"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 3,
+  "turn": 8,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"scheme\" value=\"balance\"/>बढ़िया, Swarna Balance select करते हैं.\n\nअब आप मुझे ये बता दीजिए कि आप लगभग कितने grams gold ला सकते हैं?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 3,
+  "turn": 10,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_weight\" value=\"60 grams\"/>समझ गई, 60 grams gold.\n\nऔर gold की purity क्या है — 18, 22 या 24 कैरेट?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 3,
+  "turn": 12,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_purity\" value=\"22\"/>perfect, 22 कैरेट.\n\nवैसे Rishikesh, आपकी सबसे पास वाली branch घाटकोपर वेस्ट में है — एल बी एस मार्ग पे, अनुपम बिल्डिंग, ground floor. घाटकोपर स्टेशन से बस पाँच मिनट है. पिछ"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 3,
+  "turn": 14,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"CXIPM4742A\"/>अच्छा, मैं confirm कर लेती हूँ. आपका PAN number है C X I P M 4 7 4 2 A. क्या यह बिलकुल सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 3,
+  "turn": 18,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"aadhaar\" value=\"1234 5678 9012\"/>ठीक है, मैं confirm कर लेती हूँ. आपका Aadhaar number है 1 2 3 4 5 6 7 8 9 0 1 2. क्या यह सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 3,
+  "turn": 22,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_existing\" value=\"no\"/>समझ गई. \n\nअब मुझे बस आपकी एक छोटी सी permission चाहिए कि IIFL आपको इस application के बारे में call, SMS या WhatsApp पर contact कर सके और standard credit bureau checks कर "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 3,
+  "turn": 24,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"consent_given\" value=\"true\"/>बढ़िया, मैंने आपकी सारी details भर दी हैं. एक second, मैं आपके offers निकाल रही हूँ."
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "happy-path",
+  "n": 3,
+  "turn": 26,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"handover_ready\" value=\"true\"/>आपके लिए सबसे best offer IIFL Swarna Balance scheme में है, जहाँ आपको 5 लाख का loan मिल सकता है, जिसकी monthly EMI 12,400 रुपये होगी और tenure 18 months का रहेगा.\n\nये "
+ },
+ {
+  "sev": "HIGH",
+  "scenario": "happy-path",
+  "n": 3,
+  "turn": 6,
+  "kind": "unprompted-figures",
+  "detail": "volunteered ['per gram'] without being asked",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"5 lakh\"/>बढ़िया, 5 लाख का loan amount. देखिए, इस amount के लिए हमारे पास तीन options हैं. पहला है Swarna Saver — जिसमें सबसे कम ब्याज लगता है; दूसरा है Swarna Balance — जो हमारा"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 1,
+  "turn": 2,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"3 lakh\"/>नमस्ते! मैं Ira बोल रही हूँ IIFL Finance से. अभी आपकी gold loan की enquiry आई हमारे पास, घाटकोपर वेस्ट side से — मैं आपकी पूरी help कर दूँगी. आप gold loan ही देख रहे है"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 1,
+  "turn": 4,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_type_confirmed\" value=\"true\"/>बढ़िया! IIFL Finance में आपको आपके gold की बहुत अच्छी value मिल जाएगी, interest rates भी काफी competitive हैं और पैसा same day मिल जाता है. साथ ही, आपका gold पूरी"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 1,
+  "turn": 6,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"3 lakh\"/>तो आपके लिए हमारे पास तीन options हैं. पहला है Swarna Saver — जिसमें सबसे कम ब्याज लगता है. दूसरा है Swarna Balance — जो सबसे popular है और एक बीच का रास्ता है. और तीसर"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 1,
+  "turn": 12,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"scheme\" value=\"saver\"/>बढ़िया choice है! Swarna Saver में आपको सबसे कम ब्याज का फायदा मिलेगा. \n\nअब आप मुझे ये बता दीजिए कि आप कितना gold bring कर सकते हैं, grams में?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 1,
+  "turn": 14,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_weight\" value=\"40-45 grams\"/>अच्छा, समझ गई. और आपके gold की purity क्या है — 18, 22 या 24 कैरेट?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 1,
+  "turn": 16,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_purity\" value=\"22\"/>perfect. \n\nवैसे, आपके सबसे पास वाली branch घाटकोपर वेस्ट में है — एल बी एस मार्ग पे, अनुपम बिल्डिंग, ground floor. घाटकोपर स्टेशन से बस पाँच मिनट है. इस रविवार एल बी एस मार"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 1,
+  "turn": 18,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"ABCDE1234F\"/>मैं confirm कर लेती हूँ, आपका PAN number है A B C D E 1 2 3 4 F. क्या यह सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 1,
+  "turn": 20,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"ABCDE1234F\"/>ठीक है, thank you. अब क्या आप मुझे अपना Aadhaar number बता सकते हैं?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 1,
+  "turn": 22,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"aadhaar\" value=\"1234 5678 9012\"/>मैं confirm कर लेती हूँ, आपका Aadhaar number है 1 2 3 4 5 6 7 8 9 0 1 2. क्या यह सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 1,
+  "turn": 24,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"aadhaar\" value=\"1234 5678 9012\"/>बढ़िया. बस एक आखिरी सवाल, क्या आपका पहले से कोई gold loan चल रहा है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 1,
+  "turn": 26,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_existing\" value=\"no\"/>समझ गई. अब मुझे बस आपकी एक छोटी सी permission चाहिए कि IIFL आपको इस application के बारे में call, SMS या WhatsApp पर contact कर सके और standard credit bureau record check"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 1,
+  "turn": 28,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"consent_given\" value=\"true\"/>बढ़िया, मैंने आपकी सारी details भर दी हैं. एक second, मैं आपके offers निकाल रही हूँ."
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 2,
+  "turn": 2,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"3 lakh\"/>नमस्ते! मैं Ira बोल रही हूँ IIFL Finance से. अभी आपकी gold loan की enquiry आई हमारे पास, घाटकोपर वेस्ट side से — मैं आपकी पूरी help कर दूँगी. आप gold loan ही देख रहे है"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 2,
+  "turn": 10,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"scheme\" value=\"saver\"/>tool.click_button(session_id: \"sim-v12\", button: \"scheme_saver\")\nबढ़िया choice है! Swarna Saver में आपको सबसे कम ब्याज का फायदा मिलेगा. अच्छा, ये बताइये कि आप लगभग कितने gram"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 2,
+  "turn": 12,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_weight\" value=\"42-45 grams\"/>tool.fill_field(session_id: \"sim-v12\", field_name: \"gold_weight\", value: \"42-45 grams\")\nसमझ गई. और आपके gold की purity क्या है — 18, 22 या 24 कैरेट?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 2,
+  "turn": 14,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_purity\" value=\"22\"/>tool.fill_field(session_id: \"sim-v12\", field_name: \"gold_purity\", value: \"22\")\nperfect. वैसे, आपके सबसे पास वाली branch घाटकोपर वेस्ट में है — एल बी एस मार्ग पे, अनुपम बिल्"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 2,
+  "turn": 16,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"ABCDE1234F\"/>मैं confirm कर लेती हूँ, आपका PAN number है A B C D E 1 2 3 4 F. क्या ये सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 2,
+  "turn": 18,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'tool.fill_field('",
+  "quote": "tool.fill_field(session_id: \"sim-v12\", field_name: \"pan\", value: \"ABCDE1234F\")\nठीक है. अब KYC के लिए क्या आप अपना Aadhaar number बता सकते हैं?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 2,
+  "turn": 20,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"aadhaar\" value=\"1234 5678 9012\"/>मैं confirm कर लेती हूँ, आपका Aadhaar number है 1 2 3 4 5 6 7 8 9 0 1 2. क्या ये सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 2,
+  "turn": 22,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'tool.fill_field('",
+  "quote": "tool.fill_field(session_id: \"sim-v12\", field_name: \"aadhaar\", value: \"1234 5678 9012\")\nधन्यवाद. बस एक आखिरी सवाल — क्या आपका पहले से कोई gold loan चल रहा है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 2,
+  "turn": 24,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_existing\" value=\"no\"/>tool.fill_field(session_id: \"sim-v12\", field_name: \"existing_loan\", value: \"no\")\nठीक है. अब मुझे बस आपकी permission चाहिए ताकि IIFL आपको इस application के बारे में contac"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 2,
+  "turn": 26,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"consent_given\" value=\"true\"/>tool.fill_field(session_id: \"sim-v12\", field_name: \"consent\", value: \"true\")\nबढ़िया, मैंने आपकी सारी details भर दी हैं. एक second, मैं आपके offers निकाल रही हूँ."
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 2,
+  "turn": 28,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'tool.show_offers('",
+  "quote": "tool.show_offers(session_id: \"sim-v12\", loan_type: \"gold\", loan_amount: \"3 lakh\", gold_weight: \"42-45 grams\", gold_purity: \"22\", scheme: \"saver\", pincode: \"400086\")\n<derived-variable key=\"handover_ready\" value=\"true\"/>आप"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 3,
+  "turn": 2,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"3 lakh\"/>नमस्ते! मैं Ira बोल रही हूँ IIFL Finance से. अभी आपकी gold loan की enquiry आई हमारे पास, घाटकोपर वेस्ट side से — मैं आपकी पूरी help कर दूँगी. आप gold loan ही देख रहे है"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 3,
+  "turn": 4,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_type_confirmed\" value=\"true\"/>बढ़िया! IIFL में gold loan बहुत simple है — आपको अपने gold की अच्छी value मिल जाएगी, interest rates भी कम से start होते हैं और पैसा same day मिल जाता है. साथ ही आ"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 3,
+  "turn": 10,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"scheme\" value=\"saver\"/><tool-call name=\"click_button\" arguments=\"{session_id: 'sim-v12', button: 'scheme_saver'}\"/>perfect! Swarna Saver सबसे सस्ता option है. अब आप बस ये बता दीजिए कि आप कितना gold"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 3,
+  "turn": 12,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_weight\" value=\"45-50 grams\"/> <tool-call name=\"fill_field\" arguments=\"{session_id: 'sim-v12', field_name: 'gold_weight', value: '45-50 grams'}\"/>अच्छा, समझ गई. और आपके gold की purity क्या है —"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 3,
+  "turn": 14,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_purity\" value=\"22\"/> <tool-call name=\"fill_field\" arguments=\"{session_id: 'sim-v12', field_name: 'gold_purity', value: '22'}\"/>बढ़िया. वैसे आपकी सबसे पास वाली branch घाटकोपर वेस्ट में है — एल "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 3,
+  "turn": 16,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"ABCDE1234F\"/>मैं एक बार confirm कर लेती हूँ. आपका PAN number है A B C D E 1 2 3 4 F. क्या यह सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 3,
+  "turn": 18,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'fill_field'",
+  "quote": "<tool-call name=\"fill_field\" arguments=\"{session_id: 'sim-v12', field_name: 'pan', value: 'ABCDE1234F'}\"/>ठीक है, thank you. अब क्या आप मुझे अपना Aadhaar number बता सकते हैं?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 3,
+  "turn": 20,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"aadhaar\" value=\"1234 5678 9012\"/>मैं एक बार check कर लेती हूँ. आपका Aadhaar number है 1 2 3 4, 5 6 7 8, 9 0 1 2. क्या यह सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 3,
+  "turn": 22,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'fill_field'",
+  "quote": "<tool-call name=\"fill_field\" arguments=\"{session_id: 'sim-v12', field_name: 'aadhaar', value: '1234 5678 9012'}\"/>धन्यवाद. बस एक आख़िरी चीज़, क्या आपका पहले से कोई gold loan चल रहा है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 3,
+  "turn": 24,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_existing\" value=\"no\"/> <tool-call name=\"fill_field\" arguments=\"{session_id: 'sim-v12', field_name: 'existing_loan', value: 'no'}\"/>ठीक है. अब मुझे आपकी permission चाहिए कि IIFL आपको इस applica"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 3,
+  "turn": 26,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"consent_given\" value=\"true\"/><tool-call name=\"fill_field\" arguments=\"{session_id: 'sim-v12', field_name: 'consent', value: 'true'}\"/>बढ़िया, मैंने आपकी सारी details भर दी हैं. एक second, मैं आपके o"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "asks-rates",
+  "n": 3,
+  "turn": 28,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'show_offers'",
+  "quote": "<tool-call name=\"show_offers\" arguments=\"{session_id: 'sim-v12', loan_type: 'gold', loan_amount: '3 lakh', gold_weight: '45-50 grams', gold_purity: '22', scheme: 'saver', pincode: '400086'}\"/>"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 1,
+  "turn": 4,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"2 lakh\"/>\nअरे, बिलकुल समझ सकती हूँ, शुरुआत में थोड़ा confusion होना natural है. आप बेझिझक पूछिए, आपको किस बात की चिंता है या आप क्या जानना चाहते हैं? मैं आपकी पूरी help कर दूँगी."
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 1,
+  "turn": 6,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"2 lakh\"/>\nदेखिए, आपके लिए हमारे पास तीन options हैं. Swarna Saver है जिसमें सबसे कम ब्याज लगता है, Swarna Balance जो हमारा सबसे popular और बीच का रास्ता है, और Swarna Max जिसमें"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 1,
+  "turn": 8,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"scheme\" value=\"saver\"/>\nदेखिए, अगर आप कम ब्याज देना चाहते हैं तो Swarna Saver आपके लिए सबसे best और सबसे सस्ता रहेगा. बस इसमें gold थोड़ा ज़्यादा रखना पड़ता है. क्या आप वही लेना चाहेंगे?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 1,
+  "turn": 10,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"scheme\" value=\"saver\"/>\nबढ़िया! तो Swarna Saver select कर लेते हैं. अब आप मुझे ये बताइए कि आप कितना gold ला सकते हैं, grams में?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 1,
+  "turn": 12,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_weight\" value=\"35 grams\"/>\nअच्छा, करीब 35 grams के आसपास. ये काफी है, बस इसकी final valuation branch पर आपके gold की purity देखकर हो जाएगी. \n\nवैसे, आप सोने की purity बता सकते हैं — 18, 22 या 2"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 1,
+  "turn": 14,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_purity\" value=\"22\"/>\nperfect. \n\nवैसे Rishikesh, आपकी सबसे पास वाली branch घाटकोपर वेस्ट में है — एल बी एस मार्ग पे, अनुपम बिल्डिंग, ground floor. घाटकोपर स्टेशन से बस पाँच मिनट है. पिछले महीने"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 1,
+  "turn": 16,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"ABCDE1234F\"/>\nठीक है, मैं confirm कर लेती हूँ. आपका PAN number है A B C D E 1 2 3 4 F. क्या यह बिलकुल सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 1,
+  "turn": 18,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"ABCDE1234F\"/>\nसमझ गई. अब KYC के लिए क्या आप मुझे अपना Aadhaar number बता सकते हैं?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 1,
+  "turn": 20,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"aadhaar\" value=\"123456789012\"/>\nठीक है, मैं confirm कर लेती हूँ. आपका Aadhaar number है 1 2 3 4 5 6 7 8 9 0 1 2. क्या यह सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 1,
+  "turn": 22,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"aadhaar\" value=\"123456789012\"/>\nबढ़िया. बस एक आखिरी चीज़, क्या आपका पहले से कोई gold loan चल रहा है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 1,
+  "turn": 24,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_existing\" value=\"no\"/>\nठीक है, समझ गई. अब मुझे बस आपकी एक छोटी सी permission चाहिए. क्या आप terms and conditions के लिए अपनी consent दे सकते हैं? इससे IIFL आपको इस application के बारे में cont"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 1,
+  "turn": 26,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"consent_given\" value=\"true\"/>\nबढ़िया, मैंने आपकी सारी details भर दी हैं. एक second, मैं आपके offers निकाल रही हूँ."
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 1,
+  "turn": 28,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"handover_ready\" value=\"true\"/>\nआपके लिए सबसे best offer Swarna Saver scheme में है, जिसमें आपको 2 लाख रुपये का loan मिल सकता है, जिसकी monthly EMI करीब 8,500 रुपये होगी 12 months के tenure के लिए. "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 2,
+  "turn": 4,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"2 lakh\"/> अच्छा, समझ गई. IIFL Finance में आपको gold की अच्छी value मिल जाएगी और process भी बहुत fast है. हमारा तरीका 'Seedhi Baat' का है, यानी पूरी transparency और कोई hidden ch"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 2,
+  "turn": 8,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"scheme\" value=\"saver\"/> बिल्कुल, perfect choice है. \n\nअब आप मुझे ये बता दीजिए कि आप करीब कितना gold ला सकते हैं, grams में?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 2,
+  "turn": 10,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_weight\" value=\"40-50 grams\"/> बढ़िया. और gold की purity क्या है — 18, 22 या 24 कैरेट?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 2,
+  "turn": 12,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_purity\" value=\"22\"/> बहुत अच्छा.\n\nवैसे, आपके सबसे पास वाली branch घाटकोपर वेस्ट में है — एल बी एस मार्ग पे, अनुपम बिल्डिंग, ground floor. घाटकोपर स्टेशन से बस पाँच मिनट है. पिछले महीने हमने एल"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 2,
+  "turn": 14,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"ABCDE1234F\"/> मैं confirm कर लेती हूँ. आपका PAN number है A B C D E 1 2 3 4 F. क्या यह सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 2,
+  "turn": 16,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'tool.fill_field('",
+  "quote": "tool.fill_field(session_id: \"sim-v12\", field_name: \"pan\", value: \"ABCDE1234F\")\nधन्यवाद. अब क्या आप मुझे अपना Aadhaar number बता सकते हैं?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 2,
+  "turn": 18,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"aadhaar\" value=\"1234 5678 9012\"/> मैं एक बार confirm कर लेती हूँ. आपका Aadhaar number है 1 2 3 4, 5 6 7 8, 9 0 1 2. क्या यह सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 2,
+  "turn": 20,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'tool.fill_field('",
+  "quote": "tool.fill_field(session_id: \"sim-v12\", field_name: \"aadhaar\", value: \"1234 5678 9012\")\nठीक है. बस एक आखिरी सवाल — क्या आपका पहले से कोई gold loan चल रहा है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 2,
+  "turn": 22,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_existing\" value=\"no\"/>\ntool.fill_field(session_id: \"sim-v12\", field_name: \"existing_loan\", value: \"no\")\nसमझ गई. अब मुझे आपकी permission चाहिए कि IIFL आपको इस application के बारे में call, SMS "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 2,
+  "turn": 24,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"consent_given\" value=\"true\"/>\ntool.fill_field(session_id: \"sim-v12\", field_name: \"consent\", value: \"true\")\nबढ़िया, मैंने आपकी सारी details भर दी हैं. एक second, मैं आपके offers निकाल रही हूँ."
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 2,
+  "turn": 26,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'tool.show_offers('",
+  "quote": "tool.show_offers(session_id: \"sim-v12\", loan_type: \"gold\", loan_amount: \"2 lakh\", gold_weight: \"40-50 grams\", gold_purity: \"22\", scheme: \"saver\", pincode: \"400086\")\nधन्यवाद आपके patience के लिए. आपके लिए सबसे best offer "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 2,
+  "turn": 28,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"handover_ready\" value=\"true\"/> बढ़िया! आपकी सारी details मैंने note कर ली हैं. हमारी team आपको इसी number पर थोड़ी ही देर में call करेगी, और वो आपको हमारे loan specialist से connect कर देंगे.\n\nसाथ "
+ },
+ {
+  "sev": "HIGH",
+  "scenario": "which-is-best",
+  "n": 2,
+  "turn": 4,
+  "kind": "unprompted-figures",
+  "detail": "volunteered ['per gram'] without being asked",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"2 lakh\"/> अच्छा, समझ गई. IIFL Finance में आपको gold की अच्छी value मिल जाएगी और process भी बहुत fast है. हमारा तरीका 'Seedhi Baat' का है, यानी पूरी transparency और कोई hidden ch"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 3,
+  "turn": 2,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"2 lakh\"/>नमस्ते! मैं Ira बोल रही हूँ IIFL Finance से. अभी आपकी gold loan की enquiry आई हमारे पास, घाटकोपर वेस्ट side से — मैं आपकी पूरी help कर दूँगी. आप gold loan ही देख रहे है"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 3,
+  "turn": 4,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_type_confirmed\" value=\"true\"/>बढ़िया! IIFL में gold loan as fast as thirty minutes में मिल सकता है, और आपका gold fully insured, high-security vaults में safe रहता है. हम 1995 से customers को s"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 3,
+  "turn": 8,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"scheme\" value=\"saver\"/> <tool-call name=\"click_button\" args=\"{session_id: 'sim-v12', button: 'scheme_saver'}\"/>perfect! अब बस ये बता दीजिए कि आप कितना gold bring कर सकते हैं, grams में?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 3,
+  "turn": 12,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_weight\" value=\"40-50 grams\"/> <tool-call name=\"fill_field\" args=\"{session_id: 'sim-v12', field_name: 'gold_weight', value: '40-50 grams'}\"/>अच्छा, ठीक है. और आपके gold की purity क्या है — 18, "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 3,
+  "turn": 14,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_purity\" value=\"22\"/> <tool-call name=\"fill_field\" args=\"{session_id: 'sim-v12', field_name: 'gold_purity', value: '22'}\"/>बढ़िया. वैसे आप घाटकोपर वेस्ट side में हैं, तो आपकी सबसे पास वाली bran"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 3,
+  "turn": 16,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"ABCDE1234F\"/>मैं confirm कर लेती हूँ, आपका PAN number है A B C D E 1 2 3 4 F. क्या यह सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 3,
+  "turn": 18,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'fill_field'",
+  "quote": "<tool-call name=\"fill_field\" args=\"{session_id: 'sim-v12', field_name: 'pan', value: 'ABCDE1234F'}\"/>ठीक है. अब KYC के लिए अपना Aadhaar number बता दीजिए please."
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 3,
+  "turn": 20,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"aadhaar\" value=\"1234 5678 9012\"/>मैं confirm कर लेती हूँ, आपका Aadhaar number है 1 2 3 4 5 6 7 8 9 0 1 2. क्या यह सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 3,
+  "turn": 22,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'fill_field'",
+  "quote": "<tool-call name=\"fill_field\" args=\"{session_id: 'sim-v12', field_name: 'aadhaar', value: '1 2 3 4 5 6 7 8 9 0 1 2'}\"/>समझ गई. बस एक आखिरी चीज़ — क्या आपका पहले से कोई gold loan चल रहा है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 3,
+  "turn": 24,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_existing\" value=\"no\"/> <tool-call name=\"fill_field\" args=\"{session_id: 'sim-v12', field_name: 'existing_loan', value: 'no'}\"/>ठीक है. अब मुझे बस आपकी permission चाहिए कि IIFL आपको इस applicati"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 3,
+  "turn": 26,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"consent_given\" value=\"true\"/> <tool-call name=\"fill_field\" args=\"{session_id: 'sim-v12', field_name: 'consent', value: 'true'}\"/>बढ़िया, मैंने आपकी सारी details भर दी हैं. एक second, मैं आपके offer"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "which-is-best",
+  "n": 3,
+  "turn": 28,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'show_offers'",
+  "quote": "<tool-call name=\"show_offers\" args=\"{session_id: 'sim-v12', loan_type: 'gold', loan_amount: '2 lakh', gold_weight: '40-50 grams', gold_purity: '22', scheme: 'saver', pincode: '400086'}\"/>"
+ },
+ {
+  "sev": "HIGH",
+  "scenario": "which-is-best",
+  "n": 3,
+  "turn": 4,
+  "kind": "unprompted-figures",
+  "detail": "volunteered ['per gram'] without being asked",
+  "quote": "<derived-variable key=\"loan_type_confirmed\" value=\"true\"/>बढ़िया! IIFL में gold loan as fast as thirty minutes में मिल सकता है, और आपका gold fully insured, high-security vaults में safe रहता है. हम 1995 से customers को s"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "hesitant",
+  "n": 1,
+  "turn": 4,
+  "kind": "premise-break",
+  "detail": "agent referenced screen/form: 'देख सकते ह'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"4 lakh\"/>\n<derived-variable key=\"loan_type_confirmed\" value=\"true\"/>\nबिलकुल समझ सकती हूँ, interest rate को लेकर सोचना बिलकुल natural है. देखिए, अगर आप rate कम रखना चाहते हैं तो "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "hesitant",
+  "n": 1,
+  "turn": 8,
+  "kind": "premise-break",
+  "detail": "agent referenced screen/form: 'application भर'",
+  "quote": "बिलकुल, आप आराम से सोच लीजिए — कोई जल्दी नहीं है. \n\nबस एक छोटी सी बात बता दूँ कि application भरने से आप कहीं bind नहीं हो जाते — ये सिर्फ़ इसलिए है ताकि हम आपके लिए exact offer निकाल सकें. जब आपको final amount और rate लि"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "hesitant",
+  "n": 1,
+  "turn": 4,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"4 lakh\"/>\n<derived-variable key=\"loan_type_confirmed\" value=\"true\"/>\nबिलकुल समझ सकती हूँ, interest rate को लेकर सोचना बिलकुल natural है. देखिए, अगर आप rate कम रखना चाहते हैं तो "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "hesitant",
+  "n": 2,
+  "turn": 6,
+  "kind": "premise-break",
+  "detail": "agent referenced screen/form: 'application भर'",
+  "quote": "बिलकुल, आप आराम से सोच लीजिए — कोई जल्दी नहीं है. बस इतना बता दूँ कि application भरने से आप कहीं bind नहीं हो जाते — ये सिर्फ़ आपके लिए exact offer निकालने के लिए है. जब आपको final number मिल जाएगा, तब आप बेहतर तरीके से "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "hesitant",
+  "n": 2,
+  "turn": 2,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_type_confirmed\" value=\"unknown\"/>नमस्ते Rishikesh! मैं Ira बोल रही हूँ IIFL Finance से. अभी आपकी gold loan की enquiry आई हमारे पास, घाटकोपर वेस्ट side से — मैं आपकी पूरी help कर दूँगी. आप gold"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "hesitant",
+  "n": 2,
+  "turn": 4,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"4 लाख\"/>बिलकुल समझ सकती हूँ, interest के बारे में सोचना बिलकुल natural है. देखिए, आप बिलकुल compare कीजिए, वो तो करना ही चाहिए. IIFL 1995 से है, listed company है और CRISIL AA-r"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "hesitant",
+  "n": 3,
+  "turn": 6,
+  "kind": "premise-break",
+  "detail": "agent referenced screen/form: 'Application भर'",
+  "quote": "बिलकुल, कोई जल्दी नहीं है, आप आराम से सोच लीजिए. Application भरने से आप कहीं bind नहीं हो जाते — ये सिर्फ़ इसलिए है ताकि मैं आपके लिए exact offer निकाल सकूँ और आपको सही numbers बता सकूँ. फिर आप उन्हें देखकर decide कीजिएग"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "hesitant",
+  "n": 3,
+  "turn": 4,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"4 लाख\"/>बिलकुल समझ सकती हूँ, interest के बारे में सोचना बिलकुल natural है. देखिए, आप बिलकुल compare कीजिए, वो तो करना ही चाहिए. IIFL 1995 से है, listed company है और CRISIL AA-r"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 1,
+  "turn": 2,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_type_confirmed\" value=\"true\"/>नमस्ते! मैं Ira बोल रही हूँ IIFL Finance से. अभी आपकी gold loan की enquiry आई हमारे पास, घाटकोपर वेस्ट side से — मैं आपकी पूरी help कर दूँगी. आप gold loan ही देख "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 1,
+  "turn": 6,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"3 lakh\"/>\n<derived-variable key=\"scheme\" value=\"balance\"/>\n<derived-variable key=\"gold_weight\" value=\"40 grams\"/>\n<derived-variable key=\"gold_purity\" value=\"22\"/>\n<derived-varia"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 1,
+  "turn": 8,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"ABCDE1234F\"/>ठीक है, मैं confirm कर लेती हूँ. आपका PAN number है A B C D E 1 2 3 4 F. क्या यह सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 1,
+  "turn": 10,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"ABCDE1234F\"/>\n<derived-variable key=\"loan_type_confirmed\" value=\"true\"/>\n<derived-variable key=\"loan_amount\" value=\"3 lakh\"/>\n<derived-variable key=\"scheme\" value=\"balance\"/>\n<derived-v"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 1,
+  "turn": 12,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"aadhaar\" value=\"1234 5678 9012\"/>समझ गई. मैं एक बार confirm कर लूँ — आपका Aadhaar number है 1 2 3 4, 5 6 7 8, 9 0 1 2. क्या यह सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 1,
+  "turn": 14,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"aadhaar\" value=\"1234 5678 9012\"/>\n<tool_call name=\"fill_field\" args=\"{session_id: 'sim-v12', field_name: 'aadhaar', value: '1234 5678 9012'}\"/>\nबढ़िया. बस एक छोटी सी बात और — क्या आपका पहले से कोई g"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 1,
+  "turn": 16,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_existing\" value=\"no\"/>\n<tool_call name=\"fill_field\" args=\"{session_id: 'sim-v12', field_name: 'existing_loan', value: 'no'}\"/>\nठीक है, समझ गई. \n\nअब मुझे बस आपकी एक permission चाहिए ताकि IIFL आ"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 1,
+  "turn": 18,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"consent_given\" value=\"true\"/>\n<tool_call name=\"fill_field\" args=\"{session_id: 'sim-v12', field_name: 'consent', value: 'true'}\"/>\nबढ़िया, मैंने आपकी सारी details भर दी हैं. एक second, मैं आपके offe"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 1,
+  "turn": 20,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'show_offers'",
+  "quote": "<tool_call name=\"show_offers\" args=\"{session_id: 'sim-v12', loan_type: 'gold', loan_amount: '3 lakh', gold_weight: '40 grams', gold_purity: '22', scheme: 'balance', pincode: '400086'}\"/>"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 1,
+  "turn": 22,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"handover_ready\" value=\"true\"/>आपके लिए सबसे अच्छा offer IIFL Swarna Balance scheme में है, जहाँ आपको 3 lakh का loan मिल सकता है, जिसकी monthly EMI 12,500 रुपये होगी 18 months के tenure के लिए. \n\nये"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 1,
+  "turn": 24,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"handover_ready\" value=\"true\"/>बढ़िया! आपकी सारी details मैंने note कर ली हैं. हमारी team आपको इसी number पर थोड़ी ही देर में call करेगी, और वो आपको हमारे loan specialist से connect कर देंगे.\n\nमैं अ"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 1,
+  "turn": 27,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"handover_ready\" value=\"true\"/>confirm कर रही हूँ, email आपके पास पहुँच गया है. \n\nऔर अगर आप आज तीन बजे तक घाटकोपर वेस्ट वाली branch पहुँच जाएँ अपने gold और KYC के साथ, तो पैसा आज ही मिल सकता है. \n\nह"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 2,
+  "turn": 2,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_type_confirmed\" value=\"false\"/> नमस्ते! मैं Ira बोल रही हूँ IIFL Finance से. अभी आपकी gold loan की enquiry आई हमारे पास, घाटकोपर वेस्ट side से — मैं आपकी पूरी help कर दूँगी. आप gold loan ही दे"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 2,
+  "turn": 6,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"3 lakh\"/> अच्छा, समझ गई. \n\nतो 3 lakh के लिए आपके पास तीन options हैं. पहला है Swarna Saver — जिसमें सबसे कम ब्याज लगता है; दूसरा है Swarna Balance — जो सबसे popular है और एक बीच"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 2,
+  "turn": 8,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"scheme\" value=\"balance\"/>\ntool.click_button(session_id: \"sim-v12\", button: \"scheme_balance\")\nबढ़िया choice है! \n\nअब आप मुझे ये बता दीजिए कि आप कितना gold bring कर सकते हैं, grams में?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 2,
+  "turn": 10,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_weight\" value=\"40 grams\"/>\ntool.fill_field(session_id: \"sim-v12\", field_name: \"gold_weight\", value: \"40 grams\")\nperfect. और gold की purity क्या है — 18, 22 या 24 कैरेट?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 2,
+  "turn": 12,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_purity\" value=\"22\"/>\ntool.fill_field(session_id: \"sim-v12\", field_name: \"gold_purity\", value: \"22\")\nठीक है. वैसे आपकी घाटकोपर वेस्ट वाली branch के बारे में बताऊँ तो पिछले महीने हमने एल बी एस म"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 2,
+  "turn": 14,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"ABCDE1234F\"/> मैं confirm कर लेती हूँ, आपका PAN number है A B C D E 1 2 3 4 F. क्या यह सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 2,
+  "turn": 16,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'tool.fill_field('",
+  "quote": "tool.fill_field(session_id: \"sim-v12\", field_name: \"pan\", value: \"ABCDE1234F\")\nधन्यवाद. अब आप अपना Aadhaar number बता दीजिए please."
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 2,
+  "turn": 18,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"aadhaar\" value=\"1234 5678 9012\"/> मैं एक बार confirm कर लेती हूँ, आपका Aadhaar number है 1 2 3 4 5 6 7 8 9 0 1 2. क्या यह बिलकुल सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 2,
+  "turn": 20,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'tool.fill_field('",
+  "quote": "tool.fill_field(session_id: \"sim-v12\", field_name: \"aadhaar\", value: \"1 2 3 4 5 6 7 8 9 0 1 2\")\nशुक्रिया. बस एक आखिरी सवाल — क्या आपका पहले से कोई gold loan चल रहा है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 2,
+  "turn": 22,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_existing\" value=\"no\"/>\ntool.fill_field(session_id: \"sim-v12\", field_name: \"existing_loan\", value: \"no\")\nठीक है. अब मुझे आपकी permission चाहिए कि IIFL आपको इस application के बारे में call, SMS "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 2,
+  "turn": 24,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"consent_given\" value=\"true\"/>\ntool.fill_field(session_id: \"sim-v12\", field_name: \"consent\", value: \"true\")\nबढ़िया, मैंने आपकी सारी details भर दी हैं. एक second, मैं आपके offers निकाल रही हूँ."
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 2,
+  "turn": 26,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: 'tool.show_offers('",
+  "quote": "tool.show_offers(session_id: \"sim-v12\", loan_type: \"gold\", loan_amount: \"3 lakh\", gold_weight: \"40 grams\", gold_purity: \"22\", scheme: \"balance\", pincode: \"400086\")\nएक second, मैं आपके offers check कर रही हूँ... बस अभी बत"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 2,
+  "turn": 28,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"handover_ready\" value=\"true\"/> बस कुछ ही seconds की बात है, मैं अभी check कर रही हूँ. \n\nआपके लिए सबसे best offer IIFL Swarna Balance का है, जिसमें आपको 3 lakh का loan मिल रहा है, जिसकी monthly EMI "
+ },
+ {
+  "sev": "HIGH",
+  "scenario": "branch-early",
+  "n": 2,
+  "turn": 6,
+  "kind": "unprompted-figures",
+  "detail": "volunteered ['per gram'] without being asked",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"3 lakh\"/> अच्छा, समझ गई. \n\nतो 3 lakh के लिए आपके पास तीन options हैं. पहला है Swarna Saver — जिसमें सबसे कम ब्याज लगता है; दूसरा है Swarna Balance — जो सबसे popular है और एक बीच"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 3,
+  "turn": 2,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_type_confirmed\" value=\"false\"/> नमस्ते! मैं Ira बोल रही हूँ IIFL Finance से. अभी आपकी gold loan की enquiry आई हमारे पास, घाटकोपर वेस्ट side से — मैं आपकी पूरी help कर दूँगी. आप gold loan ही दे"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 3,
+  "turn": 6,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"3 lakh\"/>\n<derived-variable key=\"scheme\" value=\"balance\"/>\nअच्छा, समझ गई. 3 लाख का amount और Swarna Balance scheme, perfect है. बस ये बता दीजिए कि आप कितना gold लेकर आ सकते हैं,"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 3,
+  "turn": 8,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_weight\" value=\"40 grams\"/>\nबढ़िया. और आपके gold की purity क्या है — 18, 22 या 24 कैरेट?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 3,
+  "turn": 10,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_purity\" value=\"22\"/>\nperfect. वैसे घाटकोपर वेस्ट वाली branch के बारे में एक बात बताऊँ, पिछले महीने हमने एल बी एस मार्ग मार्केट के पास एक weekend awareness camp लगाया था — काफ़ी local दुकानदार "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "branch-early",
+  "n": 3,
+  "turn": 16,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"handover_ready\" value=\"true\"/> ठीक है, मैंने note कर लिया है. हमारी team आपको इसी number पर थोड़ी ही देर में call करेगी, और वो आपको हमारे loan specialist से connect कर देंगे. \n\nमैं अभी आपको एक emai"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 1,
+  "turn": 2,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_type_confirmed\" value=\"false\"/>नमस्ते Rishikesh! मैं Ira बोल रही हूँ IIFL Finance से. अभी आपकी gold loan की enquiry आई हमारे पास, घाटकोपर वेस्ट side से — मैं आपकी पूरी help कर दूँगी. आप gold l"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 1,
+  "turn": 4,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_type_confirmed\" value=\"true\"/>बढ़िया! IIFL में gold loan बहुत आसान है — आपको आपके gold की अच्छी value मिल जाएगी, interest rates भी कम से start होते हैं और पैसा same day मिल जाता है. साथ ही, आप"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 1,
+  "turn": 6,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"2.5 lakh\"/>"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 1,
+  "turn": 10,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"scheme\" value=\"saver\"/>बढ़िया choice है! Swarna Saver में आपको ब्याज सबसे कम लगेगा. \n\nअब ये बता दीजिए कि आप लगभग कितना gold bring कर सकते हैं, grams में?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 1,
+  "turn": 12,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_weight\" value=\"35 grams\"/>समझ गई. और इस gold की purity क्या है — 18, 22 या 24 कैरेट?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 1,
+  "turn": 14,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_purity\" value=\"22\"/>perfect.\n\nवैसे Rishikesh, आपके सबसे पास वाली branch घाटकोपर वेस्ट में है — एल बी एस मार्ग पे, अनुपम बिल्डिंग, ground floor. घाटकोपर स्टेशन से बस पाँच मिनट है. पिछले महीने ह"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 1,
+  "turn": 16,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"ABCDE1234F\"/>एक बार confirm कर लेते हैं — आपका PAN number है A B C D E 1 2 3 4 F. क्या यह सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 1,
+  "turn": 18,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"ABCDE1234F\"/>ठीक है, thank you. अब क्या आप अपना Aadhaar number बता सकते हैं?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 1,
+  "turn": 20,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"aadhaar\" value=\"987654321098\"/>मैं confirm कर लेती हूँ — आपका Aadhaar number है 9 8 7 6, 5 4 3 2, 1 0 9 8. क्या यह सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 1,
+  "turn": 22,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"aadhaar\" value=\"987654321098\"/>बढ़िया. बस एक आखिरी सवाल — क्या आपका पहले से कोई gold loan चल रहा है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 1,
+  "turn": 24,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_existing\" value=\"no\"/>ठीक है, समझ गई. \n\nअब आगे बढ़ने के लिए मुझे आपकी एक permission चाहिए. क्या आप terms and conditions के लिए अपनी consent दे सकते हैं? इससे IIFL आपको इस application के बारे मे"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 1,
+  "turn": 26,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"consent_given\" value=\"true\"/>बढ़िया, मैंने आपकी सारी details भर दी हैं. एक second, मैं आपके offers निकाल रही हूँ."
+ },
+ {
+  "sev": "HIGH",
+  "scenario": "email-fails",
+  "n": 1,
+  "turn": 8,
+  "kind": "unprompted-figures",
+  "detail": "volunteered ['per gram'] without being asked",
+  "quote": "// The user is hallucinating/simulating the agent's role by asking the agent to pick a plan. \n// According to the flow, I am in the gold_scheme_explain state. \n// I must present the three schemes clearly without numbers "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 2,
+  "turn": 6,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"2.5 lakh\"/>अच्छा, तो ढाई लाख का loan चाहिए आपको. \n\nइस amount के लिए हमारे पास तीन options हैं. पहला है Swarna Saver — जिसमें सबसे कम ब्याज लगता है; दूसरा है Swarna Balance — जो "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 2,
+  "turn": 8,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"scheme\" value=\"saver\"/>बढ़िया choice है, Swarna Saver में ब्याज सबसे कम रहता है. \n\nअब आप मुझे ये बता दीजिए कि आप कितना gold bring कर सकते हैं, grams में?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 2,
+  "turn": 10,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_weight\" value=\"35 grams\"/>समझ गई, 35 grams gold. \n\nऔर gold की purity कितनी है — 18, 22 या 24 कैरेट?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 2,
+  "turn": 12,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_purity\" value=\"22\"/>perfect, 22 कैरेट.\n\nवैसे Rishikesh, आपके सबसे पास वाली branch घाटकोपर वेस्ट में है — एल बी एस मार्ग पे, अनुपम बिल्डिंग, ground floor. घाटकोपर स्टेशन से बस पाँच मिनट है. इस "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 2,
+  "turn": 14,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"ABCDE1234F\"/>मैं एक बार confirm कर लेती हूँ. आपका PAN number है A B C D E 1 2 3 4 F. क्या ये सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 2,
+  "turn": 18,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"aadhaar\" value=\"9876 5432 1098\"/>मैं एक बार confirm कर लेती हूँ. आपका Aadhaar number है 9 8 7 6, 5 4 3 2, 1 0 9 8. क्या ये सही है?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 2,
+  "turn": 22,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_existing\" value=\"no\"/>ठीक है, समझ गई.\n\nअब मुझे बस आपकी एक permission चाहिए कि IIFL आपको इस application के बारे में call, SMS या WhatsApp पर contact कर सके और standard credit checks कर सके. क्य"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 2,
+  "turn": 24,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"consent_given\" value=\"true\"/>बढ़िया, मैंने आपकी सारी details भर दी हैं. एक second, मैं आपके offers निकाल रही हूँ."
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 2,
+  "turn": 26,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"handover_ready\" value=\"true\"/>आपके लिए सबसे best offer IIFL Swarna Saver का है, जिसमें आपको 2.5 lakh का loan मिल सकता है, जिसकी monthly EMI 8,500 रुपये होगी और tenure 12 months का रहेगा. \n\nये indic"
+ },
+ {
+  "sev": "HIGH",
+  "scenario": "email-fails",
+  "n": 2,
+  "turn": 6,
+  "kind": "unprompted-figures",
+  "detail": "volunteered ['per gram'] without being asked",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"2.5 lakh\"/>अच्छा, तो ढाई लाख का loan चाहिए आपको. \n\nइस amount के लिए हमारे पास तीन options हैं. पहला है Swarna Saver — जिसमें सबसे कम ब्याज लगता है; दूसरा है Swarna Balance — जो "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "email-fails",
+  "n": 3,
+  "turn": 6,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"2.5 lakh\"/>"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 1,
+  "turn": 4,
+  "kind": "premise-break",
+  "detail": "agent referenced screen/form: 'screen'",
+  "quote": "जी हाँ, मैं एक digital assistant हूँ. जहाँ तक tools की बात है, तो मैं बस आपकी details note करने और आपके लिए best offers निकालने में help कर रही हूँ. और देखिए, आप मुझसे phone पर बात कर रहे हैं, तो आपके सामने कोई screen नह"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 1,
+  "turn": 6,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"5 lakh\"/>\n<derived-variable key=\"loan_type_confirmed\" value=\"true\"/>\nअच्छा, पाँच लाख का loan चाहिए आपको. देखिए, जहाँ तक LTV की बात है, तो RBI की limit के हिसाब से maximum sevent"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 1,
+  "turn": 12,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"5 lakh\"/>\nबिलकुल, पाँच लाख का loan amount हम note कर लेते हैं. इस amount के लिए हमारे पास तीन options हैं: Swarna Saver, जिसमें सबसे कम ब्याज लगता है; Swarna Balance, जो हमारा स"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 1,
+  "turn": 14,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"scheme\" value=\"max\"/>\nSwarna Max में आपको per gram सबसे ज़्यादा पैसा मिलता है, करीब ₹9,960 per gram. इसमें LTV seventy five percent है, तो आपको कम gold गिरवी रखना पड़ेगा, पर इसका interest rate बाकी "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 1,
+  "turn": 16,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"scheme\" value=\"max\"/>\nबढ़िया, Swarna Max select कर लिया है. अब बस ये बता दीजिए कि आप कितना gold bring कर सकते हैं, grams में?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 1,
+  "turn": 20,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_weight\" value=\"100 grams\"/>\nअच्छा, 100 grams gold. perfect! अब बस ये बता दीजिए कि gold की purity क्या है — 18, 22 या 24 कैरेट?"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 1,
+  "turn": 22,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_purity\" value=\"22\"/>\nबढ़िया, 22 कैरेट gold. देखिए, आपके gold की final valuation branch पर होगी, पर Swarna Max के हिसाब से आपको काफी अच्छा amount मिल जाना चाहिए. \n\nवैसे, आपके सबसे पास वाली branc"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 1,
+  "turn": 26,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"ABCDE1234F\"/>\nठीक है, मैंने PAN note कर लिया है. मैं एक बार confirm कर लेती हूँ — आपका PAN है A B C D E 1 2 3 4 F. क्या ये सही है?\n\nजहाँ तक approval की बात है, तो IIFL में gold loan बहु"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 1,
+  "turn": 28,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"ABCDE1234F\"/>\nमैं आपकी बात बिलकुल समझ सकती हूँ और आपकी help करना चाहती हूँ, पर जैसा कि मैंने पहले बताया, seventy five percent RBI की maximum limit है. यह एक regulatory rule है जिसे हम c"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 2,
+  "turn": 6,
+  "kind": "premise-break",
+  "detail": "agent referenced screen/form: 'screen'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"5 lakh\"/>\n\nअच्छा, पाँच लाख। मैं note कर लेती हूँ। \n\nदेखिए, मैं सिर्फ IIFL के internal systems use कर रही हूँ ताकि आपकी details सही से record हो सकें। और जहाँ तक screen की बात है"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 2,
+  "turn": 10,
+  "kind": "premise-break",
+  "detail": "agent referenced screen/form: 'screen'",
+  "quote": "<derived-variable key=\"gold_weight\" value=\"150 grams\"/>\n\nबढ़िया, एक सौ पचास grams। मैं note कर लेती हूँ।\n\nदेखिए, मुझे बस वही details पता हैं जो आपने website पर दी थीं और जो आप मुझे अभी बता रहे हैं, ताकि मैं आपकी applicat"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 2,
+  "turn": 6,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"5 lakh\"/>\n\nअच्छा, पाँच लाख। मैं note कर लेती हूँ। \n\nदेखिए, मैं सिर्फ IIFL के internal systems use कर रही हूँ ताकि आपकी details सही से record हो सकें। और जहाँ तक screen की बात है"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 2,
+  "turn": 8,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"scheme\" value=\"max\"/>\n\nठीक है, तो Swarna Max आपके लिए सही रहेगा क्योंकि इसमें आपको per gram सबसे ज़्यादा पैसा मिल जाता है। \n\nऔर आपकी curiosity के लिए बता दूँ कि मैं एक AI digital assistant हूँ, इंस"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 2,
+  "turn": 10,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_weight\" value=\"150 grams\"/>\n\nबढ़िया, एक सौ पचास grams। मैं note कर लेती हूँ।\n\nदेखिए, मुझे बस वही details पता हैं जो आपने website पर दी थीं और जो आप मुझे अभी बता रहे हैं, ताकि मैं आपकी applicat"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 2,
+  "turn": 12,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_purity\" value=\"22\"/>\n\nठीक है, 22 कैरेट।\n\nदेखिए, मैं इन technical details के बारे में तो नहीं बता सकती, पर मैं आपकी loan application में पूरी help कर सकती हूँ।\n\nवैसे, आपके सबसे पास वाली branch "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 2,
+  "turn": 16,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"pan\" value=\"ABCDE1234F\"/>\n\nअरे नहीं, बिलकुल नहीं! आप बिलकुल बेफिक्र रहिये, मेरे पास आपके phone के camera या microphone का कोई access नहीं है। मैं आपको देख नहीं सकती, मैं बस आपकी बातें सुन रही हूँ औ"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 2,
+  "turn": 20,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"aadhaar\" value=\"1 2 3 4 5 6 7 8 9 0 1 2\"/>\n\nअरे नहीं, मैं आपके thoughts बिलकुल read नहीं कर सकती! मैं तो बस आपकी बातों से अंदाज़ा लगा रही हूँ। मैं एक digital assistant हूँ, कोई mind reader नहीं। \n\nआ"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 2,
+  "turn": 24,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"gold_existing\" value=\"no\"/>\n\nअरे नहीं, ऐसी कोई बात नहीं है! मैं यहाँ सिर्फ आपकी मदद करने के लिए हूँ और मेरा system बिलकुल secure है। आप बिलकुल बेफिक्र रहिये और loan की details पर focus कीजिये।\n\nअब "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 2,
+  "turn": 26,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"consent_given\" value=\"true\"/>\n\nदेखिए, मैं आपकी बात समझ सकती हूँ, पर LTV की limit RBI का नियम है और system में ऐसा कोई loophole नहीं होता जिससे इसे बदला जा सके। यह नियम सबकी safety और security के लि"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 3,
+  "turn": 6,
+  "kind": "premise-break",
+  "detail": "agent referenced screen/form: 'screen'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"5 lakh\"/> अच्छा, आपको 5 lakh का loan चाहिए। देखिए, आप अभी मुझसे phone पर बात कर रहे हैं, तो आपके सामने कोई screen नहीं है। मैं बस आपसे बातचीत करके आपकी details note कर रही हूँ त"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 3,
+  "turn": 8,
+  "kind": "premise-break",
+  "detail": "agent referenced screen/form: 'देख सकते ह'",
+  "quote": "देखिए, 75% RBI की limit है, उससे ऊपर कोई भी lender loan नहीं दे सकता। इसलिए 90% LTV possible नहीं होगा। पर आप अपनी ज़रूरत के हिसाब से हमारे options देख सकते हैं।\n\nजैसा कि मैंने बताया, Swarna Saver में सबसे कम ब्याज है, Sw"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 3,
+  "turn": 14,
+  "kind": "premise-break",
+  "detail": "agent referenced screen/form: 'screen'",
+  "quote": "देखिए, जैसा कि मैंने पहले बताया, आप अभी मुझसे phone पर बात कर रहे हैं, तो आपके सामने कोई screen नहीं है। मैं बस आपसे बातचीत कर रही हूँ और आपकी details note कर रही हूँ।\n\nहम schemes के बारे में बात कर रहे थे—Swarna Saver, "
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 3,
+  "turn": 16,
+  "kind": "premise-break",
+  "detail": "agent referenced screen/form: 'देख सकते ह'",
+  "quote": "मैं आपकी बात समझ सकती हूँ, पर जैसा कि मैंने बताया, 75% RBI की limit है और उससे ऊपर कोई भी bank या NBFC loan नहीं दे सकता। ये rule सबके लिए same है, तो मैं इसे change नहीं कर पाऊँगी।\n\nपर आप अपनी ज़रूरत के हिसाब से हमारे op"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 3,
+  "turn": 28,
+  "kind": "premise-break",
+  "detail": "agent referenced screen/form: 'screen'",
+  "quote": "देखिए, मैं आपकी screen नहीं देख सकती और न ही मुझे पता है कि आपके phone पर क्या चल रहा है। मैं सिर्फ आपकी आवाज़ सुन सकती हूँ और आपसे बात कर सकती हूँ।\n\nहम schemes के बारे में बात कर रहे थे—Swarna Saver, Swarna Balance और Sw"
+ },
+ {
+  "sev": "CRITICAL",
+  "scenario": "adversarial",
+  "n": 3,
+  "turn": 6,
+  "kind": "tool-leak",
+  "detail": "leaked internal syntax: '<derived-variable'",
+  "quote": "<derived-variable key=\"loan_amount\" value=\"5 lakh\"/> अच्छा, आपको 5 lakh का loan चाहिए। देखिए, आप अभी मुझसे phone पर बात कर रहे हैं, तो आपके सामने कोई screen नहीं है। मैं बस आपसे बातचीत करके आपकी details note कर रही हूँ त"
+ }
+]
