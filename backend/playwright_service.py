@@ -8,6 +8,13 @@ from playwright.async_api import async_playwright
 # Global session registry
 PLAYWRIGHT_SESSIONS: Dict[str, Dict[str, Any]] = {}
 
+# A session touched within this many seconds is presumed to be a LIVE call and
+# is never evicted by another start_session. Sized well above the longest gap
+# between tool calls in a real conversation (the caller thinking, a long STT
+# pause), so a running demo is never mistaken for a leftover. Idle leftovers
+# from a finished demo fall outside it and are still torn down.
+EVICTION_GRACE_SECONDS = 120
+
 # Get logger (configuration is done by app.py)
 logger = logging.getLogger(__name__)
 
@@ -350,10 +357,38 @@ class PlaywrightService:
         # started. There is exactly one screen and one demo at a time, so tear down
         # every existing session before opening a new one. This also reclaims the
         # Chromium processes, which is why the cap existed in the first place.
-        stale = [sid for sid in PLAYWRIGHT_SESSIONS if sid != session_id]
+        # ⚠️ BUT NEVER EVICT A CALL THAT IS STILL RUNNING.
+        #
+        # Evicting unconditionally killed live calls: noVNC went to the bare
+        # Fluxbox desktop mid-conversation while Meera kept talking and every
+        # fill failed. Anyone opening the demo link in a second tab — a
+        # teammate, a page refresh — minted a new session id and destroyed the
+        # one in use.
+        #
+        # A session touched within EVICTION_GRACE_SECONDS is presumed live and
+        # is left alone; only genuinely idle leftovers from a finished demo are
+        # torn down. That keeps the fresh-start guarantee above (a previous
+        # demo's screen is still cleared) without the collateral damage.
+        now = datetime.now()
+        stale, live = [], []
+        for sid, sess in PLAYWRIGHT_SESSIONS.items():
+            if sid == session_id:
+                continue
+            touched = sess.get("last_activity_at") or sess.get("created_at")
+            if touched and (now - touched).total_seconds() < EVICTION_GRACE_SECONDS:
+                live.append(sid)
+            else:
+                stale.append(sid)
+
+        if live:
+            logger.warning(
+                "Fresh start: LEAVING %d active session(s) alone (touched < %ss ago): %s",
+                len(live), EVICTION_GRACE_SECONDS, live, extra=extra,
+            )
+
         if stale:
             logger.info(
-                "Fresh start: destroying %d leftover session(s) before opening the new one: %s",
+                "Fresh start: destroying %d idle leftover session(s) before opening the new one: %s",
                 len(stale), stale, extra=extra,
             )
             for sid in stale:
