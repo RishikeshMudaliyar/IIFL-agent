@@ -1,12 +1,146 @@
-# IIFL demo — state of the world as of 2026-07-28 (v12)
+# IIFL demo — state of the world as of 2026-07-28 (v13)
 
-**v12 IS BUILT, PUBLISHED (Ira `24874`) AND PARTLY UNVERIFIED.** v12 is an **agent + backend**
-change (frontend untouched since v11). Read this section, then
+## ✅ v13 — THE DEMO RAN AND THE TEAM LIKED IT
+
+**v13 IS PUBLISHED, VERIFIED AND DEMO-PROVEN.** It is the version that ran the IIFL
+Enterprise Connect demo on 2026-07-28 and was well received. Tag
+**`v13-checkpoint-2026-07-28`**. Read this section, then
 `agent-build/loan-lead-qualification/PLATFORM-CONFIG.md` for every ID and the platform gotchas.
 
-Tags: `v12-checkpoint-2026-07-28` (this state), `v11-checkpoint-2026-07-28`,
-`v10-checkpoint-2026-07-27`, `v9-checkpoint-2026-07-27`, `v8-checkpoint-2026-07-27`,
-`v7-checkpoint-2026-07-27`.
+Tags: `v13-checkpoint-2026-07-28` (**this state — the demo-proven one**),
+`v12-checkpoint-2026-07-28`, `v11-checkpoint-2026-07-28`, `v10-checkpoint-2026-07-27`,
+`v9-checkpoint-2026-07-27`, `v8-checkpoint-2026-07-27`, `v7-checkpoint-2026-07-27`.
+
+### 🔜 START HERE NEXT SESSION — what is still open
+
+1. **RENAME THE AGENT: Ira → Meera.** Major, operator-confirmed. Not started. Every
+   surface is listed in "The Ira → Meera rename" below — it is far wider than the
+   agent's display name (prompt body, opening line, WhatsApp signature, email
+   signature, `EMAIL_FROM`, frontend copy).
+2. **The 2:30 team-meeting feedback.** ⚠️ **NOT CAPTURED — the items were never
+   written down in the build session.** Ask the operator to restate them before
+   planning; do not guess from these notes.
+
+### What v13 does that v12 did not
+
+| | v12 | **v13** |
+|---|---|---|
+| Caller gets | Summary **email** at the end | **WhatsApp** with branch address/details, sent **before the KYC questions** |
+| Branch manager gets | nothing | **Email** with every input + every answer (PAN, Aadhaar, existing loan, consent), sent **silently after consent** |
+| Schemes | Ira asked the caller to pick, and blocked until they did | **Information only** — names the three, invites questions, never solicits a pick |
+
+### The three v13 behaviours to protect
+
+- **WhatsApp goes over Twilio's REST API (HTTPS), never SMTP.** Railway blocks all
+  outbound SMTP. `whatsapp_service.py`; `branch_data.py` is the single source of
+  branch/scheme truth shared with the email so the two can never contradict.
+- **The manager email is SILENT but must not be skippable.** `lead_email_action()`
+  keeps a mandatory explicit instruction line. A tool-only state with no instruction
+  gets skipped by the model — that is the v12 `go_to_form` regression (call
+  `2044aa31`) and it broke every form fill.
+- **A caller who never picks a scheme is a VALID outcome.** All three scheme states
+  fall through to `gold_q3()`; `offer_read()` presents the offers generically when
+  `<<scheme>>` is empty. Never re-add a block-until-chosen rule.
+
+### Conversation fixes earned from live calls (do not regress these)
+
+From call **`372c5ce1`** (the 11:54 feedback):
+- No `"select कर लूँ?" / "fix करें?"` — asking permission to record a choice
+  describes operating a screen the caller cannot see. It derailed three turns.
+- No standalone filler turns (`"एक मिनिट बस"`, `"Okay..."`), no repeating yourself,
+  each confirmation asked once.
+- Burst-turn rule: callers speak in two or three fragments; answer the latest once.
+- `branch_hook()` capped at **two sentences**; the local event lives in the WhatsApp
+  only. It previously produced an 85-word monologue that ran out of breath.
+
+From call **`05ab9af5`** (the demo rehearsal):
+- `confirm_context()` must **not** re-introduce Ira — the static opening line already
+  says who she is.
+- `iifl_welcome()` invokes `go_to_form` **first**, then speaks the trust lines **and**
+  the loan-amount question as ONE turn. Previously the tool ran after the turn,
+  leaving a 31-second gap the model filled with a bare `"Okay..."`.
+
+### ⚠️ Known-fragile, NOT fixed
+
+- **"Agent stuck".** Mitigated by the burst-turn rule, root cause unfixed: the
+  platform's turn handling when caller speech arrives while a tool is running.
+  Prompt rules reduce it; they cannot eliminate it. Set expectations accordingly.
+- **Twilio WhatsApp sandbox opt-in expires after 72h of inactivity.** Every recipient
+  must WhatsApp `join contrast-place` to `+14155238886` again. **This is the single
+  most likely thing to break a future demo.** An approved WA Business sender would
+  remove the constraint (`TWILIO_CONTENT_SID` is already wired for that path).
+- **The Priya callback ringing has still never been observed working.** Pre-existing.
+
+### Publishing
+
+**Publishing is operator-only in this setup** — the permission classifier blocks both
+the MCP `nurix_publish_draft` and the raw `POST /agent/{id}-draft/draft/publish`. Push
+scripts stop at the draft by design; the operator publishes in the NuPlay UI.
+Publishing has silently reverted schemas/prompts **3 times**, so re-verify the
+compiled prompt, all 7 tools and both action schemas afterwards. v13's publishes came
+through clean.
+
+**`opening_dialogue` is NOT writable by any API** — four routes return HTTP 200 and
+silently ignore it. Change it in the NuPlay UI. Currently:
+`"Hello, मै Ira बोल रही हु IIFL Finance bank से..."` ← **must change in the rename.**
+
+---
+
+## 📋 THE IRA → MEERA RENAME (open, not started)
+
+Operator-confirmed after the demo. **The name is in more places than the agent's
+display name** — a partial rename is worse than none, because the caller then hears
+"Meera" but the WhatsApp is signed "Ira". Verified inventory as of the v13 checkpoint:
+
+### Customer-visible — these MUST all change together
+| Where | Current | Note |
+|---|---|---|
+| `opening_dialogue` (NuPlay UI) | `"Hello, मै Ira बोल रही हु IIFL Finance bank से..."` | ⚠️ **UI only — no API writes this** |
+| SOP body (4 refs) | `confirm_context()` example, `closing()`, persona | Factory copy, then push + publish |
+| `whatsapp_service.py:103` | `"— Ira, IIFL Finance"` | WhatsApp signature |
+| `email_service.py:251` | `"New lead from a call with Ira, IIFL's voice assistant."` | Manager email body |
+| `email_service.py:281` | `"Generated automatically during the call by Ira."` | Manager email footer |
+| `PhoneCallFrame.tsx:135,196` | `Ira` | The on-screen caller name in the phone UI |
+
+### Platform / config
+- **Agent display name:** `IIFL Finance - Ira (Loan Voice)` → Meera (NuPlay UI).
+  Agent id `56dfd3b8-…` does NOT change; do not create a new agent.
+- **`EMAIL_FROM=ira@nurix.tech`** → decide whether to move to a `meera@` sender.
+  ⚠️ **A new address needs Resend domain verification first** or every email
+  silently fails. `EMAIL_FROM_NAME` is `IIFL Finance` and can stay.
+- **Voice/TTS:** unchanged unless the team also wants a different voice.
+
+### Not customer-visible — cosmetic, do last or skip
+Code comments and docstrings across `agent_routes.py`, `email_service.py`,
+`whatsapp_service.py`, `use-nurix-outbound.ts`, `branches.ts`, `BranchHero.tsx`,
+`AgentVoicePage.tsx`. No behaviour depends on them.
+
+### Suggested order
+1. SOP + `opening_dialogue` (the spoken name) → push → **operator publishes** → verify
+2. Backend strings (WhatsApp + email signatures) → commit → auto-deploys
+3. `PhoneCallFrame.tsx` → **`railway up --service iifl-frontend`** (the frontend does
+   NOT auto-deploy from a git push)
+4. Agent display name in the UI
+5. Comments, if anyone cares
+
+⚠️ **Verify with one live call afterwards.** Two independent things must agree: what
+the caller HEARS (prompt + opening line) and what they RECEIVE (WhatsApp + email
+signatures). Grep for `Ira` across `iifl-agent/` and the factory SOP as the final check.
+
+---
+
+## 📋 THE 2:30 TEAM-MEETING FEEDBACK (open — CONTENT NOT CAPTURED)
+
+⚠️ **The items were never recorded in the build session.** The operator flagged that
+feedback exists and must be actioned, but the specifics were not shared, so there is
+nothing here to work from. **Ask the operator to restate them before planning any
+work, and do not infer them from the notes above** — guessing at feedback is how a
+regression gets shipped as a fix.
+
+Once restated, treat them the way the `372c5ce1` and `05ab9af5` items were treated:
+reproduce from a real conversation log first (`nurix_conversation_messages`, whose
+`tools[]` array carries each call's inputs/outputs), then add a push-script gate per
+fix so a later edit that deletes the rule fails loudly.
 
 ---
 
