@@ -1,4 +1,79 @@
-# IIFL demo — state of the world as of 2026-07-28 (v13)
+# IIFL demo — state of the world as of 2026-07-28 (v14)
+
+## 🟡 v14 — THE TEAM-FEEDBACK BATCH. On the draft, NOT published.
+
+The eight post-demo feedback items (the "2:30 feedback" that earlier notes said was
+never captured — it **was** restated and is now actioned). Seven are prompt-side in
+**SOP v14**, pushed to the draft with **43 gates green**; the eighth is the branded
+manager email, **deployed and live**.
+
+### 🔴 THE ONLY BLOCKER: two UI-only fields, then publish
+
+The rename **Ira → Meera** is complete in `sop_content`, the backend, the frontend and
+`agent_name`. Two fields **cannot be written by any API**, so right now **the caller
+HEARS "Ira"** while everything else says "Meera" — worse than not renaming. Type both
+in the NuPlay UI, then publish:
+
+1. **Agent settings → Given name:** `Meera`
+2. **Agent settings → Opening dialogue:**
+   `नमस्ते! मैं Meera बोल रही हूँ IIFL Finance से. एक second दीजिए.`
+
+⚠️ **Probed and confirmed 2026-07-28 — do not waste time re-probing.** For BOTH fields,
+`PUT /v2/voice/agent-config`, `PUT /voice/agent-config` and `PUT /agent/{draft}` return
+**200 and silently ignore the write**; `PATCH` → 405; nested `{"persona":{"name":…}}` → 422.
+**`agent_name` DOES write on the same call**, so this is a **per-field allowlist, not a
+blanket block** — never trust a 200 on these two, always read back.
+The existing opening line also has two unrelated defects to fix in the same edit: wrong
+feminine auxiliaries (`मै … हु` → `मैं … हूँ`), and it calls IIFL Finance a "bank" when it
+is an NBFC.
+
+`push_sop_v14_meera_feedback.py` is idempotent — re-run it any time; it re-verifies every
+gate and prints both UI values plus each compiled line still naming Ira.
+
+### What v14 changed, item by item
+
+| # | Feedback | What changed |
+|---|---|---|
+| 1 | Drop CRISIL / 1995 / NBFC | **Banned by name**, not just deleted — including in `on_comparison`, which recited them when a caller compared lenders. Replaced by three claims verified on iifl.com: **80 लाख+ customers**, same-day disbursal, insured secure vaults. |
+| 2 | Rename to Meera | SOP, WhatsApp signature, both email strings, `PhoneCallFrame.tsx`, `agent_name`, every comment. `EMAIL_FROM` → `meera@nurix.tech`. |
+| 3 | Crisp intro | **ONE** strength, **one sentence**, then the first question. The old rule said "one or two … rotate", which produced a paragraph. |
+| 4 | No "बढ़िया" | The **old rule was causing it** — it literally instructed "warmth and variety ('अच्छा, बढ़िया', 'perfect')". Now a neutral 2–3 word ack in the SAME turn as the next question, with celebration words banned by name. `अरे` also removed from the discourse-marker list, which contradicted the ban. |
+| 5 | Swarna Max heard as Balance | **Never guess a scheme.** An unclear name always triggers "which of the three?". Phonetic aliases for all three + a no-drift rule. |
+| 6 | gold vs loan confusion | `scope_gold_only`: any gold/loan mention is the same intent, never ask which. `confirm_context()` **stops asking** the caller to confirm the loan type — that was the turn inviting a mis-heard answer. |
+| 7 | Guardrails | `offtopic_policy`: one-sentence redirect, answer nothing, **never escalate**. The old 3-strike ladder ended at `transfer_intro()`, so a tester asking trivia could push the demo into a human handover. The `offtopic` intent now fires on the **first** off-topic turn (it required repeats before) and covers prompt-disclosure probing. |
+| 8 | Bland manager email | **IIFL-branded HTML lead sheet**, built as a worksheet: name/number/tap-to-call above the fold, missing fields listed as outstanding, refused consent flagged in red. multipart/alternative with the old text as fallback. |
+
+### ⚠️ Two invented claims removed (accuracy, not style)
+
+Both were being spoken on live calls and neither is on iifl.com. They had spread into
+the FAQ answers, the branch lines **and** the urgency CTA:
+
+- **"fully insured"** → IIFL's own wording is that pledged gold is covered under
+  *applicable* insurance arrangements. "Fully" turns a hedge into a guarantee on a
+  recorded lending call.
+- **"as fast as thirty minutes"** → nowhere on IIFL's site. The real claims are
+  "approved in 5 minutes" and "disbursed promptly". Now: same-day disbursal.
+
+Both are gated, so they cannot creep back.
+
+### Deployed / verified for v14
+
+- **Backend live** (`fc11cf3`): branded email confirmed sending from the new container,
+  both a complete lead and a partial/consent-refused lead.
+- **Frontend live**: bundle `index-DyEeaynE.js` served, contains `AGENT_NAME = "Meera"`
+  and **zero** "Ira". (Frontend does NOT auto-deploy from git — `railway up --service
+  iifl-frontend`.)
+- **Not yet done:** publish, and **one live voice call** — nothing in v14 has been heard
+  by a caller. Listen for: CRISIL/1995 gone, no बढ़िया/perfect, "Swarna Max" answered as
+  Max, an off-topic question redirected without a callback offer, intro at one sentence.
+
+### 🔑 Housekeeping
+
+**Rotate the Resend API key** — it was printed into the operator's terminal scrollback on
+2026-07-28 by an unfiltered `railway variables` call. `nurix.tech` is verified at the
+**domain** level in Resend, so any local-part (`meera@`, `ira@`) works — confirmed live.
+
+---
 
 ## ✅ v13 — THE DEMO RAN AND THE TEAM LIKED IT
 
@@ -13,13 +88,10 @@ Tags: `v13-checkpoint-2026-07-28` (**this state — the demo-proven one**),
 
 ### 🔜 START HERE NEXT SESSION — what is still open
 
-1. **RENAME THE AGENT: Ira → Meera.** Major, operator-confirmed. Not started. Every
-   surface is listed in "The Ira → Meera rename" below — it is far wider than the
-   agent's display name (prompt body, opening line, WhatsApp signature, email
-   signature, `EMAIL_FROM`, frontend copy).
-2. **The 2:30 team-meeting feedback.** ⚠️ **NOT CAPTURED — the items were never
-   written down in the build session.** Ask the operator to restate them before
-   planning; do not guess from these notes.
+1. ~~**RENAME THE AGENT: Ira → Meera.**~~ **DONE in v14** except the two UI-only fields
+   (`given_name`, `opening_dialogue`) — see the v14 section at the top of this file.
+2. ~~**The 2:30 team-meeting feedback.**~~ **CAPTURED AND ACTIONED in v14** — the operator
+   restated all eight items and every one is implemented. See the v14 table above.
 
 ### What v13 does that v12 did not
 
