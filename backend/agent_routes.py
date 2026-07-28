@@ -8,6 +8,8 @@ Endpoints:
 - POST /agent/session/start   - Launch browser, return session_id
 - POST /agent/fill-field      - Fill a form field
 - POST /agent/click-button    - Click a form button
+- POST /agent/send-email      - Email the call summary live, during the call
+- GET  /agent/email-config    - Report which SMTP env vars are set (no values)
 """
 
 import logging
@@ -21,6 +23,7 @@ from pydantic import BaseModel, model_validator
 from typing import Any, Dict, Optional
 
 from playwright_service import playwright_service
+from email_service import config_status, send_summary_email
 
 logger = logging.getLogger(__name__)
 
@@ -409,6 +412,56 @@ async def show_offers(
     url = _offers_url(lt, amount, grams, purity, scheme, pin)
     logger.info(f"show_offers loan_type={lt!r} -> {url}")
     return await playwright_service.show_offers(sid, url)
+
+
+class SendEmailRequest(BaseModel):
+    """Everything Ira captured on the call, for the live summary email."""
+    session_id: Optional[str] = None
+    name: Optional[str] = None
+    pincode: Optional[str] = None
+    loan_type: Optional[str] = None
+    loan_amount: Optional[str] = None
+    scheme: Optional[str] = None
+    gold_weight: Optional[str] = None
+    gold_purity: Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def unwrap(cls, v): return _unwrap_payload(v)
+
+
+@agent_router.post("/send-email")
+async def send_email(request: Request, body: Optional[SendEmailRequest] = None):
+    """Email the call summary + branch details + local event, DURING the call.
+
+    Always returns HTTP 200 with an `email_sent` of "true"/"false" — never an
+    error status. A 5xx here would surface to the agent as a tool failure mid-
+    call; instead Ira reads the flag and softens her line to a promise.
+    """
+    if not body:
+        try:
+            raw = await request.json()
+        except Exception:
+            raw = {}
+        raw = _unwrap_payload(raw) or {}
+        body = SendEmailRequest(**{k: raw.get(k) for k in SendEmailRequest.model_fields})
+
+    logger.info("send_email: name=%r pincode=%r scheme=%r",
+                body.name, body.pincode, body.scheme)
+
+    return await send_summary_email(
+        name=body.name or "", pincode=body.pincode or "",
+        loan_type=body.loan_type or "", loan_amount=body.loan_amount or "",
+        scheme=body.scheme or "", gold_weight=body.gold_weight or "",
+        gold_purity=body.gold_purity or "",
+    )
+
+
+@agent_router.get("/email-config")
+async def email_config():
+    """Which SMTP env vars are set — presence only, never values. Lets us verify
+    the Railway wiring without exposing the App Password."""
+    return config_status()
 
 
 class HandoverGateRequest(BaseModel):
