@@ -1,0 +1,41 @@
+{
+  "1-happy-1": {
+    "asked_amount": false,
+    "named_schemes": true,
+    "asked_grams": true,
+    "asked_purity": true,
+    "mentioned_branch": true,
+    "mentioned_whatsapp": true,
+    "asked_pan": true,
+    "asked_consent": true,
+    "read_offers": true,
+    "promised_callback": true,
+    "ended": true
+  },
+  "2-happy-questions-1": {
+    "asked_amount": true,
+    "named_schemes": true,
+    "asked_grams": true,
+    "asked_purity": true,
+    "mentioned_branch": true,
+    "mentioned_whatsapp": true,
+    "asked_pan": true,
+    "asked_consent": true,
+    "read_offers": true,
+    "promised_callback": true,
+    "ended": true
+  },
+  "3-not-happy-1": {
+    "asked_amount": true,
+    "named_schemes": true,
+    "asked_grams": true,
+    "asked_purity": true,
+    "mentioned_branch": true,
+    "mentioned_whatsapp": false,
+    "asked_pan": true,
+    "asked_consent": false,
+    "read_offers": true,
+    "promised_callback": true,
+    "ended": true
+  }
+}

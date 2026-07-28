@@ -1,0 +1,107 @@
+{
+  "nodes": [
+    {
+      "id": "start-flow",
+      "type": "startFlow",
+      "position": {
+        "x": 600,
+        "y": 20
+      },
+      "data": {
+        "label": "iifl_handover_callback",
+        "taskName": "start_workflow",
+        "workflowType": "POST_CONVERSATION",
+        "description": "After Ira's call ends, call the customer back with Priya (warm-up + handover).",
+        "inputParameters": {},
+        "outputParameters": {}
+      }
+    },
+    {
+      "id": "ask-gate",
+      "type": "http",
+      "data": {
+        "name": "ask_gate",
+        "taskName": "ask_gate",
+        "description": "Ask the backend whether this conversation actually reached handover. Returns the number to dial, or an empty string to suppress the call.",
+        "method": "POST",
+        "url": "https://iifl-backend-production.up.railway.app/agent/handover-gate",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": "{\n  \"handover_ready\": \"${workflow.input.agent_input.handover_ready}\",\n  \"phone_e164\": \"${workflow.input.agent_input.phone_e164}\",\n  \"name\": \"${workflow.input.agent_input.name}\"\n}",
+        "body_type": "json",
+        "retries": 1,
+        "continue_with_error": true
+      },
+      "position": {
+        "x": 600,
+        "y": 150
+      }
+    },
+    {
+      "id": "callback",
+      "type": "http",
+      "position": {
+        "x": 550,
+        "y": 300
+      },
+      "data": {
+        "name": "trigger_callback",
+        "taskName": "trigger_callback",
+        "method": "POST",
+        "url": "http://agentx.agentx/voice/outbound-call",
+        "headers": {
+          "Content-Type": "application/json",
+          "workspace-id": "ed51dad4-783e-4adf-8ec0-1b14b8938a5d",
+          "tenant-id": "ed51dad4-783e-4adf-8ec0-1b14b8938a5d",
+          "user-id": "123",
+          "user-email": "rishikesh.mudaliyar@nurix.ai"
+        },
+        "body": "{\n  \"agent_id\": \"52bbc61b-8ba5-4801-9286-0f9c8eccebd0\",\n  \"number\": \"${ask_gate.output.response.body.number}\",\n  \"overide_previous_context\": true,\n  \"custom_dynamic_variables_config\": {\n    \"name\": \"${workflow.input.agent_input.name}\",\n    \"loan_type\": \"${workflow.input.agent_input.loan_type}\",\n    \"pincode\": \"${workflow.input.agent_input.pincode}\",\n    \"pincode_spoken\": \"${workflow.input.agent_input.pincode_spoken}\",\n    \"phone\": \"${workflow.input.agent_input.phone}\"\n  }\n}",
+        "body_type": "json",
+        "retries": 1,
+        "continue_with_error": true,
+        "position": {
+          "x": 600,
+          "y": 300
+        }
+      }
+    },
+    {
+      "id": "end-flow",
+      "type": "endFlow",
+      "position": {
+        "x": 600,
+        "y": 600
+      },
+      "data": {
+        "label": "End Workflow",
+        "taskName": "end_workflow",
+        "outputParameters": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "start-flow",
+      "target": "ask-gate"
+    },
+    {
+      "id": "e2",
+      "source": "ask-gate",
+      "target": "callback"
+    },
+    {
+      "id": "e3",
+      "source": "callback",
+      "target": "end-flow"
+    }
+  ],
+  "globalVariables": [],
+  "displayName": "iifl_handover_callback",
+  "workflowType": "POST_CONVERSATION",
+  "tag": null,
+  "workspaceId": "ed51dad4-783e-4adf-8ec0-1b14b8938a5d",
+  "workflowDef": null
+}

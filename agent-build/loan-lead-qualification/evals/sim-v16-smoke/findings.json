@@ -1,0 +1,218 @@
+[
+  {
+    "sev": "CRITICAL",
+    "scenario": "1-happy",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: '<derived-variable'",
+    "quote": "<derived-variable key=\"loan_type_confirmed\" value=\"neutral\"/>नमस्ते Rishikesh! मुझे बस​ अभी आपकी gold loan की enquiry मिली है, घाटकोपर वेस्ट side से. तो कहिये, मैं आपकी कैसे help कर सकती हूँ?"
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "1-happy",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: '<derived-variable'",
+    "quote": "<derived-variable key=\"loan_amount\" value=\"5 lakh\"/>\n<derived-variable key=\"loan_type_confirmed\" value=\"gold\"/>\n<derived-variable key=\"loan_amount\" value=\"500000\"/>\ntool.go_to_form(session_id: \"sim-v16\", loan_type: \"gold\")\ntool.fill_field(session_id: \"sim-v16\""
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "1-happy",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: '<derived-variable'",
+    "quote": "<derived-variable key=\"gold_weight\" value=\"60 grams\"/>\ntool.fill_field(session_id: \"sim-v16\", field_name: \"gold_weight\", value: \"60\")\n\nसमझ गई. और gold की purity क्या है — 18, 22 या 24 कैरेट?"
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "1-happy",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: '<derived-variable'",
+    "quote": "<derived-variable key=\"gold_purity\" value=\"22\"/>\ntool.fill_field(session_id: \"sim-v16\", field_name: \"gold_purity\", value: \"22\")\n\nठीक है. आपकी सबसे पास वाली branch घाटकोपर वेस्ट में है, एल बी एस मार्ग पे अनुपम बिल्डिंग में. तो Rishikesh, मैं आपके WhatsApp पर अभ"
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "1-happy",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: '<derived-variable'",
+    "quote": "<derived-variable key=\"pan\" value=\"CXIPM4742A\"/>मैं confirm कर लेती हूँ, आपका PAN number है C X I P M 4 7 4 2 A. क्या यह सही है?"
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "1-happy",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: 'tool.fill_field('",
+    "quote": "tool.fill_field(session_id: \"sim-v16\", field_name: \"pan\", value: \"CXIPM4742A\")\n\nठीक है. अब क्या आप अपना Aadhaar number बता सकते हैं?"
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "1-happy",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: '<derived-variable'",
+    "quote": "<derived-variable key=\"aadhaar\" value=\"123456789012\"/>मैं confirm कर लेती हूँ, आपका Aadhaar number है 1 2 3 4 5 6 7 8 9 0 1 2. क्या यह सही है?"
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "1-happy",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: 'tool.fill_field('",
+    "quote": "tool.fill_field(session_id: \"sim-v16\", field_name: \"aadhaar\", value: \"123456789012\")\n\nठीक है. क्या आपका पहले से कोई gold loan चल रहा है?"
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "1-happy",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: '<derived-variable'",
+    "quote": "<derived-variable key=\"gold_existing\" value=\"no\"/>\ntool.fill_field(session_id: \"sim-v16\", field_name: \"existing_loan\", value: \"no\")\n\nठीक है. अब बस एक आखिरी चीज़, मुझे आपकी permission चाहिए ताकि IIFL आपको इस application के बारे में contact कर सके और standard che"
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "1-happy",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: '<derived-variable'",
+    "quote": "<derived-variable key=\"consent_given\" value=\"true\"/>\ntool.fill_field(session_id: \"sim-v16\", field_name: \"consent\", value: \"true\")\ntool.send_email(session_id: \"sim-v16\", name: \"Rishikesh\", pincode: \"400086\", loan_type: \"gold\", loan_amount: \"500000\", scheme: \"nu"
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "1-happy",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: 'tool.show_offers('",
+    "quote": "tool.show_offers(session_id: \"sim-v16\", loan_type: \"gold\", loan_amount: \"500000\", gold_weight: \"60\", gold_purity: \"22\", scheme: \"null\", pincode: \"400086\")\n\nबस एक पल और... मैं आपके लिए best offers check कर रही हूँ."
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "1-happy",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: '<derived-variable'",
+    "quote": "[tool result: offers=[{\"scheme\": \"Swarna Saver\", \"amount\": 500000, \"emi\": 43500, \"tenure\": 12}, {\"scheme\": \"Swarna Balance\", \"amount\": 500000, \"emi\": 29500, \"tenure\": 18}, {\"scheme\": \"Swarna Max\", \"amount\": 500000, \"emi\": 24000, \"tenure\": 24}]]\n\n<derived-varia"
+  },
+  {
+    "sev": "MEDIUM",
+    "scenario": "1-happy",
+    "n": 1,
+    "kind": "repetition",
+    "detail": "consecutive turns are near-identical",
+    "quote": "tool.show_offers(session_id: \"sim-v16\", loan_type: \"gold\", loan_amount: \"500000\", gold_weight: \"60\", gold_purity: \"22\", scheme: \"null\", pincode: \"400086\")\n\nबस एक पल और... मैं आपके लिए best offers check कर रही हूँ."
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "2-happy-questions",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: 'tool.start_session('",
+    "quote": "tool.start_session(session_id: \"sim-v16\", loan_type: \"gold\", pincode: \"400086\")\ntool.go_to_form(session_id: \"sim-v16\", loan_type: \"gold\")\n\nनमस्ते Rishikesh! मुझे बस अभी आपकी gold loan की enquiry मिली है, घाटकोपर वेस्ट side से. तो कहिये, मैं आपकी कैसे help कर स"
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "2-happy-questions",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: '<derived-variable'",
+    "quote": "<derived-variable key=\"loan_amount\" value=\"4 lakh\"/>\ntool.fill_field(session_id: \"sim-v16\", field_name: \"loan_amount\", value: \"4 lakh\")\n\nठीक है. Swarna Max हमारी वो scheme है जिसमें आपको सबसे ज़्यादा पैसा per gram मिलता है. इसमें LTV seventy five percent है और"
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "2-happy-questions",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: '<derived-variable'",
+    "quote": "<derived-variable key=\"gold_weight\" value=\"45 grams\"/>\ntool.fill_field(session_id: \"sim-v16\", field_name: \"gold_weight\", value: \"45 grams\")\n\nजी बिल्कुल, आपका gold पूरी तरह safe रहेगा. इसे घाटकोपर वेस्ट branch के high-security, constantly-monitored vaults में र"
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "2-happy-questions",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: '<derived-variable'",
+    "quote": "<derived-variable key=\"gold_purity\" value=\"22\"/>\ntool.fill_field(session_id: \"sim-v16\", field_name: \"gold_purity\", value: \"22\")\n\nदेखिए, हमारी एक policy है 'Seedhi Baat', मतलब कोई hidden charges नहीं होते. Processing fee zero से शुरू होती है scheme के हिसाब से,"
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "2-happy-questions",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: '<derived-variable'",
+    "quote": "<derived-variable key=\"pan\" value=\"ABCDE1234F\"/>\n\nठीक है. हमारी branch सुबह साढ़े नौ बजे से शाम छह बजे तक खुली रहती है, बस रविवार को बंद रहता है.\n\nएक बार confirm कर लीजिए, आपका PAN number है A B C D E 1 2 3 4 F. क्या यह सही है?"
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "2-happy-questions",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: '<derived-variable'",
+    "quote": "<derived-variable key=\"aadhaar\" value=\"9876 5432 1098\"/>\ntool.fill_field(session_id: \"sim-v16\", field_name: \"pan\", value: \"ABCDE1234F\")\n\nजी, renewed gold loans पर कोई pre-closure charge नहीं लगता, तो आप बिना किसी extra charge के अपना loan चुका सकते हैं.\n\nआपका "
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "2-happy-questions",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: '<derived-variable'",
+    "quote": "<derived-variable key=\"gold_existing\" value=\"no\"/>\ntool.fill_field(session_id: \"sim-v16\", field_name: \"aadhaar\", value: \"9876 5432 1098\")\ntool.fill_field(session_id: \"sim-v16\", field_name: \"existing_loan\", value: \"no\")\n\nसमझ गई, यानी आपका कोई और gold loan नहीं "
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "2-happy-questions",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: '<derived-variable'",
+    "quote": "<derived-variable key=\"consent_given\" value=\"true\"/>\ntool.fill_field(session_id: \"sim-v16\", field_name: \"consent\", value: \"true\")\ntool.send_email(session_id: \"sim-v16\", name: \"Rishikesh\", pincode: \"400086\", loan_type: \"gold\", loan_amount: \"4 lakh\", scheme: \"Sw"
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "2-happy-questions",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: 'tool.show_offers('",
+    "quote": "tool.show_offers(session_id: \"sim-v16\", loan_type: \"gold\", loan_amount: \"4 lakh\", gold_weight: \"45 grams\", gold_purity: \"22\", scheme: \"Swarna Max\", pincode: \"400086\")\n\nबस एक पल और, मैं check कर रही हूँ."
+  },
+  {
+    "sev": "MEDIUM",
+    "scenario": "2-happy-questions",
+    "n": 1,
+    "kind": "intro-too-long",
+    "detail": "first substantive turn is 87 words — item 3 wants it crisp",
+    "quote": "tool.start_session(session_id: \"sim-v16\", loan_type: \"gold\", pincode: \"400086\")\ntool.go_to_form(session_id: \"sim-v16\", loan_type: \"gold\")\n\nनमस्ते Rishikesh! मुझे बस अभी आपकी gold loan की enquiry मिली है, घाटकोपर वेस्ट side से. तो कहिये, मैं आपकी कैसे help कर स"
+  },
+  {
+    "sev": "MEDIUM",
+    "scenario": "2-happy-questions",
+    "n": 1,
+    "kind": "repetition",
+    "detail": "consecutive turns are near-identical",
+    "quote": "tool.show_offers(session_id: \"sim-v16\", loan_type: \"gold\", loan_amount: \"4 lakh\", gold_weight: \"45 grams\", gold_purity: \"22\", scheme: \"Swarna Max\", pincode: \"400086\")\n\nबस एक पल और, मैं check कर रही हूँ."
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "3-not-happy",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: 'tool.start_session('",
+    "quote": "tool.start_session(session_id: \"sim-v16\", loan_type: \"gold\", pincode: \"400086\")\n\nनमस्ते Rishikesh! मुझे बस अभी आपकी gold loan की enquiry मिली है, घाटकोपर वेस्ट side से. तो कहिये, मैं आपकी कैसे help कर सकती हूँ?"
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "3-not-happy",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: '<derived-variable'",
+    "quote": "<derived-variable key=\"loan_amount\" value=\"3 lakh\"/>\nबिलकुल समझ सकती हूँ, ये सोचना बिलकुल natural है. देखिए, IIFL Finance पर 80 लाख से ज़्यादा customers भरोसा करते हैं और आपका gold secure vaults में, insurance cover के साथ safe रहता है.\n\nतो Rishikesh, क्या आप "
+  },
+  {
+    "sev": "CRITICAL",
+    "scenario": "3-not-happy",
+    "n": 1,
+    "kind": "tool-syntax-leak",
+    "detail": "spoke internals: '<derived-variable'",
+    "quote": "<derived-variable key=\"gold_weight\" value=\"30 grams\"/>\n<derived-variable key=\"gold_purity\" value=\"22\"/>\ntool.go_to_form(session_id: \"sim-v16\", loan_type: \"gold\")\ntool.fill_field(session_id: \"sim-v16\", field_name: \"loan_amount\", value: \"3 lakh\")\ntool.fill_field"
+  }
+]

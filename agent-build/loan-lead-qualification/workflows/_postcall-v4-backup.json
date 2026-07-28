@@ -1,0 +1,103 @@
+{
+  "name": "bdf1bba0-fb79-42c4-b034-fff3dc96a34b",
+  "version": 4,
+  "description": "After Ira's call ends, call the customer back with Priya (warm-up + handover).",
+  "tasks": [
+    {
+      "name": "ask_gate",
+      "taskReferenceName": "ask_gate",
+      "description": "Ask the backend whether this conversation actually reached handover. Returns the number to dial, or an empty string to suppress the call.",
+      "inputParameters": {
+        "http_request": {
+          "method": "POST",
+          "body": {
+            "handover_ready": "${workflow.input.agent_input.handover_ready}",
+            "phone_e164": "${workflow.input.agent_input.phone_e164}",
+            "name": "${workflow.input.agent_input.name}"
+          },
+          "uri": "https://iifl-backend-production.up.railway.app/agent/handover-gate",
+          "contentType": "application/json"
+        }
+      },
+      "type": "HTTP_SYNC",
+      "decisionCases": {},
+      "defaultCase": [],
+      "forkTasks": [],
+      "startDelay": 0,
+      "joinOn": [],
+      "optional": true,
+      "defaultExclusiveJoinTask": [],
+      "asyncComplete": false,
+      "loopOver": [],
+      "onStateChange": {},
+      "permissive": false,
+      "conditionalBranches": []
+    },
+    {
+      "name": "trigger_callback",
+      "taskReferenceName": "trigger_callback",
+      "inputParameters": {
+        "http_request": {
+          "headers": {
+            "user-email": "rishikesh.mudaliyar@nurix.ai",
+            "workspace-id": "ed51dad4-783e-4adf-8ec0-1b14b8938a5d",
+            "tenant-id": "ed51dad4-783e-4adf-8ec0-1b14b8938a5d",
+            "user-id": "123"
+          },
+          "method": "POST",
+          "body": {
+            "agent_id": "52bbc61b-8ba5-4801-9286-0f9c8eccebd0",
+            "number": "${ask_gate.output.response.body.number}",
+            "overide_previous_context": true,
+            "custom_dynamic_variables_config": {
+              "name": "${workflow.input.agent_input.name}",
+              "loan_type": "${workflow.input.agent_input.loan_type}",
+              "pincode": "${workflow.input.agent_input.pincode}",
+              "pincode_spoken": "${workflow.input.agent_input.pincode_spoken}",
+              "phone": "${workflow.input.agent_input.phone}"
+            }
+          },
+          "uri": "http://agentx.agentx/voice/outbound-call",
+          "contentType": "application/json"
+        }
+      },
+      "type": "HTTP_SYNC",
+      "decisionCases": {},
+      "defaultCase": [],
+      "forkTasks": [],
+      "startDelay": 0,
+      "joinOn": [],
+      "optional": true,
+      "defaultExclusiveJoinTask": [],
+      "asyncComplete": false,
+      "loopOver": [],
+      "onStateChange": {},
+      "permissive": false,
+      "conditionalBranches": []
+    }
+  ],
+  "inputParameters": [],
+  "outputParameters": {},
+  "schemaVersion": 2,
+  "variables": {
+    "workspace_id": "ed51dad4-783e-4adf-8ec0-1b14b8938a5d"
+  },
+  "metadata": {},
+  "failureWorkflow": "mozart_workflow_failure_log",
+  "displayName": "iifl_handover_callback",
+  "workspaceId": "ed51dad4-783e-4adf-8ec0-1b14b8938a5d",
+  "workflowType": "POST_CONVERSATION",
+  "tag": null,
+  "userId": "123",
+  "createTime": 1785149649000,
+  "updateTime": 1785149649000,
+  "createdBy": "rishikesh.mudaliyar@nurix.ai",
+  "updatedBy": "rishikesh.mudaliyar@nurix.ai",
+  "restartable": true,
+  "workflowStatusListenerEnabled": false,
+  "ownerEmail": null,
+  "timeoutPolicy": "ALERT_ONLY",
+  "timeoutSeconds": 0,
+  "inputTemplate": {},
+  "enforceSchema": true
+}

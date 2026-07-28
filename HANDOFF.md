@@ -1,79 +1,131 @@
-# IIFL demo — state of the world as of 2026-07-28 (v14)
+# IIFL demo — state of the world as of 2026-07-28 (v19)
 
-## 🟡 v14 — THE TEAM-FEEDBACK BATCH. On the draft, NOT published.
+## 🟡 v19 — ON THE DRAFT, NOT PUBLISHED. Fixes the form-never-loaded bug.
 
-The eight post-demo feedback items (the "2:30 feedback" that earlier notes said was
-never captured — it **was** restated and is now actioned). Seven are prompt-side in
-**SOP v14**, pushed to the draft with **43 gates green**; the eighth is the branded
-manager email, **deployed and live**.
+**The prompt is OPERATOR-AUTHORED from v16 onward.** The operator hand-edits and publishes
+in the NuPlay UI. `agent-build/loan-lead-qualification/dsl-prompt/iifl-loan-v19-sop-content.txt`
+is the latest authored state; **never regenerate a version from an older one** or you silently
+revert their conversational polish. Diff of their v16 edits: `dsl-prompt/CHANGELOG-v16.md`.
 
-### 🔴 THE ONLY BLOCKER: two UI-only fields, then publish
+### 🔴 TWO OPERATOR STEPS, IN THIS ORDER
 
-The rename **Ira → Meera** is complete in `sop_content`, the backend, the frontend and
-`agent_name`. Two fields **cannot be written by any API**, so right now **the caller
-HEARS "Ira"** while everything else says "Meera" — worse than not renaming. Type both
-in the NuPlay UI, then publish:
+1. **Set the welcome message** (NuPlay UI → Agent settings → Opening dialogue):
+   `नमस्ते {{name}}, मैं मीरा बोल रही हूँ IIFL Finance से. मुझे आपकी enquiry मिली है recently. तो कहिये, आज मैं आपकी कैसे help कर सकती हूँ?`
+2. **Publish the draft**, then re-verify — publishing has silently reverted prompts and
+   action schemas **3 times** on this agent. `push_sop_v19_session_fix.py` is idempotent and
+   re-checks every gate.
 
-1. **Agent settings → Given name:** `Meera`
-2. **Agent settings → Opening dialogue:**
-   `नमस्ते! मैं Meera बोल रही हूँ IIFL Finance से. एक second दीजिए.`
+### ✅ `{{name}}` DOES interpolate in opening_dialogue — corrects an earlier note
 
-⚠️ **Probed and confirmed 2026-07-28 — do not waste time re-probing.** For BOTH fields,
-`PUT /v2/voice/agent-config`, `PUT /voice/agent-config` and `PUT /agent/{draft}` return
-**200 and silently ignore the write**; `PATCH` → 405; nested `{"persona":{"name":…}}` → 422.
-**`agent_name` DOES write on the same call**, so this is a **per-field allowlist, not a
-blanket block** — never trust a 200 on these two, always read back.
-The existing opening line also has two unrelated defects to fix in the same edit: wrong
-feminine auxiliaries (`मै … हु` → `मैं … हूँ`), and it calls IIFL Finance a "bank" when it
-is an NBFC.
+Earlier handoffs said variables could not be templated in `opening_dialogue`. **That was
+wrong**, proven by the operator on a live call. The working syntax there is **`{{name}}`**
+(the platform's own injection syntax, cf. `{{AGENT_VARIABLES}}` in the compiled preamble) —
+**not** `<<name>>`, which is prompt-only. Use the registered variable name `name`, not
+`lead_name`. Writes to the field are still **UI-only**.
 
-`push_sop_v14_meera_feedback.py` is idempotent — re-run it any time; it re-verifies every
-gate and prints both UI values plus each compiled line still naming Ira.
+### 🔴 THE v19 BUG AND FIX — read before touching the greeting
 
-### What v14 changed, item by item
+On a live call the **form never loaded and every fill failed**:
 
-| # | Feedback | What changed |
-|---|---|---|
-| 1 | Drop CRISIL / 1995 / NBFC | **Banned by name**, not just deleted — including in `on_comparison`, which recited them when a caller compared lenders. Replaced by three claims verified on iifl.com: **80 लाख+ customers**, same-day disbursal, insured secure vaults. |
-| 2 | Rename to Meera | SOP, WhatsApp signature, both email strings, `PhoneCallFrame.tsx`, `agent_name`, every comment. `EMAIL_FROM` → `meera@nurix.tech`. |
-| 3 | Crisp intro | **ONE** strength, **one sentence**, then the first question. The old rule said "one or two … rotate", which produced a paragraph. |
-| 4 | No "बढ़िया" | The **old rule was causing it** — it literally instructed "warmth and variety ('अच्छा, बढ़िया', 'perfect')". Now a neutral 2–3 word ack in the SAME turn as the next question, with celebration words banned by name. `अरे` also removed from the discourse-marker list, which contradicted the ban. |
-| 5 | Swarna Max heard as Balance | **Never guess a scheme.** An unclear name always triggers "which of the three?". Phonetic aliases for all three + a no-drift rule. |
-| 6 | gold vs loan confusion | `scope_gold_only`: any gold/loan mention is the same intent, never ask which. `confirm_context()` **stops asking** the caller to confirm the loan type — that was the turn inviting a mis-heard answer. |
-| 7 | Guardrails | `offtopic_policy`: one-sentence redirect, answer nothing, **never escalate**. The old 3-strike ladder ended at `transfer_intro()`, so a tester asking trivia could push the demo into a human handover. The `offtopic` intent now fires on the **first** off-topic turn (it required repeats before) and covers prompt-disclosure probing. |
-| 8 | Bland manager email | **IIFL-branded HTML lead sheet**, built as a worksheet: name/number/tap-to-call above the fold, missing fields listed as outstanding, refused consent flagged in red. multipart/alternative with the old text as fallback. |
+    15:21:15  go_to_form  -> ERROR Invalid session_id
+    15:21:52  fill-field  -> ERROR Invalid session_id
 
-### ⚠️ Two invented claims removed (accuracy, not style)
+`start_session` was **never called**. Cause: the whole greeting moved into
+`opening_dialogue`, *including its closing question* "कैसे help कर सकती हूँ?". So the first
+turn the model receives is the caller ANSWERING that question, and it goes straight to being
+helpful instead of running its entry state. No browser session existed, so `go_to_form` had
+nothing to navigate and every later fill silently lost the caller's answer while the call
+sounded perfect.
 
-Both were being spoken on live calls and neither is on iifl.com. They had spread into
-the FAQ answers, the branch lines **and** the urgency CTA:
+⚠️ **This is NOT the v15 tool-only-state bug.** `start_action` already had its instruction
+line and was skipped anyway. v15's bug = an empty state body is skippable. This bug = the
+caller's opening answer gives the model something more urgent to do. **Keep both fixes.**
 
-- **"fully insured"** → IIFL's own wording is that pledged gold is covered under
-  *applicable* insurance arrangements. "Fully" turns a hedge into a guarantee on a
-  recorded lending call.
-- **"as fast as thirty minutes"** → nowhere on IIFL's site. The real claims are
-  "approved in 5 minutes" and "disbursed promptly". Now: same-day disbursal.
+**Fix (v19), two independent statements** — the pattern that made the v12 `go_to_form` fix
+stick, because one prompt rule alone is probabilistic:
+1. `start_action()` explicitly states the caller's first words do not excuse skipping it.
+2. `response_rules` ordering rule: `start_session` is the FIRST tool on every call.
 
-Both are gated, so they cannot creep back.
+⚠️ **Still a prompt rule, so still probabilistic. NOT yet verified on a live call.** If the
+form fails again after publishing, the structural fix is to **remove the question from the
+welcome message** so the caller has nothing to answer on turn one.
 
-### Deployed / verified for v14
+Also in v19: the greeting is no longer duplicated (`confirm_context()` used to repeat the
+same sentence the welcome message says, so the caller heard it twice), and her name is
+re-established for a mid-call "आपका नाम क्या है?" without re-greeting.
 
-- **Backend live** (`fc11cf3`): branded email confirmed sending from the new container,
-  both a complete lead and a partial/consent-refused lead.
-- **Frontend live**: bundle `index-DyEeaynE.js` served, contains `AGENT_NAME = "Meera"`
-  and **zero** "Ira". (Frontend does NOT auto-deploy from git — `railway up --service
-  iifl-frontend`.)
-- **Not yet done:** publish, and **one live voice call** — nothing in v14 has been heard
-  by a caller. Listen for: CRISIL/1995 gone, no बढ़िया/perfect, "Swarna Max" answered as
-  Max, an off-topic question redirected without a callback offer, intro at one sentence.
+### v18 — the email moved AFTER the call, and fires on EVERY call
 
-### 🔑 Housekeeping
+- `lead_email_action()` **deleted**; `send_email` removed from `tools{}`. The agent no longer
+  sends mail at all. `fill_consent()` routes straight to `offer_intro()`.
+- The send is now a `send_lead_email` HTTP task in the **post-call Mozart workflow**
+  `bdf1bba0-…`, **published version 5**, FIRST in the chain with `continue_with_error` so a
+  mail failure can never suppress the Priya callback after it.
+- **Fires on every call by operator decision** — including a 10-second hangup, which produces
+  a near-empty lead sheet whose "still needed" list is the intended signal.
+- All 13 fields resolve from `${workflow.input.agent_input.*}`; agent variables are passed to
+  the post-call workflow automatically, so no extra plumbing was needed.
+- **PROVEN end-to-end in both gate states** (backend log 14:25):
+  complete lead → `send_email` fired + `should_call=True`; abandoned call →
+  `send_email` **still fired** + `should_call=False`.
+- ⚠️ Verify workflow edits in the **compiled `tasks` array**, never the graph — Mozart stores
+  and reads back a node fine while the compiler silently drops it.
+- Mozart edit sequence that works: `GET /{uid}/draft` → `PUT /{uid}/draft` →
+  `POST /{uid}/publish`. Execute with `POST /api/workflow/sync/execute` and the id in the
+  **body**. `/api/metadata/workflow` is read-only (PUT/POST both 500).
 
-**Rotate the Resend API key** — it was printed into the operator's terminal scrollback on
-2026-07-28 by an unfiltered `railway variables` call. `nurix.tech` is verified at the
-**domain** level in Resend, so any local-part (`meera@`, `ira@`) works — confirmed live.
+### v17 — the d40e0eb6 feedback
+
+| # | Change |
+|---|---|
+| KYC | **Gone from every speakable line.** PAN/Aadhaar asks give NO reason; "KYC document" → "ID document" in the FAQ/urgency answers; removed from the default-English word list. |
+| 🔴 Risk framing | **Never explain pricing as IIFL's risk.** She had said "अगर आप कम loan लेते हैं, तो IIFL के लिए risk कम होता है" — that tells a customer our pricing protects us. Replaced with the caller's own trade-off; `IIFL के लिए risk` / `हमारा risk` banned by name; "risk" barred from rate/LTV/scheme talk entirely. |
+| "gold bring" | An English **verb** in a Hindi frame. Root cause was the instruction itself ("how much gold the caller can bring in", in English) — now gives the exact Hindi phrasing, plus a rule that English contributes **nouns only, never verbs**. |
+| Button | Hero CTA "Talk to AI Agent" → **"Talk"** (live). |
+
+### ⚠️ Gates pinned to exact wording turn operator polish into false failures
+
+Six carried-over gates failed against operator-authored versions because they grepped for
+strings the operator had deliberately changed or removed (the scheme question, the burst-turn
+rule, the standalone-filler ban they removed **on purpose**, the in-call email state v18
+deletes, two self-intro strings). All were relaxed to check **intent**, or deleted with a note
+explaining why. **When adding a gate, assert the behaviour, not the operator's phrasing.**
+
+### Verified this session
+
+- Draft prompt: **17/17** assertions on the compiled v18/v19 prompt (0 tool-only states).
+- Full tool chain via API: `start_session` → `go_to_form` → **7/7 fills** → scheme click →
+  WhatsApp → offers. Offers correct (Balance ₹3,88,500 @14.4%, capped by the gold).
+- Post-call email: both gate states, twice.
+- Branded lead email **with the real IIFL logo** — operator confirmed it renders.
+- 3-scenario simulation on v16 (happy / question-heavy / hesitant): clean on every rule.
+  Transcripts in `agent-build/loan-lead-qualification/evals/sim-v16-smoke/`.
+- Lead email recipient → `sanchit.goel@nurix.ai`; sender `meera@nurix.tech`.
+- WhatsApp opted in: `+91 91678 76538` and `+91 95124 98277` (Sanchit), both ~31 Jul.
+
+### 🔑 The email logo — do not break this
+
+The IIFL logo is a **CID inline attachment**, not a `data:` URI (Gmail strips those — the
+first attempt arrived as a broken-image icon) and not a remote URL (blocked by default, and
+IIFL's asset 403s on hot-link). It must stay a **PNG** (Gmail/Outlook strip `<img>` SVG) and
+live in a `multipart/related` **with** the HTML part. ⚠️ `backend/Dockerfile` needs
+`COPY assets/` or the logo vanishes **silently** via the text fallback.
+
+### 🔴 Housekeeping
+
+- **Rotate the Resend API key** — it was printed to terminal scrollback on 2026-07-28.
+- **Never change a Railway variable near a demo.** A restart destroys the live browser session
+  mid-call and answers stop recording with no visible error. Documented as runbook step 2.5.
+- **`DEMO-RUNBOOK.md`** is the operator-facing guide for whoever runs the demo next.
 
 ---
+
+> **v14–v16 detail:** v14 (the 8-item team-feedback batch: CRISIL/1995 banned, celebration
+> acks banned, never-guess-scheme, gold-only scope, off-topic guardrails, branded manager
+> email) and v15 (**the tool-only-state fix** — 21 of 26 tool states were skippable, which is
+> why a live call captured an empty application) are summarised in the v17/v19 sections above.
+> Their full write-ups are in git: `git show 587cfc4:HANDOFF.md`. v16 is the operator's own
+> rewrite — see `dsl-prompt/CHANGELOG-v16.md`.
 
 ## ✅ v13 — THE DEMO RAN AND THE TEAM LIKED IT
 
