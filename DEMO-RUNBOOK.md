@@ -114,6 +114,17 @@ Open: https://iifl-backend-production.up.railway.app/agent/sessions
 
 Ringer ON, volume UP, **speaker mode**, do-not-disturb OFF. The audience needs to hear her.
 
+## ☐ 2.5 FREEZE the system — no config changes from here
+
+**Do not let anyone change a Railway variable, redeploy, or push code from now until the
+demo is over.** A variable change restarts the backend, and a restart **destroys the live
+browser session mid-call** — the application then stops recording answers with no visible
+error at all. This happened on 28 Jul: a variable was changed a few minutes before a test
+call and `gold_purity` was silently lost mid-conversation while the call sounded perfect.
+
+If a change is genuinely unavoidable, make it and then **wait 3 minutes and run one
+throwaway test call** before the real one.
+
 ---
 
 # PART 3 — RUNNING THE DEMO
@@ -132,9 +143,9 @@ Use a **fresh tab** (or hard-refresh) if you have already run one demo in this t
 | Full Name | a first name — she will use it out loud |
 | Mobile Number | the 10-digit number from step 1.1, no `+91` |
 | Enter Pincode | one of the four from 1.2 |
-| Consent tick | tick it (the button stays greyed out otherwise) |
+| Consent tick | tick it (the **Talk** button stays greyed out otherwise) |
 
-Click **"Talk to AI Agent"**.
+Click **"Talk"**.
 
 ## ☐ 3.3 The call
 
@@ -150,7 +161,8 @@ Then just have the conversation. What the audience should watch:
 4. **Gold weight** → **purity**.
 5. She names their **nearest branch** and says she is sending WhatsApp details.
    → **check the phone: the WhatsApp should arrive here.**
-6. **PAN**, then **Aadhaar** — she reads each back digit by digit to confirm.
+6. **PAN**, then **Aadhaar** — she asks for each plainly, with no mention of "KYC", and
+   reads each back digit by digit to confirm.
 7. Existing loan? → **consent**.
 8. She reads out **indicative offers** (amount, EMI, tenure).
 9. She promises a **specialist callback** and ends.
@@ -191,6 +203,7 @@ it during the call — open the inbox afterwards as the reveal.
 | Long silence early on | cold start | Wait ~30 s once; if dead, restart the call. Prevent with step 2.2 |
 | She says *"our team will send the details shortly"* | WhatsApp send failed | Correct, honest behaviour — she is designed not to claim a send that failed |
 | **Form on screen stays empty** | the known form-fill defect | The conversation still works. **Do not draw attention to the screen**; carry on and report it afterwards |
+| Form fills for a while then **stops mid-call** | the backend restarted (someone changed a variable or pushed code) — see 2.5 | Nothing to do live. Carry on; the conversation is unaffected. Prevent it by freezing config before the demo |
 | Specialist callback never rings | never reliably worked | **Do not promise the audience a callback demo.** Treat as out of scope |
 
 **Golden rule on stage: never say "that should have happened".** Move to the next thing.
@@ -227,7 +240,7 @@ BEFORE (30 min)
   phone: ringer on, speaker on
 
 RUN
-  <frontend> -> Gold Loans -> name / 10-digit mobile / pincode -> tick -> "Talk to AI Agent"
+  <frontend> -> Gold Loans -> name / 10-digit mobile / pincode -> tick -> "Talk"
   phone rings -> ANSWER -> talk
   WhatsApp arrives when she mentions the branch
 
