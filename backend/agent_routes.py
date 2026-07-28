@@ -159,6 +159,87 @@ def _latest_sid(sessions: dict) -> str:
     return max(sessions.items(), key=lambda kv: kv[1].get("created_at") or datetime.min)[0]
 
 
+# ---------- the per-session lead store ----------
+#
+# WHY THIS EXISTS. The branch-manager email is built ENTIRELY from the request
+# body of /agent/send-email. The post-call workflow can only pass what the
+# platform hands it (name, phone, pincode), so every other field rendered as
+# "not stated on the call" even when the call went perfectly — conversation
+# fd6540b6 filled loan_amount/gold_weight/gold_purity/pan/aadhaar/existing_loan/
+# consent, every tool returned success, and the manager still got an empty
+# lead sheet.
+#
+# The values were never missing: fill_field already receives each one. They were
+# simply thrown away after being typed into the form. So record them here, keyed
+# by session, and let send_email fall back to this when the caller of the
+# endpoint did not supply a field.
+#
+# In memory only — never written to disk, and dropped when the session is torn
+# down, so PAN/Aadhaar do not outlive the call. They stay masked in the email
+# and are still never logged.
+LEAD_STORE: Dict[str, Dict[str, str]] = {}
+
+# fill_field's field_name -> the SendEmailRequest field it feeds.
+_LEAD_FIELD_MAP = {
+    "loan_amount": "loan_amount",
+    "gold_weight": "gold_weight",
+    "gold_purity": "gold_purity",
+    "pan": "pan",
+    "pan_number": "pan",
+    "aadhaar": "aadhaar",
+    "aadhaar_number": "aadhaar",
+    "existing_loan": "existing_loan",
+    "consent": "consent_given",
+}
+
+
+def _lead_record(sid: str, **fields: Optional[str]) -> None:
+    """Remember a value the agent captured, for the post-call lead email."""
+    if not sid:
+        return
+    slot = LEAD_STORE.setdefault(sid, {})
+    wrote = False
+    for key, val in fields.items():
+        if val is None or val == "":
+            continue
+        slot[key] = str(val)
+        wrote = True
+    if wrote:
+        # Retention clock, refreshed on every capture. Prefixed with "_" so it
+        # can never be mistaken for an email field (the backfill only copies
+        # keys that exist on SendEmailRequest, but keep it unambiguous).
+        slot["_ts"] = str(time.time())
+
+
+def _lead_record_fill(sid: str, field_name: str, value: Any) -> None:
+    """Record a fill_field call if it maps to something the email shows."""
+    key = _LEAD_FIELD_MAP.get((field_name or "").strip().lower())
+    if key:
+        _lead_record(sid, **{key: value})
+
+
+def _lead_snapshot(sid: str) -> Dict[str, str]:
+    """Everything recorded for this session (empty dict if nothing)."""
+    _lead_evict_old()
+    return dict(LEAD_STORE.get(sid) or {})
+
+
+# How long a lead sheet survives after its last update. It must OUTLIVE the
+# call, because the lead email is sent by the POST-call workflow — clearing on
+# hangup (session/end) would wipe exactly the data the email needs. An hour is
+# far longer than the gap between hangup and the workflow firing, and short
+# enough that PAN/Aadhaar do not linger. Nothing here is written to disk.
+LEAD_RETENTION_SECONDS = 3600
+
+
+def _lead_evict_old() -> None:
+    """Drop lead sheets older than the retention window."""
+    now = time.time()
+    for sid in [s for s, v in LEAD_STORE.items()
+                if now - float(v.get("_ts", now)) > LEAD_RETENTION_SECONDS]:
+        LEAD_STORE.pop(sid, None)
+
+
 # ---------- request models ----------
 
 def _unwrap_payload(data: Any) -> Any:
@@ -249,6 +330,9 @@ async def start_session(
     # Opening the form here removes the second hop, so there is no window to
     # race. The branch hero is demo dressing; the form is what must load.
     start_url = _get_form_url(lt)
+    # A new call starts a fresh lead sheet -- never inherit the last caller's.
+    LEAD_STORE.pop(sid, None)
+    _lead_record(sid, pincode=pin, loan_type=lt)
     logger.info(f"start_session loan_type={lt!r} pincode={pin!r} -> url={start_url}")
     result = await playwright_service.start_session(start_url, sid)
     if not result.get("success"):
@@ -333,6 +417,10 @@ async def fill_field(
     # Resolve to the live session even if the agent sent an empty/unresolved id.
     sid = _resolve_sid(sid)
     result = await playwright_service.fill_field(sid, fn, val)
+    # Remember what the caller told us, so the post-call lead email has it even
+    # though nothing else carries these values out of the conversation.
+    if result.get("success"):
+        _lead_record_fill(sid, fn, val)
     if not result.get("success"):
         return result
     return result
@@ -355,6 +443,9 @@ async def click_button(
         raise HTTPException(status_code=422, detail="button is required")
     sid = _resolve_sid(sid)
     result = await playwright_service.click_button(sid, btn)
+    # A scheme card click is how a caller picks their tier -- record it.
+    if result.get("success") and (btn or "").startswith("scheme_"):
+        _lead_record(sid, scheme=btn.replace("scheme_", "", 1))
     return result
 
 
@@ -449,6 +540,9 @@ async def show_offers(
         scheme, pin = raw.get("scheme"), raw.get("pincode")
 
     sid = _resolve_sid(sid)
+    # show_offers carries the whole picture -- record whatever it was given.
+    _lead_record(sid, loan_amount=amount, gold_weight=grams, gold_purity=purity,
+                 scheme=scheme, pincode=pin, loan_type=lt)
     url = _offers_url(lt, amount, grams, purity, scheme, pin)
     logger.info(f"show_offers loan_type={lt!r} -> {url}")
     return await playwright_service.show_offers(sid, url)
@@ -494,6 +588,10 @@ async def send_whatsapp(request: Request, body: Optional[SendWhatsAppRequest] = 
 
     logger.info("send_whatsapp: name=%r pincode=%r phone=%r",
                 body.name, body.pincode, body.phone)
+
+    # The WhatsApp step is the one place the caller's name and number arrive.
+    _lead_record(_resolve_sid(body.session_id), name=body.name,
+                 phone=body.phone, pincode=body.pincode)
 
     return await send_branch_whatsapp(
         name=body.name or "", pincode=body.pincode or "", phone=body.phone or "",
@@ -547,6 +645,21 @@ async def send_email(request: Request, body: Optional[SendEmailRequest] = None):
             raw = {}
         raw = _unwrap_payload(raw) or {}
         body = SendEmailRequest(**{k: raw.get(k) for k in SendEmailRequest.model_fields})
+
+    # ---- BACKFILL FROM THE LEAD STORE ----------------------------------------
+    # The post-call workflow can only pass what the platform hands it (name,
+    # phone, pincode), so without this every other field renders as "not stated
+    # on the call" even when the call captured everything. Anything the request
+    # DID supply wins; the store only fills gaps.
+    snap = _lead_snapshot(_resolve_sid(body.session_id))
+    filled_from_store = []
+    for key, val in snap.items():
+        if key in SendEmailRequest.model_fields and not getattr(body, key, None):
+            setattr(body, key, val)
+            filled_from_store.append(key)
+    if filled_from_store:
+        logger.info("send_email: backfilled %d field(s) from the lead store: %s",
+                    len(filled_from_store), sorted(filled_from_store))
 
     # PAN and Aadhaar are deliberately NOT logged — they are identity documents and
     # these logs are retained. Presence is enough to debug a missing-field problem.
