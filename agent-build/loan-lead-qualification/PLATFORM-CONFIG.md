@@ -217,3 +217,45 @@ Runtime fn the LLM calls: `Transfer_To_Loan_Expert`.
 ## Debugging a bad call
 `nurix_conversation_messages(conversation_id=<call_id>, agent_ids=…)` — the **`tools[]`** array carries
 each tool's input/output/error and is what exposed the real bug. `nurix_get_transcript` 500s (`'speaker'`).
+
+---
+
+## v12 ADDITIONS (2026-07-28) — email tool + hard-won platform gotchas
+
+### New 6th tool: `send_email_flow_iifl`
+| thing | id |
+|---|---|
+| tool | `e2cc59a1-1a61-4b18-8841-fa4127399846` |
+| action | `00e03dbc-938a-4b0e-b5f6-bc332454f694` |
+| Mozart workflow | `1dfb5342-57aa-40e0-aa87-93352eb2b432` |
+| backend | `POST /agent/send-email` · body `{session_id, name, pincode, loan_type, loan_amount, scheme, gold_weight, gold_purity}` |
+| diagnostics | `GET /agent/email-config` (which env vars are set, never values) · `GET /agent/email-probe` (which SMTP ports the container can reach) |
+
+Verified executing end-to-end through Mozart (`COMPLETED` → backend → real delivery) AND on live call
+`2044aa31`.
+
+### ⚠️ Gotchas that each cost real time in v12
+1. **`opening_dialogue` is NOT writable via any API found.** Four routes returned **HTTP 200 and
+   silently ignored** the change: `PUT /v2/voice/agent-config/{draft}` (partial), `PUT
+   /voice/agent-config/{draft}` (partial AND full-object-minus-audit-fields), `PUT /agent/{draft}`, and
+   MCP `nurix_update_voice_agent` (its response does not even contain the field). **Change it in the
+   NuPlay UI.**
+2. **Mozart execute route** = `POST /api/workflow/sync/execute` with the workflow id **in the BODY**
+   (`{name, version, workspaceId, input}`). `POST /api/workflow/{uid}/sync/execute` 404s with
+   "No static resource". Discover routes from `GET /v3/api-docs` (19 paths).
+3. **Creating a Mozart TOOL workflow AUTO-CREATES its action and tool.** A follow-up
+   `nurix_create_workflow_tool` therefore **409s** — and the auto-created schema was already complete
+   and correct. Look it up with `nurix_get_server_tool_by_name` rather than creating it again.
+4. **`GET /agent/{id}/has-changed` 400s on a bare id** ("Agent ID is not a draft") — needs the
+   `-draft` suffix. And `GET /agent/{id}-draft/tools` is not the tool-list route; use MCP
+   `nurix_list_agent_tools`.
+5. **`tools-in.nurixlabs.tech` does not resolve** — use the MCP action/tool read tools.
+6. **Railway blocks ALL outbound SMTP** (587/465/25/2525 all time out). Mail must go over HTTPS.
+7. **`backend/Dockerfile` COPYs modules individually.** A new `.py` without its own `COPY` line is
+   absent from the image and crashes uvicorn on boot — while the **previous container keeps serving**,
+   so `/health` stays 200 and the failure is invisible. Check `railway deployment list`.
+8. **The Railway CLI links to ONE service.** `railway status` was linked to `iifl-frontend` and showed
+   the frontend's (healthy) deploys while the backend build was failing. Use
+   `railway service iifl-backend` first, or pass `--service`.
+9. **A DSL state whose body is only a `tool.x()` call gets SKIPPED by the model** — see the v12
+   regression in `HANDOFF.md`. Every mandatory tool state needs an explicit instruction line.

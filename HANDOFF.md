@@ -1,14 +1,102 @@
-# IIFL demo — state of the world as of 2026-07-27 (v10)
+# IIFL demo — state of the world as of 2026-07-28 (v12)
 
-**v10 IS BUILT AND DEPLOYED.** v10 is a **frontend-only** change: the call page now looks like a
-real inbound phone call (smartphone mockup, rings, auto-answers, then shows the transcript).
-**No agent, prompt, tool, PCA or backend change — Ira is untouched and still on published version
-24843 (SOP v9).** v9 fixed the two defects the first live call exposed (below). Read this first,
-then `agent-build/loan-lead-qualification/PLATFORM-CONFIG.md` for every ID and the platform
-gotchas.
+**v12 IS BUILT, PUBLISHED (Ira `24874`) AND PARTLY UNVERIFIED.** v12 is an **agent + backend**
+change (frontend untouched since v11). Read this section, then
+`agent-build/loan-lead-qualification/PLATFORM-CONFIG.md` for every ID and the platform gotchas.
 
-Tags: `v11-checkpoint-2026-07-28` (this state), `v10-checkpoint-2026-07-27`,
-`v9-checkpoint-2026-07-27`, `v8-checkpoint-2026-07-27`, `v7-checkpoint-2026-07-27`.
+Tags: `v12-checkpoint-2026-07-28` (this state), `v11-checkpoint-2026-07-28`,
+`v10-checkpoint-2026-07-27`, `v9-checkpoint-2026-07-27`, `v8-checkpoint-2026-07-27`,
+`v7-checkpoint-2026-07-27`.
+
+---
+
+## ☎️ v12 — PHONE-NATIVE REWRITE + LIVE IN-CALL EMAIL
+
+**The premise changed.** The caller is on a **phone and can see nothing**. The browser form still
+fills — that is how the demo team watches the backend work — but Ira no longer knows it exists.
+Operator directive: no "look at your screen" anywhere, and never offer to help fill a form; just ask
+questions and record silently.
+
+### The flow now (operator-specified)
+Enthusiastic self-intro from IIFL Finance → context-aware *"your gold loan enquiry just came in from
+[area]"* → **loose** offers/trust talk with no hard numbers → **form opens silently** → amount →
+three schemes as **three short phrases** → grams → purity → **branch + local-event hook** → PAN →
+Aadhaar → existing loan → consent → **email sent live during the call** → last questions → callback.
+
+### 🔴 THE v12 REGRESSION — READ BEFORE TOUCHING `go_to_form()`
+Making `go_to_form()` silent left a state whose body was **only a tool call**, and gemma **skipped it
+entirely** (`iifl_welcome()` → `gold_q1()`). The browser stayed on the branch page, so on live call
+**`2044aa31`** all 7 `fill_field` calls and the `click_button` failed with **"field not found"** and
+the application captured **nothing** — while Ira sounded flawless.
+
+⚠️ **A DSL state whose body is only a tool call reads as skippable to the model.**
+
+Fix (live in `24874`, gated in the push script so it cannot regress):
+1. `go_to_form()` carries an explicit *"Do not speak. Invoke the tool NOW. Mandatory"* line.
+2. `response_rules` gained an **ordering rule** — go_to_form BEFORE any fill; if it has not run,
+   run it first in the same response.
+3. A rule to never surface a fill error to the caller.
+
+**NOT yet re-tested on a live call. That is the #1 action.**
+
+### 🔴 STILL BROKEN — 30 seconds in the NuPlay UI (operator-only)
+`opening_dialogue` is still the v9 line *"क्या मै जल्दी से आपके लिये **application start** कर दुं?"* —
+mentions an application, asks permission (both removed in v12), wrong feminine auxiliaries, and it
+**caused a double-greeting** on call 2044aa31.
+
+**Four API routes all returned HTTP 200 and silently ignored the write** (`/v2/voice/agent-config/
+{draft}`, `/voice/agent-config/{draft}` partial *and* full-object, `/agent/{draft}`, and MCP
+`nurix_update_voice_agent` — whose response does not even include the field). **Do not burn time
+re-deriving this.** Fix in **Agent settings → Opening dialogue**:
+
+```
+नमस्ते! मैं Ira बोल रही हूँ IIFL Finance से. एक second दीजिए.
+```
+
+### 📧 The live in-call email — WORKING
+`send_email_flow_iifl` (tool `e2cc59a1-…`, action `00e03dbc-…`, workflow `1dfb5342-…`) → backend
+`POST /agent/send-email`. **Confirmed firing on live call 2044aa31 and delivering to Sanchit.**
+Renders amount (Indian digit grouping), chosen scheme + terms, grams/purity, the caller's branch with
+directions, and their pincode's local event.
+
+- ⚠️ **Railway blocks ALL outbound SMTP** (587/465/25/2525 all time out — proven via
+  `GET /agent/email-probe`). A Gmail App Password can never work from Railway. Mail goes over
+  **Resend's HTTPS API**; `EMAIL_PROVIDER=resend|smtp` selects transport.
+- ⚠️ Resend sends only **FROM a verified domain**: Nurix's is **`nurix.tech`**, not `nurix.ai`.
+  The restriction is on the *sender*, so `EMAIL_TO=sanchit.goel@nurix.ai` is fine.
+- ⚠️ **Do NOT "claim" `nurix.ai` in Resend** — it belongs to another Nurix team and claiming
+  **revokes their access**, which could break production email.
+- Never returns non-200: failure → `email_sent:"false"` → Ira's `email_failed()` state softens to
+  "our team will send it shortly" rather than erroring mid-call or claiming a false send.
+
+### 🗜️ Prompt cut 22% — comments stripped at PUSH time
+The platform preamble says *"// marks a silent comment. Never speak or act on comment text"*, so
+comments cost tokens and buy nothing. `push_sop_v12_phone_native.py` strips whole-line `//` before
+pushing: SOP 66,978→53,932; **compiled 105,412→82,283**. Proven lossless (218 instruction lines,
+79 states, 26 tool calls, 181 routes, 4 `say()`, 6 switch cases, 112 intent handlers all identical).
+**Comments stay in the authored file** — they document why each guardrail exists. ~29,000 chars of the
+compiled prompt is the platform's own preamble and is not ours to cut.
+
+### Verification status
+- ✅ 38/38 static gates pass against the **compiled** prompt.
+- ✅ Post-publish: agent ACTIVE, 6 tools attached and enabled, **all 6 action schemas intact** —
+  the first clean publish in four attempts (it had silently reverted 3× before).
+- ✅ Simulation `evals/sim-v12-run1/` — 7 scenarios × 3 = 21 conversations. 201 raw findings triaged
+  to **1 real defect** (a v9 line saying "Application भरने से"), fixed + gated. The rest were checker
+  false positives — notably the adversarial scenario where Ira **correctly denies** a screen exists —
+  or the platform-contract `<derived-variable>` emission.
+- ❌ `va-dsl-judge` **never run on v12** — operator accepted the risk. Would statically check the new
+  Devanagari (branch_hook, email states, reworded opening).
+- ❌ **No live call since the hotfix.**
+- ❌ The Priya callback has **still** never been observed ringing (pre-existing).
+
+### How to debug the next live call
+Get the conversation id and run
+`nurix_conversation_messages(conversation_id, agent_ids)`. **Read the `tools[]` array, not the
+transcript** — it shows `success:false` / "field not found" that the transcript hides completely.
+That is how 2044aa31 was diagnosed; the transcript looked perfect.
+
+---
 
 **v11 (2026-07-28, frontend only):** the ring is now **5 s, not 3 s**
 (`RING_DURATION_MS` in `PhoneCallFrame.tsx`). Deployed via `railway up` and verified live —
