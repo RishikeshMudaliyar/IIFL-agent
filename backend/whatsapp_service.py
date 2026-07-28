@@ -99,7 +99,6 @@ Your nearest branch:
 *What to bring:*
 • Your gold
 • One KYC document (Aadhaar or PAN)
-No income proof and no guarantor required.
 
 — Ira, IIFL Finance
 1860 267 3000"""
