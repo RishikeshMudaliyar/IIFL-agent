@@ -29,9 +29,18 @@ phone that has explicitly opted in. **The opt-in expires after 72 hours of no me
 You should get a confirmation reply. **If you skip this, everything else works and the
 WhatsApp silently never arrives** — the call sounds perfect and nothing errors.
 
-> **As of 28 Jul, only `+91 91678 76538` is opted in** (joined 06:44, so it lapses around
-> **06:44 on 31 Jul**). **Any other phone will receive nothing until it joins.**
-> Re-send the join message the morning of the demo — it is free and takes 10 seconds.
+> ⚠️ **The WhatsApp goes to whatever number you type into the demo form** — not to a fixed
+> address. So the number that must be opted in is **the handset you will use on the day**.
+>
+> **Opted in as of 28 Jul:**
+>
+> | Number | Joined | Lapses (~72 h idle) |
+> |---|---|---|
+> | `+91 91678 76538` | 28 Jul 06:44 | ~31 Jul 06:44 |
+> | `+91 95124 98277` (Sanchit) | 28 Jul 12:41 | ~31 Jul 12:41 |
+>
+> **Any other phone receives nothing until it joins.** Re-send the join message the morning
+> of the demo regardless — it is free, takes 10 seconds, and resets the 72-hour clock.
 
 ## ☐ 1.2 Decide the demo phone number and pincode
 
@@ -51,10 +60,13 @@ that is not the caller's. Don't improvise a pincode on stage.
 
 ## ☐ 1.3 Know where the lead email lands
 
-Right now the lead email goes to **`rishikesh.mudaliyar@nurix.ai`**, *not* to a real
-branch manager. If you want to show it live, either have access to that inbox or ask for
-`BRANCH_MANAGER_EMAIL` to be pointed at yours before the demo. **This is a one-variable
-change; ask early, not on the day.**
+The lead email goes to **`sanchit.goel@nurix.ai`** (set 28 Jul, verified by a live send).
+Have that inbox open and ready to project after the call — it is the second half of the
+reveal.
+
+If it needs to go somewhere else, it is a one-variable change (`BRANCH_MANAGER_EMAIL` on
+the `iifl-backend` Railway service) plus ~2 minutes for the redeploy. **Ask an engineer the
+day before, not on the day.**
 
 ## ☐ 1.4 Record a backup video
 
